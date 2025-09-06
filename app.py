@@ -128,15 +128,18 @@ def journal():
 def add_journal():
     if "username" not in session:
         return jsonify({"error": "Unauthorized"}), 403
-    
+
     data = request.get_json()
+    title = data.get("title", "").strip()   # <-- added this
     content = data.get("content", "").strip()
-    if not content:
-        return jsonify({"error": "Empty content"}), 400
+
+    if not title or not content:
+        return jsonify({"error": "Empty title or content"}), 400
 
     entry = {
         "id": len(journal_entries) + 1,
         "username": session["username"],
+        "title": title,                    # <-- save title
         "content": content,
         "date": datetime.now().strftime("%Y-%m-%d"),
         "time": datetime.now().strftime("%H:%M:%S")
@@ -147,7 +150,6 @@ def add_journal():
         json.dump(journal_entries, f, indent=2)
 
     return jsonify({"message": "Entry added!", "entry": entry}), 201
-
 
 @app.route("/get_journals/<username>", methods=["GET"])
 def get_journals(username):
