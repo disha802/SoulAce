@@ -139,7 +139,6 @@
     }
 
 
-
     body.dark .user-popup {
         background: #333;
         color: #f9e6d0;
@@ -163,6 +162,81 @@
       max-width: 600px;
       margin: 0 auto;
     }
+
+    .mood-tracker {
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .moods {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin: 20px;
+    }
+    .mood-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    .mood-btn {
+      font-size: 25px;
+      cursor: pointer;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      padding: 10px;
+      background: white;
+      transition: 0.2s;
+      margin-bottom: 8px;
+    }
+    .mood-btn:hover {
+      border-color: #555;
+    }
+    .label {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .popup-btn {
+      background: #FFFFFF;
+      color: #243B36;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }   
+
+    button {
+      background: linear-gradient(135deg, #657A74 , #243B36);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #657A74 , #243B36);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+
+
 
     .features {
       display: grid;
@@ -206,6 +280,8 @@
     .feature-card p{
       color: #657A74;
     }
+
+
 
     footer {
       text-align: center;
@@ -305,13 +381,17 @@
 
   </header>
 
-<div class="user-popup">
-  <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
+  <div class="user-popup">
+    <a href="{{ url_for('dashboard') }}">
+      <button type="popup-button" class="popup-btn">🏠 Home</button>
+    </a>
 
-  <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-    <button type="submit" class="popup-btn">🚪 Log Out</button>
-  </form>
-</div>
+    <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
+
+    <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+      <button type="submit" class="popup-btn">🚪 Log Out</button>
+    </form>
+  </div>
 
 
 
@@ -322,40 +402,94 @@
     <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.</p>
   </section>
 
+<section class="mood-tracker">
+  <h2>How are you feeling?</h2>
+
+  <div class="moods">
+    <div class="mood-option" onclick="setMood('Very Happy')">
+      <div class="mood-btn">😁</div>
+      <div class="label">Very Happy</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Feeling Blessed')">
+      <div class="mood-btn">😇</div>
+      <div class="label">Feeling Blessed</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Happy')">
+      <div class="mood-btn">🙂</div>
+      <div class="label">Happy</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Mind Blown')">
+      <div class="mood-btn">🤯</div>
+      <div class="label">Mind Blown</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Frustrated')">
+      <div class="mood-btn">😤</div>
+      <div class="label">Frustrated</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Sad')">
+      <div class="mood-btn">😔</div>
+      <div class="label">Sad</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Angry')">
+      <div class="mood-btn">😡</div>
+      <div class="label">Angry</div>
+    </div>
+
+    <div class="mood-option" onclick="setMood('Crying')">
+      <div class="mood-btn">😭</div>
+      <div class="label">Crying</div>
+    </div>
+  </div>
+
+
+
+  <form action="/download_moods" method="get">
+      <button type="submit">📥 Download history</button>
+  </form>
+
+</section>
+
+
   <section class="features">
     <div class="feature-card">
-      <span>💬</span>
+      <span><img src = "{{ url_for('static', filename='chatbot.png') }}"></span>
       <h3>AI Support</h3>
       <p>Chat with our AI guide for coping strategies and next steps.</p>
     </div>
     <div class="feature-card">
-      <span>📅</span>
+      <span><img src = "{{ url_for('static', filename='appointment.png') }}"></span>
       <h3>Confidential Booking</h3>
       <p>Book sessions with counsellors without fear of judgment.</p>
     </div>
     <div class="feature-card">
       <a href="{{ url_for('resources') }}" class="feature-card">
-        <span>📖</span>
+        <span><img src = "{{ url_for('static', filename='wellness.png') }}"></span>
         <h3>Wellness Resources</h3>
         <p>Access guides, audios, and videos in your own language.</p>
       </a>
     </div>
     <div class="feature-card">
-      <span><img src = "..\static\peer support.png"></span>
-      <h3>Peer Support</h3>
-      <p>Join moderated forums to share and support each other.</p>
+      <a href="{{ url_for('dashboard') }}" class="feature-card">
+        <span><img src = "{{ url_for('static', filename='peer support.png') }}"></span>
+        <h3>Peer Support</h3>
+        <p>Join moderated forums to share and support each other.</p>
+      </a>
     </div>
-
+    
     <div class="feature-card">
-      <span><img src = "..\static\journal-new.png"> </span>
-      <h3>Journal</h3>
-      <p>Pen down your thoughts and feelings of the day.</p>
+      <a href="{{ url_for('journal') }}" class="feature-card">
+        <span><img src = "{{ url_for('static', filename='journal.png') }}"></span>
+        <h3>Journal</h3>
+        <p>Pen down your thoughts and feelings of the day.</p>
+      </a>
     </div>
-    <div class="feature-card">
-      <span>💌</span>
-      <h3>Mood Tracker</h3>
-      <p>Talk about your moods.</p>
-    </div>
+    
   </section>
 
   <footer>
@@ -377,6 +511,18 @@
         const popup = document.getElementById('user-popup');
         popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
     }
+
+    async function setMood(mood) {
+      const response = await fetch("/save_mood", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: mood })
+      });
+
+      const result = await response.json();
+      alert(result.message); // popup confirmation
+    }
+
 
     // Optional: click outside to close
     window.addEventListener('click', function(e) {

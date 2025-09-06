@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SoulAce Journal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* === Copying over your global styles === */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #7B9B8B;
+    }
+    .header-left { 
+      display: flex; 
+      align-items: center; 
+      gap: 15px; 
+      background-color: #7B9B8B; 
+    }
+
+    .header-text { 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    .header-text h1 { 
+      margin: 0; 
+      font-size: 1.8rem; 
+      color: #FFFFFF; 
+    }
+    .header-text h3 { 
+      margin: 0; 
+      font-size: 1rem; 
+      font-weight: normal; 
+      color: #FFF7E4; 
+    }
+
+    .logo-container img { 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 50%; 
+      object-fit: cover; 
+    }
+
+    .user-icon { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 
+      50%; cursor: pointer; 
+    }
+    .user-popup {
+
+      display: none; position: absolute; top: 50px; right: 0;
+      background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      padding: 10px; z-index: 100; min-width: 140px;
+    }
+
+    .user-popup .popup-btn {
+      display: block;   /* force one below the other */
+      width: 100%;      /* fill popup width */
+      margin-bottom: 8px; /* spacing between buttons */
+    }
+
+
+    .popup-btn {
+      background: #FFFFFF;
+      color: #243B36;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+
+    .popup-btn:hover { background: #f2f2f2; }
+
+    /* Journal-specific styles */
+    main { padding: 2rem; }
+    h2 { color: #243B36; }
+    textarea {
+      width: 100%; padding: 12px; margin: 12px 0;
+      border-radius: 10px; border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    button {
+      background: linear-gradient(135deg, #657A74 , #243B36);
+      color: #fff; font-size: 16px; font-weight: 600;
+      padding: 10px 18px; border: none; border-radius: 8px;
+      cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    button:hover { background: linear-gradient(45deg, #657A74 , #243B36); transform: translateY(-2px); }
+    .tiles { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+    .tile {
+      background: white; padding: 15px; border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 220px; cursor: pointer;
+    }
+    .tile:hover { background: #f5f5f5; }
+    #popup {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 20px; border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3); width: 400px;
+    }
+
+    /* Dark mode overrides */
+    body.dark { background: #121212; color: #e0e0e0; }
+    body.dark header { background: #1f1f1f; }
+    body.dark .header-text h3 { color: #ccc; }
+    body.dark .user-popup { background: #2a2a2a; color: #f9e6d0; border: 1px solid #444; }
+    body.dark .tile { background: #2a2a2a; color: #e0e0e0; }
+    body.dark #popup { background: #2a2a2a; color: #e0e0e0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}"
+             alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <a href="{{ url_for('dashboard') }}" class="popup-btn">🏠 Home</a>
+          <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">🚪 Logout</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- === Journal Main Section === -->
+  <main>
+    <h2>My Journal</h2>
+    <textarea id="content" placeholder="Write your thoughts..."></textarea>
+    <button onclick="saveEntry()">Save Entry</button>
+
+    <h3>Your Entries</h3>
+    <div class="tiles" id="entries"></div>
+  </main>
+
+  <!-- Popup for full entry -->
+  <div id="popup">
+    <h3 id="popup-title"></h3>
+    <p id="popup-content"></p>
+    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="deleteEntry()" style="background:#b33a3a;">Delete</button>
+      <button onclick="closePopup()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    let currentEntry = null; // store the entry being viewed
+
+    function toggleUserPopup() {
+      const popup = document.getElementById("user-popup");
+      popup.style.display = (popup.style.display === "block") ? "none" : "block";
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    async function saveEntry() {
+      const content = document.getElementById("content").value;
+      if (!content) { alert("Please write something"); return; }
+
+      await fetch("/add_journal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content })
+      });
+      document.getElementById("content").value = "";
+      loadEntries();
+    }
+
+    async function loadEntries() {
+      const res = await fetch("/get_journals/{{ username }}");
+      const data = await res.json();
+      const container = document.getElementById("entries");
+      container.innerHTML = "";
+
+      data.forEach(entry => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.innerHTML = `<strong>${entry.date}</strong><br>${entry.content.substring(0, 60)}...`;
+        tile.onclick = () => openPopup(entry);
+        container.appendChild(tile);
+      });
+    }
+
+    function openPopup(entry) {
+      currentEntry = entry;
+      document.getElementById("popup-title").innerText = entry.date;
+      document.getElementById("popup-content").innerText = entry.content;
+      document.getElementById("popup").style.display = "block";
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+      currentEntry = null;
+    }
+
+    async function deleteEntry() {
+      if (!currentEntry) return;
+      if (!confirm("Are you sure you want to delete this entry?")) return;
+
+      await fetch(`/delete_journal/${currentEntry.id}`, { method: "DELETE" });
+      closePopup();
+      loadEntries();
+    }
+
+    // Load entries on page load
+    loadEntries();
+  </script>
+
+</body>
+</html>
