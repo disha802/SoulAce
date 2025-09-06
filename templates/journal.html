@@ -5,124 +5,36 @@
   <title>SoulAce Journal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* === Copying over your global styles === */
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #F5F7F2;
-      color: #333;
-      transition: background 0.4s, color 0.4s;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #7B9B8B;
-    }
-    .header-left { 
-      display: flex; 
-      align-items: center; 
-      gap: 15px; 
-      background-color: #7B9B8B; 
-    }
-
-    .header-text { 
-      display: flex; 
-      flex-direction: column; 
-    }
-    
-    .header-text h1 { 
-      margin: 0; 
-      font-size: 1.8rem; 
-      color: #FFFFFF; 
-    }
-    .header-text h3 { 
-      margin: 0; 
-      font-size: 1rem; 
-      font-weight: normal; 
-      color: #FFF7E4; 
-    }
-
-    .logo-container img { 
-      width: 60px; 
-      height: 60px; 
-      border-radius: 50%; 
-      object-fit: cover; 
-    }
-
-    .user-icon { 
-      width: 40px; 
-      height: 40px; 
-      border-radius: 
-      50%; cursor: pointer; 
-    }
-    .user-popup {
-
-      display: none; position: absolute; top: 50px; right: 0;
-      background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      padding: 10px; z-index: 100; min-width: 140px;
-    }
-
-    .user-popup .popup-btn {
-      display: block;   /* force one below the other */
-      width: 100%;      /* fill popup width */
-      margin-bottom: 8px; /* spacing between buttons */
-    }
-
-
-    .popup-btn {
-      background: #FFFFFF;
-      color: #243B36;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }
-
-
-    .popup-btn:hover { background: #f2f2f2; }
-
-    /* Journal-specific styles */
-    main { padding: 2rem; }
-    h2 { color: #243B36; }
-    textarea {
-      width: 100%; padding: 12px; margin: 12px 0;
-      border-radius: 10px; border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-    button {
-      background: linear-gradient(135deg, #657A74 , #243B36);
-      color: #fff; font-size: 16px; font-weight: 600;
-      padding: 10px 18px; border: none; border-radius: 8px;
-      cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }
-    button:hover { background: linear-gradient(45deg, #657A74 , #243B36); transform: translateY(-2px); }
-    .tiles { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
-    .tile {
-      background: white; padding: 15px; border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 220px; cursor: pointer;
-    }
-    .tile:hover { background: #f5f5f5; }
-    #popup {
-      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; padding: 20px; border-radius: 12px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.3); width: 400px;
-    }
-
-    /* Dark mode overrides */
-    body.dark { background: #121212; color: #e0e0e0; }
-    body.dark header { background: #1f1f1f; }
-    body.dark .header-text h3 { color: #ccc; }
-    body.dark .user-popup { background: #2a2a2a; color: #f9e6d0; border: 1px solid #444; }
-    body.dark .tile { background: #2a2a2a; color: #e0e0e0; }
-    body.dark #popup { background: #2a2a2a; color: #e0e0e0; }
+    body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#7B9B8B; }
+    .header-left { display:flex; align-items:center; gap:15px; }
+    .header-text h1 { margin:0; font-size:1.8rem; color:#fff; }
+    .header-text h3 { margin:0; font-size:1rem; color:#FFF7E4; }
+    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:140px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding:10px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); }
+    .popup-btn:hover { background:#f2f2f2; }
+    main { padding:2rem; }
+    h2 { color:#243B36; }
+    input, textarea { width:100%; padding:12px; margin:12px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
+    textarea { min-height:150px; max-height:500px; resize:none; overflow-y:hidden; }
+    button { background:linear-gradient(135deg, #657A74 , #243B36); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
+    button:hover { background:linear-gradient(45deg, #657A74 , #243B36); transform:translateY(-2px); }
+    .tiles { display:flex; flex-wrap:wrap; gap:15px; margin-top:20px; }
+    .tile { background:white; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); width:220px; cursor:pointer; }
+    .tile:hover { background:#f5f5f5; }
+    #popup { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.3); width:400px; }
+    .tab-container { display:flex; gap:10px; margin-bottom:15px; }
+    .tab { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; background:#ddd; }
+    .tab.active { background:#657A74; color:white; }
+    body.dark { background:#121212; color:#e0e0e0; }
+    body.dark header { background:#1f1f1f; }
+    body.dark .tile { background:#2a2a2a; color:#e0e0e0; }
+    body.dark #popup { background:#2a2a2a; color:#e0e0e0; }
+    body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
+    .prompt-card { background:#f0f8f5; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:15px; }
+    .prompt-card h4 { margin-top:0; }
   </style>
 </head>
 <body>
@@ -136,11 +48,9 @@
         <h3>Wellness begins here.</h3>
       </div>
     </div>
-
     <div class="header-right">
       <div class="user-icon-container">
-        <img src="{{ url_for('static', filename='user-icon.jpeg') }}"
-             alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
         <div id="user-popup" class="user-popup">
           <a href="{{ url_for('dashboard') }}" class="popup-btn">🏠 Home</a>
           <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
@@ -148,58 +58,126 @@
             <button type="submit" class="popup-btn">🚪 Logout</button>
           </form>
         </div>
-
       </div>
     </div>
   </header>
 
-  <!-- === Journal Main Section === -->
   <main>
     <h2>My Journal</h2>
-    <textarea id="content" placeholder="Write your thoughts..."></textarea>
-    <button onclick="saveEntry()">Save Entry</button>
+    <div class="tab-container">
+      <button id="tab-journal" class="tab active" onclick="switchTab('journal')">Journaling</button>
+      <button id="tab-prompts" class="tab" onclick="switchTab('prompts')">Journaling Prompts</button>
+    </div>
 
-    <h3>Your Entries</h3>
-    <div class="tiles" id="entries"></div>
+    <!-- Journaling Tab -->
+    <div id="journal-tab">
+      <p style="font-size:1.1rem; margin-bottom:12px; color:#243B36;">
+        🖊️ Journaling is one of those simple habits that can have surprisingly big benefits for your mind, emotions, and even productivity. Take a few minutes to write your thoughts and reflect!
+      </p>
+      <input type="text" id="title-input" placeholder="Entry title">
+      <textarea id="content" placeholder="Write your thoughts..."></textarea>
+      <button onclick="saveEntry()">Save Entry</button>
+      <h3>Your Entries</h3>
+      <div class="tiles" id="entries"></div>
+    </div>
+
+    <!-- Prompts Tab -->
+    <div id="prompts-tab" style="display:none;">
+      <p style="font-size:1.1rem; margin-bottom:15px;">Need some inspiration or ideas to write? Here are some journaling prompts to help you dive deeper.</p>
+
+      <div class="prompt-card">
+        <h4>1. 🧠 Self-discovery and reflection:</h4>
+        <ul>
+          <li>What values do you consider most important in life, and how do your actions align with them?</li>
+          <li>What is one thing that holds you back from being your best self?</li>
+          <li>If you could give your younger self one piece of advice, what would it be?</li>
+        </ul>
+      </div>
+
+      <div class="prompt-card">
+        <h4>2. 🌅 Daily and mindfulness:</h4>
+        <ul>
+          <li>Write 3 things you are grateful for and why?</li>
+          <li>What happened today that brought you joy or contentment?</li>
+        </ul>
+      </div>
+
+      <div class="prompt-card">
+        <h4>3. 🎯 Goals and aspirations:</h4>
+        <ul>
+          <li>Describe what your life looks like 5 years from now.</li>
+          <li>What is a goal you are afraid to pursue, and what is holding you back?</li>
+          <li>What would you do with your life if money or the opinions of others were no concern?</li>
+          <li>What steps can you take today to move closer to a current goal?</li>
+        </ul>
+      </div>
+
+      <div class="prompt-card">
+        <h4>4. 💪 Overcoming challenges:</h4>
+        <ul>
+          <li>What is currently causing you stress, and what can you do about it?</li>
+          <li>Write about a mistake that taught you something important about yourself.</li>
+          <li>Describe a time you failed and got back up.</li>
+        </ul>
+      </div>
+    </div>
   </main>
 
-  <!-- Popup for full entry -->
   <div id="popup">
     <h3 id="popup-title"></h3>
     <p id="popup-content"></p>
-    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+    <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
       <button onclick="deleteEntry()" style="background:#b33a3a;">Delete</button>
       <button onclick="closePopup()">Close</button>
     </div>
   </div>
 
   <script>
-    let currentEntry = null; // store the entry being viewed
+    let currentEntry = null;
 
     function toggleUserPopup() {
       const popup = document.getElementById("user-popup");
       popup.style.display = (popup.style.display === "block") ? "none" : "block";
     }
 
-    function toggleMode() {
-      document.body.classList.toggle("dark");
+    function toggleMode() { document.body.classList.toggle("dark"); }
+
+    function switchTab(tab) {
+      document.getElementById("journal-tab").style.display = (tab==='journal')?'block':'none';
+      document.getElementById("prompts-tab").style.display = (tab==='prompts')?'block':'none';
+      document.getElementById("tab-journal").classList.toggle('active', tab==='journal');
+      document.getElementById("tab-prompts").classList.toggle('active', tab==='prompts');
+    }
+
+    const textarea = document.getElementById("content");
+    textarea.addEventListener("input", autoResize, false);
+    function autoResize() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
     }
 
     async function saveEntry() {
-      const content = document.getElementById("content").value;
-      if (!content) { alert("Please write something"); return; }
+      const title = document.getElementById("title-input").value.trim();
+      const content = textarea.value.trim();
+      if (!title || !content) { alert("Please add a title and content."); return; }
+
+      const now = new Date();
+      const date = now.toLocaleDateString();
+      const time = now.toLocaleTimeString();
 
       await fetch("/add_journal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content })
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({title, content, date, time})
       });
-      document.getElementById("content").value = "";
+      textarea.value = "";
+      document.getElementById("title-input").value = "";
+      autoResize.call(textarea);
       loadEntries();
     }
 
     async function loadEntries() {
-      const res = await fetch("/get_journals/{{ username }}");
+      const res = await fetch(`/get_journals/{{ username }}`);
       const data = await res.json();
       const container = document.getElementById("entries");
       container.innerHTML = "";
@@ -207,7 +185,7 @@
       data.forEach(entry => {
         const tile = document.createElement("div");
         tile.className = "tile";
-        tile.innerHTML = `<strong>${entry.date}</strong><br>${entry.content.substring(0, 60)}...`;
+        tile.innerHTML = `<strong>${entry.title}</strong><br>${entry.date} ${entry.time}<br>${entry.content.substring(0,60)}...`;
         tile.onclick = () => openPopup(entry);
         container.appendChild(tile);
       });
@@ -215,28 +193,28 @@
 
     function openPopup(entry) {
       currentEntry = entry;
-      document.getElementById("popup-title").innerText = entry.date;
+      document.getElementById("popup-title").innerText = entry.title + " (" + entry.date + " " + entry.time + ")";
       document.getElementById("popup-content").innerText = entry.content;
       document.getElementById("popup").style.display = "block";
     }
 
-    function closePopup() {
-      document.getElementById("popup").style.display = "none";
-      currentEntry = null;
-    }
+    function closePopup() { document.getElementById("popup").style.display="none"; currentEntry=null; }
 
     async function deleteEntry() {
       if (!currentEntry) return;
       if (!confirm("Are you sure you want to delete this entry?")) return;
-
-      await fetch(`/delete_journal/${currentEntry.id}`, { method: "DELETE" });
+      await fetch(`/delete_journal/${currentEntry.id}`, {method:"DELETE"});
       closePopup();
       loadEntries();
     }
 
-    // Load entries on page load
     loadEntries();
   </script>
+
+  <!-- Footer -->
+  <footer style="background:#7B9B8B; color:white; text-align:center; padding:15px; margin-top:30px;">
+    <p>&copy; 2025 SoulAce. All rights reserved.</p>
+  </footer>
 
 </body>
 </html>
