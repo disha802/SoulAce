@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - SoulAce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
+
+        :root {
+            --dark-green: rgba(0,55,62,1);
+            --cream: #f9e6d0;
+            --light-cream: #f7f6f4;
+            --font-family: 'Bricolage Grotesque', Helvetica, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--light-cream);
+            color: var(--dark-green);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 20px;
+            background: var(--dark-green);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        header .logo-placeholder {
+            width: 40px; height: 40px;
+            background: white; border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--cream);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+
+        .card h2 {
+            margin-bottom: 24px;
+        }
+
+        .card input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .card button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: var(--dark-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .card button:hover {
+            background: rgba(0,55,62,0.9);
+        }
+
+        .card a {
+            color: var(--dark-green);
+            text-decoration: none;
+        }
+
+        .toggle {
+            margin-top: 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo-placeholder"></div>
+    SoulAce
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Register</h2>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Choose User ID" required>
+            <input type="password" name="password" placeholder="Choose Password" required>
+            <button type="submit">Register</button>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <p style="color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;">
+                {{ message }}
+            </p>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+        <p>Already registered? <a href="{{ url_for('login') }}">Login here</a></p>
+        <div class="toggle" onclick="toggleTheme()">🌗 Toggle Dark/Light</div>
+    </div>
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    if(document.body.classList.contains('dark')) {
+        document.body.style.background = '#00373e';
+        document.body.style.color = '#f9e6d0';
+    } else {
+        document.body.style.background = '#f7f6f4';
+        document.body.style.color = '#00373e';
+    }
+}
+</script>
+</body>
+</html>

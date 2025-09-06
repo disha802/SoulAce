@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soulace - Support for Your Mental Well-being</title>
+    <link rel="stylesheet" href="..\static\styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-container">
+                <nav class="nav">
+                    <div class="nav-left">
+                        <a href="#" class="nav-link">Home</a>
+                        <a href="#" class="nav-link">About</a>
+                        <a href="#" class="nav-link">Services</a>
+                    </div>
+                    
+                    <div class="logo">Soulace</div>
+                    
+                    <div class="nav-right">
+                        <a href="#" class="nav-link">Therapists</a>
+                        <a href="#" class="nav-link">Contact</a>
+                        <a href="#" class="nav-link">Language</a>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="hero-container">
+                    <img class="hero-img-left" src="figmaAssets/illustration-2.png" alt="Illustration">
+                    <img class="hero-img-right" src="figmaAssets/illustration-1.png" alt="Illustration">
+                    
+                    <div class="hero-content">
+                        <h1 class="hero-title">Support for Your Mental Well-being</h1>
+                        <p class="hero-description">Connect with licensed therapists, counselors, without revealing your true identity.</p>
+                        <button class="btn btn-primary" onclick="window.location.href='login.html'">Start Your Wellness Journey</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Improve Mental Health Section -->
+            <section class="mental-health-section">
+                <div class="mental-health-container">
+                    <div class="mental-health-content">
+                        <div class="section-label">IMPROVE YOUR MENTAL HEALTH</div>
+                        <h2 class="section-title">We Help You Prioritize Your Mental Well-being</h2>
+                        <p class="section-description">Connect with licensed therapists, access AI-powered support, and start your healing journey in a safe, anonymous environment.</p>
+                        <div class="mental-health-features">
+                            <div class="feature">
+                                <div class="feature-icon">🧠</div>
+                                <h3>AI-Powered Chat</h3>
+                                <p>24/7 support with our intelligent chatbot</p>
+                            </div>
+                            <div class="feature">
+                                <div class="feature-icon">👥</div>
+                                <h3>Licensed Therapists</h3>
+                                <p>Connect with qualified professionals</p>
+                            </div>
+                            <div class="feature">
+                                <div class="feature-icon">🔒</div>
+                                <h3>Complete Privacy</h3>
+                                <p>Anonymous sessions protect your identity</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.location.href='login.html'">Start Your Journey</button>
+                    </div>
+                    
+                    <div class="mental-health-image">
+                        <img src="figmaAssets/illustration-3.png" alt="Mental health support illustration">
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section class="faq-section">
+                <div class="faq-container">
+                    <div class="faq-header">
+                        <div class="section-label">FAQ</div>
+                        <h2 class="section-title">Frequently Asked Questions</h2>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFaq(this)">
+                                <h3>Is my identity completely anonymous?</h3>
+                                <span class="faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer">
+                                <p>Yes, we prioritize your privacy. You can use our platform without revealing your true identity to therapists or other users.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFaq(this)">
+                                <h3>How does the AI chatbot work?</h3>
+                                <span class="faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer">
+                                <p>Our AI chatbot provides 24/7 support, offering guidance and detecting when you might need additional help from a licensed professional.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFaq(this)">
+                                <h3>Are the therapists licensed?</h3>
+                                <span class="faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer">
+                                <p>All therapists on our platform are licensed professionals with verified credentials and experience in mental health support.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFaq(this)">
+                                <h3>How much does it cost?</h3>
+                                <span class="faq-icon">+</span>
+                            </div>
+                            <div class="faq-answer">
+                                <p>We offer various pricing options to make mental health support accessible. Contact us for detailed pricing information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section class="contact-section">
+                <div class="contact-container">
+                    <div class="contact-header">
+                        <div class="section-label">CONTACT</div>
+                        <h2 class="section-title">Get In Touch</h2>
+                        <p class="section-description">Have questions? We're here to help you on your mental wellness journey.</p>
+                    </div>
+                    <div class="contact-content">
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <div class="contact-icon">📧</div>
+                                <div>
+                                    <h3>Email Us</h3>
+                                    <p>support@soulace.com</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">💬</div>
+                                <div>
+                                    <h3>Chat Support</h3>
+                                    <p>Available 24/7 through our platform</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">🌍</div>
+                                <div>
+                                    <h3>Global Support</h3>
+                                    <p>Available worldwide, anytime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-form">
+                            <form>
+                                <div class="form-group">
+                                    <input type="text" placeholder="Your Name" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" placeholder="Your Email" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <textarea placeholder="Your Message" class="form-input form-textarea"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Send Message</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-main">
+                    <div class="footer-brand">
+                        <h3 class="footer-logo">Soulace</h3>
+                        <p>Support for your mental well-being</p>
+                    </div>
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4>Platform</h4>
+                            <a href="login.html">Student Login</a>
+                            <a href="login.html">Admin Login</a>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Support</h4>
+                            <a href="#faq">FAQ</a>
+                            <a href="#contact">Contact</a>
+                        </div>
+                        <div class="footer-column">
+                            <h4>Privacy</h4>
+                            <a href="#">Privacy Policy</a>
+                            <a href="#">Terms of Service</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Soulace. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="..\static\script.js"></script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce - Your Mental Health Companion</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
+    display: flex;
+    justify-content: space-between; /* left-right spread */
+    align-items: center; /* vertically centered */
+    padding: 10px 20px;
+    background-color: #7B9B8B; /* or whatever color */
+    }
+
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* space between logo and title */
+        background-color: #7B9B8B;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* space between buttons */
+    }
+    
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .logo-container img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .logout-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #fff;
+        color: #333;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .logout-btn, .toggle-btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #FFFFFF;
+    }
+
+    .header-text h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: normal;
+    color: #FFF7E4; /* optional */
+    }
+
+    .user-icon-container {
+        position: relative;
+    }
+
+    .user-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%; /* circular */
+        cursor: pointer;
+    }
+
+
+    .toggle-btn {
+      background: #fff;
+      border: 2px solid #ccc;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: #fcd58d;
+    }
+
+    .user-icon-container {
+        position: relative; /* so popup is positioned relative to icon */
+    }
+
+    .user-popup {
+        display: none; /* hidden by default */
+        position: absolute;
+        top: 50px; /* below the icon */
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        padding: 10px;
+        z-index: 100;
+        min-width: 140px;
+    }
+
+
+    .user-popup .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .user-popup .popup-btn:hover {
+      background: #f2f2f2;
+    }
+
+
+
+    body.dark .user-popup {
+        background: #333;
+        color: #f9e6d0;
+    }
+
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: #F5F7F2;
+    }
+
+    .hero h2 {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      color: #243B36;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .feature-card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      text-decoration: none;
+    }
+
+    .feature-card span {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card span img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 0.5rem;
+    }
+
+
+    .feature-card p{
+      color: #657A74;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ffeecf;
+      border-top: 2px solid #fcd58d;
+      margin-top: 2rem;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+        background: #121212;
+        color: #e0e0e0;
+    }
+
+    body.dark header {
+        background-color: #1f1f1f;
+        color: #f9e6d0;
+    }
+
+    body.dark .header-text h3 {
+        color: #ccc; /* lighter for subtitle */
+    }
+
+    body.dark .logo-container img {
+        /* optional: add a subtle border for logo visibility */
+        border: 2px solid #444;
+    }
+
+    body.dark .header-right {
+        color: #f9e6d0;
+    }
+
+    body.dark .user-popup {
+        background: #2a2a2a;
+        color: #f9e6d0;
+        border: 1px solid #444;
+    }
+
+    body.dark .user-popup .popup-btn {
+        color: #f9e6d0;
+    }
+
+    body.dark .toggle-btn {
+        background: #444;
+        color: #f9e6d0;
+        border: 1px solid #666;
+    }
+
+    body.dark .hero {
+        background: #1f1f1f;
+        color: #e0e0e0;
+    }
+
+    body.dark .feature-card {
+        background: #2a2a2a;
+        color: #e0e0e0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    body.dark footer {
+        background: #1f1f1f;
+        color: #e0e0e0;
+        border-top: 2px solid #444;
+    }
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
+      </div>
+    </div>
+
+    <div class="header-right">
+        <div class="user-icon-container">
+            <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+                alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+            <!-- move popup inside this container -->
+            <div id="user-popup" class="user-popup">
+                <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+                <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+                    <button type="submit" class="popup-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+  </header>
+
+<div class="user-popup">
+  <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
+
+  <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+    <button type="submit" class="popup-btn">🚪 Log Out</button>
+  </form>
+</div>
+
+
+
+
+
+  <section class="hero">
+    <h2>Hey {{username}}, you’re not alone 💛</h2>
+    <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.</p>
+  </section>
+
+  <section class="features">
+    <div class="feature-card">
+      <span>💬</span>
+      <h3>AI Support</h3>
+      <p>Chat with our AI guide for coping strategies and next steps.</p>
+    </div>
+    <div class="feature-card">
+      <span>📅</span>
+      <h3>Confidential Booking</h3>
+      <p>Book sessions with counsellors without fear of judgment.</p>
+    </div>
+    <div class="feature-card">
+      <a href="{{ url_for('resources') }}" class="feature-card">
+        <span>📖</span>
+        <h3>Wellness Resources</h3>
+        <p>Access guides, audios, and videos in your own language.</p>
+      </a>
+    </div>
+    <div class="feature-card">
+      <span><img src = "..\static\peer support.png"></span>
+      <h3>Peer Support</h3>
+      <p>Join moderated forums to share and support each other.</p>
+    </div>
+
+    <div class="feature-card">
+      <span><img src = "..\static\journal-new.png"> </span>
+      <h3>Journal</h3>
+      <p>Pen down your thoughts and feelings of the day.</p>
+    </div>
+    <div class="feature-card">
+      <span>💌</span>
+      <h3>Mood Tracker</h3>
+      <p>Talk about your moods.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+  <script>
+    function toggleMode() {
+      document.body.classList.toggle('dark');
+      const btn = document.querySelector('.toggle-btn');
+      if (document.body.classList.contains('dark')) {
+        btn.textContent = '☀️ Light Mode';
+      } else {
+        btn.textContent = '🌙 Dark Mode';
+      }
+    }
+
+    function toggleUserPopup() {
+        const popup = document.getElementById('user-popup');
+        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Optional: click outside to close
+    window.addEventListener('click', function(e) {
+        const popup = document.getElementById('user-popup');
+        const icon = document.querySelector('.user-icon');
+        if (!popup.contains(e.target) && e.target !== icon) {
+            popup.style.display = 'none';
+        }
+    });
+
+  </script>
+</body>
+</html>

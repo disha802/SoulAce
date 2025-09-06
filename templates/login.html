@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - SoulAce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="..\static\header-logo.png" type="image/png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
+
+        :root {
+            --dark-green: rgba(0,55,62,1);
+            --cream: #f9e6d0;
+            --light-cream: #f7f6f4;
+            --font-family: 'Bricolage Grotesque', Helvetica, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--light-cream);
+            color: var(--dark-green);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 20px;
+            background: var(--dark-green);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        header .logo-placeholder {
+            width: 40px; height: 40px;
+            background: white; border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--cream);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .card h2 {
+            margin-bottom: 24px;
+        }
+
+        .card input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .card button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: var(--dark-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card button:hover {
+            background: rgba(0,55,62,0.9);
+        }
+
+        .card a {
+            color: var(--dark-green);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .toggle {
+            margin-top: 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Dark Mode Classes */
+        body.dark {
+            background-color: #011114;
+            color: #f9e6d0;
+        }
+
+        body.dark header {
+            background: #2e3030;
+            color: #f9e6d0;
+        }
+
+        body.dark .card {
+            background: #1f1d1d;
+            color: #f9e6d0;
+        }
+
+        body.dark .card input {
+            background: #2b2d2d;
+            color: #f9e6d0;
+            border: 2px solid #00787a;
+        }
+
+        body.dark .card button {
+            background: #00787a;
+            color: #f9e6d0;
+        }
+
+        body.dark .card a {
+            color: #f9e6d0;
+        }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo-placeholder"></div>
+    SoulAce
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Login</h2>
+        <form method="POST">
+            <input type="text" name="username" placeholder="User ID" required>
+            <div style="position: relative; width: 100%;">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <span onclick="togglePassword()" 
+                        style="position:absolute; right:12px; top:50%; transform: translateY(-50%); cursor:pointer; font-size:18px;">
+                        👁️
+                </span>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <p style= "color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;" >
+                {{ message }}
+            </p>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <p>New user? <a href="{{ url_for('register') }}">Register here</a></p>
+        <div class="toggle" onclick="toggleTheme()">🌗 Toggle Dark/Light</div>
+    </div>
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+}
+
+function togglePassword() {
+    const password = document.getElementById('password');
+    password.type = (password.type === 'password') ? 'text' : 'password';
+}
+</script>
+</body>
+</html>

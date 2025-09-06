@@ -1,1 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce - Resources</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
 
+    /* --- HEADER --- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #7B9B8B;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #FFFFFF;
+    }
+
+    .header-text h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: normal;
+      color: #FFF7E4;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .user-popup {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 0;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      padding: 10px;
+      z-index: 100;
+      min-width: 140px;
+    }
+
+    .user-popup .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    /* --- HERO --- */
+    .hero {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: #F5F7F2;
+    }
+
+    .hero h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #243B36;
+    }
+
+    /* --- VIDEO GRID --- */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      border: none;
+    }
+
+    /* --- TILES --- */
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .tile {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, background 0.3s ease;
+    }
+
+    .tile:hover {
+      background: #fcd58d;
+      transform: translateY(-4px);
+    }
+
+    /* --- MODALS --- */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ffeecf;
+      border-top: 2px solid #fcd58d;
+      margin-top: 2rem;
+    }
+
+    /* --- DARK MODE --- */
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
+    }
+
+    body.dark header {
+      background: #1f1f1f;
+      color: #f9e6d0;
+    }
+
+    body.dark .user-popup {
+      background: #2a2a2a;
+      border: 1px solid #444;
+    }
+
+    body.dark .tile {
+      background: #2a2a2a;
+      color: #e0e0e0;
+    }
+
+    body.dark .modal-content {
+      background: #2a2a2a;
+      color: #f9e6d0;
+    }
+
+    body.dark footer {
+      background: #1f1f1f;
+      border-top: 2px solid #444;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h2>Wellness Resources 📚</h2>
+    <p>Explore videos and guides designed to support your mental well-being.</p>
+  </section>
+
+  <!-- Video Section -->
+  <div class="video-grid">
+    <iframe width="853" height="480" src="https://www.youtube.com/embed/ZToicYcHIOU" title="Daily Calm | 10 Minute Mindfulness Meditation | Be Present" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <iframe width="853" height="480" src="https://www.youtube.com/embed/ULM16z71po0" title="10 Minute Deep Meditation Music • &quot;Expand Your Consciousness&quot; Raise Your Energy Vibration" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <iframe width="853" height="480" src="https://www.youtube.com/embed/Xl_B45DpMLU" title="Daily Calm | 10 Minute Mindfulness Meditation | Self Soothing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <iframe width="853" height="480" src="https://www.youtube.com/embed/60Gnd8Wy0gE" title="10 Minute Super Deep Meditation Music • Healing Meditation Music, Relax Mind Body" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</div>
+
+  <!-- Reading Material Section -->
+  <div class="tile-grid">
+    <div class="tile" onclick="openModal('modal1')">Cognitive Behavioral Therapy (CBT)</div>
+    <div class="tile" onclick="openModal('modal2')">Mindful Breathing</div>
+    <div class="tile" onclick="openModal('modal3')">Journaling</div>
+    <div class="tile" onclick="openModal('modal4')">Meditation</div>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modal1')">&times;</span>
+      <h2>Cognitive Behavioral Therapy (CBT)</h2>
+      <p>CBT helps identify and reframe negative thought patterns into more balanced perspectives. Try challenging unhelpful thoughts with evidence-based reasoning.</p>
+    </div>
+  </div>
+
+  <div id="modal2" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modal2')">&times;</span>
+      <h2>Mindful Breathing</h2>
+      <p>Slow down with intentional breaths. Inhale for 4 counts, hold for 4, exhale for 6. This helps ground you in the present and reduce stress.</p>
+    </div>
+  </div>
+
+  <div id="modal3" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modal3')">&times;</span>
+      <h2>Journaling</h2>
+      <p>Writing your thoughts and emotions on paper can provide clarity, release stress, and track your growth over time.</p>
+    </div>
+  </div>
+
+  <div id="modal4" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modal4')">&times;</span>
+      <h2>Meditation</h2>
+      <p>Spend a few minutes each day focusing on your breath or a calming visualization. Meditation can lower anxiety and improve emotional resilience.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    function toggleMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    function toggleUserPopup() {
+      const popup = document.getElementById('user-popup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function openModal(id) {
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach(modal => {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      });
+      const popup = document.getElementById('user-popup');
+      if (!event.target.matches('.user-icon') && !popup.contains(event.target)) {
+        popup.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
