@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SoulAce - Resources</title>
+  <title>SoulAce - Wellness Resources</title>
   <style>
+      a {
+    color: #007B7F;   /* your desired link color */
+    text-decoration: none;  /* optional: remove underline */
+  }
+  a:hover {
+    text-decoration: underline; /* optional hover effect */
+  }
+  a:visited {
+    color: #007B7F;  /* keeps links blue even after clicking */
+  }
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -12,8 +22,6 @@
       color: #333;
       transition: background 0.4s, color 0.4s;
     }
-
-    /* --- HEADER --- */
     header {
       display: flex;
       justify-content: space-between;
@@ -21,197 +29,58 @@
       padding: 10px 20px;
       background-color: #7B9B8B;
     }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .header-text { display: flex; flex-direction: column; }
+    .logo-container img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+    header h1 { margin: 0; font-size: 1.8rem; color: #fff; }
+    .header-text h3 { margin: 0; font-size: 1rem; font-weight: normal; color: #FFF7E4; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .user-icon { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+    .user-popup { display: none; position: absolute; top: 50px; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 10px; z-index: 100; min-width: 140px; }
+    .user-popup .popup-btn { display: block; width: 100%; padding: 8px; border: none; background: none; text-align: left; cursor: pointer; }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+    .hero { text-align: center; padding: 3rem 1.5rem; background: #F5F7F2; }
+    .hero h2 { font-size: 2rem; margin-bottom: 1rem; color: #243B36; }
+    .hero p { font-size: 1.1rem; color: #444; }
 
-    .header-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .logo-container img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      color: #FFFFFF;
-    }
-
-    .header-text h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: normal;
-      color: #FFF7E4;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-
-    .user-popup {
-      display: none;
-      position: absolute;
-      top: 50px;
-      right: 0;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      padding: 10px;
-      z-index: 100;
-      min-width: 140px;
-    }
-
-    .user-popup .popup-btn {
-      display: block;
-      width: 100%;
-      padding: 8px;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    /* --- HERO --- */
-    .hero {
-      text-align: center;
-      padding: 3rem 1.5rem;
-      background: #F5F7F2;
-    }
-
-    .hero h2 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: #243B36;
-    }
-
-    /* --- VIDEO GRID --- */
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      padding: 20px;
-    }
-
-    iframe {
-      width: 100%;
-      height: 200px;
-      border-radius: 12px;
-      border: none;
-    }
-
-    /* --- TILES --- */
     .tile-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
       padding: 20px;
     }
-
     .tile {
       background: #fff;
-      padding: 20px;
-      border-radius: 12px;
+      padding: 30px;
+      border-radius: 16px;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       transition: transform 0.2s ease, background 0.3s ease;
+      font-size: 1.1rem;
     }
+    .tile:hover { background: #fcd58d; transform: translateY(-6px); }
 
-    .tile:hover {
-      background: #fcd58d;
-      transform: translateY(-4px);
-    }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.6); }
+    .modal-content { background: #fff; margin: 3% auto; padding: 30px; border-radius: 20px; width: 90%; max-width: 1000px; position: relative; box-shadow:0 10px 25px rgba(0,0,0,0.3); }
+    .modal-content h2 { text-align:center; margin-bottom:20px; color:#243B36; font-size:2rem; }
+    .modal-resources { display:grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+    .resource-card { background:#fafafa; padding:15px; border-radius:14px; box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; transition: transform .2s; }
+    .resource-card:hover { transform: translateY(-4px); background:#fff5e6; }
+    .resource-card iframe { width:100%; height:180px; border:none; border-radius:12px; margin-bottom:10px; }
+    .resource-card a { display:inline-block; margin-top:10px; color:#007B7F; font-weight:bold; text-decoration:none; }
+    .resource-card p { margin: 5px 0; }
 
-    /* --- MODALS --- */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background: rgba(0,0,0,0.6);
-    }
+    .close { position: absolute; top: 15px; right: 20px; font-size: 32px; cursor: pointer; color: #333; }
 
-    .modal-content {
-      background: #fff;
-      margin: 10% auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 600px;
-      position: relative;
-    }
+    footer { text-align: center; padding: 1rem; font-size: 0.9rem; background: #ffeecf; border-top: 2px solid #fcd58d; margin-top: 2rem; }
 
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #333;
-    }
-
-    /* --- FOOTER --- */
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-      background: #ffeecf;
-      border-top: 2px solid #fcd58d;
-      margin-top: 2rem;
-    }
-
-    /* --- DARK MODE --- */
-    body.dark {
-      background: #121212;
-      color: #e0e0e0;
-    }
-
-    body.dark header {
-      background: #1f1f1f;
-      color: #f9e6d0;
-    }
-
-    body.dark .user-popup {
-      background: #2a2a2a;
-      border: 1px solid #444;
-    }
-
-    body.dark .tile {
-      background: #2a2a2a;
-      color: #e0e0e0;
-    }
-
-    body.dark .modal-content {
-      background: #2a2a2a;
-      color: #f9e6d0;
-    }
-
-    body.dark footer {
-      background: #1f1f1f;
-      border-top: 2px solid #444;
-    }
+    body.dark { background: #121212; color: #e0e0e0; }
+    body.dark header { background: #1f1f1f; color: #f9e6d0; }
+    body.dark .user-popup { background: #2a2a2a; border: 1px solid #444; }
+    body.dark .tile { background: #2a2a2a; color: #e0e0e0; }
+    body.dark .modal-content { background: #2a2a2a; color: #f9e6d0; }
+    body.dark footer { background: #1f1f1f; border-top: 2px solid #444; }
   </style>
 </head>
 <body>
@@ -241,90 +110,267 @@
 
   <!-- Hero -->
   <section class="hero">
-    <h2>Wellness Resources 📚</h2>
-    <p>Explore videos and guides designed to support your mental well-being.</p>
+    <h2>Wellness Resources🌸</h2>
+    <p>Curated tools for a calmer, healthier you!</p>
   </section>
 
-  <!-- Video Section -->
-  <div class="video-grid">
-    <iframe width="853" height="480" src="https://www.youtube.com/embed/ZToicYcHIOU" title="Daily Calm | 10 Minute Mindfulness Meditation | Be Present" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    <iframe width="853" height="480" src="https://www.youtube.com/embed/ULM16z71po0" title="10 Minute Deep Meditation Music • &quot;Expand Your Consciousness&quot; Raise Your Energy Vibration" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    <iframe width="853" height="480" src="https://www.youtube.com/embed/Xl_B45DpMLU" title="Daily Calm | 10 Minute Mindfulness Meditation | Self Soothing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    <iframe width="853" height="480" src="https://www.youtube.com/embed/60Gnd8Wy0gE" title="10 Minute Super Deep Meditation Music • Healing Meditation Music, Relax Mind Body" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <!-- Tiles -->
+  <div class="tile-grid">
+    <div class="tile" onclick="openModal('modalMeditation')">Meditations</div>
+    <div class="tile" onclick="openModal('modalPodcastsBooks')">Podcasts & Books</div>
+    <div class="tile" onclick="openModal('modalHealthyBody&Mind')">Healthy Body & Mind</div>
+    <div class="tile" onclick="openModal('modalDigitalWellness')">Digital Wellness</div>
+    <div class="tile" onclick="openModal('modalCBTTests')">CBT & Self Tests</div>
+  </div>
+
+  <!-- Meditation Modal -->
+<div id="modalMeditation" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
+    <h2>Meditations 🧘‍♂️</h2>
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">Meditation is the pause that lets the mind breathe.</p>
+    <div class="modal-resources">
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/uFAIoCZcRjA"></iframe><p>Morning Mindfulness</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/ZToicYcHIOU"></iframe><p>Daily Calm 10 Min</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/swjDIvuxFx4"></iframe><p>Stress Relief Meditation</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/Xl_B45DpMLU"></iframe><p>Self Soothing Practice</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/sfSDQRdIvTc"></iframe><p>Relaxation Meditation</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/QHkXvPq2pQE"></iframe><p>Energy Boost Meditation</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/uI0oMw-ncZo"></iframe><p>Calm Mind Session</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/lk9poGcsHps"></iframe><p>Mindfulness for Sleep</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/EwQkfoKxRvo"></iframe><p>Deep Relaxation</p></div>
+    </div>
+  </div>
 </div>
 
-  <!-- Reading Material Section -->
-  <div class="tile-grid">
-    <div class="tile" onclick="openModal('modal1')">Cognitive Behavioral Therapy (CBT)</div>
-    <div class="tile" onclick="openModal('modal2')">Mindful Breathing</div>
-    <div class="tile" onclick="openModal('modal3')">Journaling</div>
-    <div class="tile" onclick="openModal('modal4')">Meditation</div>
-  </div>
+  <!-- Podcasts & Books Modal -->
+<div id="modalPodcastsBooks" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
+    <h2>Podcasts & Books🎧</h2>
+    
+    <!-- Podcasts Section -->
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">A pause from noise, a path to insight.</p>
+    <h3 style="margin-bottom:10px; color:#243B36;">Podcasts 🎙️</h3>
+    <div class="modal-resources">
+      <div class="resource-card"><iframe src="https://open.spotify.com/embed/show/5hPJePeH0yRpkbpLuZOZhV" style="height:180px;"></iframe><p>The Happiness Podcast</p></div>
+      <div class="resource-card"><iframe src="https://open.spotify.com/embed/show/5PbW8DFSF6tpjw1FWDir3t" style="height:180px;"></iframe><p>Wellness Talks</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/-Kd7I6GrdGM"></iframe><p>Mel Robbins</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/rKQLBiylsn8"></iframe><p>TedX Talks</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/vIbLQQ1i56Y"></iframe><p>The Diary of a CEO</p></div>
+      <div class="resource-card"><iframe src="https://www.youtube.com/embed/OTQJmkXC2EI"></iframe><p>The Jay Shetty Podcast</p></div>
+    </div>
 
-  <!-- Modals -->
-  <div id="modal1" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modal1')">&times;</span>
-      <h2>Cognitive Behavioral Therapy (CBT)</h2>
-      <p>CBT helps identify and reframe negative thought patterns into more balanced perspectives. Try challenging unhelpful thoughts with evidence-based reasoning.</p>
+    <!-- Books Section -->
+<h3 style="margin:20px 0 10px 0; color:#243B36;">Books 📖</h3>
+<p style="margin-top:15px; font-style:italic;">Browse the curated bookshelf we’ve crafted for you:</p>
+
+<div style="line-height:1.7; font-size:1rem; text-align:left;">
+  <!-- Mind–Body & Lifestyle -->
+  <p>🌿 <strong>Mind–Body & Lifestyle</strong></p>
+  <ol>
+    <li>“<a href="https://www.amazon.com/dp/0735211299" target="_blank">Atomic Habits</a>” – James Clear: Practical, science-backed strategies for building good habits and breaking unhelpful ones.</li>
+    <li>“<a href="https://www.amazon.com/Defense-Food-Eaters-Manifesto/dp/0143114964/ref=sr_1_1?crid=1BSX4VH942AC2&dib=eyJ2IjoiMSJ9.EUhuM-andD1ossUPXspDd3QZsvm_lzsIzHqzsiuXkiW9jwxrFQt-a_KLIcaVG5eGRv7R3WXgu1Xq82cXMpYaja_mfdfx8ceBui2xv-jhOv4Ehflun2m8H811iNhqLAz0pUgvZPLXMu_6ihqaJNJwaiZguisPslE7T0hkD5IIPrx8SikkccDeCN7aQFnYiURQ.NJ9oifc9V39xRBBsF7VLbV6bYJcAJqC9Nn_80yV7rfI&dib_tag=se&keywords=in+defence+of+food+book&qid=1757234990&s=books&sprefix=in+defence+of+food+boo%2Cstripbooks-intl-ship%2C540&sr=1-1" target="_blank">In Defense of Food</a>” – Michael Pollan: A simple, balanced approach to nutrition: “Eat food, not too much, mostly plants.”</li>
+    <li>“<a href="https://www.amazon.com/dp/0143130722" target="_blank">Ikigai: The Japanese Secret to a Long and Happy Life</a>” – Héctor García & Francesc Miralles: Blends longevity research with Japanese wisdom on purpose.</li>
+    <li>“<a href="https://www.amazon.com/Dont-Believe-Everything-Think-Expanded/dp/B0D47VYQMY/ref=sr_1_7?crid=2IS5QKL5M4W8Z&currency=INR&dib=eyJ2IjoiMSJ9.hLK8Ri5fwAp2vJudzdOKL4I6VW_6qqqeHfw7NQVR0wIfQBjrdRFfXKyx8ViGd-gdHUfjGxjs0oP1_oQGJS-4yBvGTq5P6t9oN2C1CtTkAVypsGz-3SwKD7wVNeht7-IuXvdxCJaN0w-DcqjimXosnqPNO0pHnL9nWAR5jgPFWUWKBMyeCtjr-0K_p5EiFCZPDMZaHrtxFH8tLhEm3aybTMAbyRHgOrPq7z8j61dNePI.EX9QqVSEdldDEMXrQKY2tVZVYMJYOHkgwdmRNw8C5jQ&dib_tag=se&keywords=wellness+books&qid=1757235077&s=books&sprefix=wellness%2Cstripbooks-intl-ship%2C418&sr=1-7" target="_blank">Don't Believe Everything You Think</a>” – Joseph Nguyen: Clear, practical guide to quiet the mind, drop limiting beliefs, and find everyday peace.</li>
+  </ol>
+
+  <!-- Mental & Emotional Well-Being -->
+  <p>🧘‍♀️ <strong>Mental & Emotional Well-Being</strong></p>
+  <ol>
+    <li>“<a href="https://www.amazon.com/dp/159285849X" target="_blank">The Gifts of Imperfection</a>” – Brené Brown: About cultivating self-compassion, authenticity, and resilience.</li>
+    <li>“<a href="https://www.amazon.com/dp/1572245379" target="_blank">The Untethered Soul</a>” – Michael A. Singer: Helps shift perspective on thoughts, emotions, and inner freedom.</li>
+  </ol>
+
+  <!-- Holistic & Spiritual Wellness -->
+  <p>🌱 <strong>Holistic & Spiritual Wellness</strong></p>
+  <ol>
+    <li>“<a href="https://www.amazon.com/dp/1878424319" target="_blank">The Four Agreements</a>” – Don Miguel Ruiz: Simple yet profound principles for inner peace and healthier relationships.</li>
+    <li>“<a href="https://www.amazon.com/Seven-Spiritual-Laws-Success-Fulfillment-ebook/dp/B005BY3XHC/ref=sr_1_8?crid=2GKIPG8TQPBAU&dib=eyJ2IjoiMSJ9.Dk2Gg0rndIjb42mE_y1cx_smXG3t4g1RAG8zAZssL-tFegdK0FCympd46ii4OWrEkB6Toh_FDZAcJ_zIrkM3arxJALkIAJiAW7JwE9Lws2yxJZZ22QOSopg3bcsSP2FApH1UVPmqz0aVr0JoAJYCJ-N5YDy1kUOoyzYhfb7H6syp7Ru3r6Gez2UFHWEoWaoDTF85JQvGNys7iwgNPiQAOwLwEuyq7RbqilZcDoT-S6c.o7tiXGNgpWOjC3MtjxPdj0442XBaogscqUN9KyasgK8&dib_tag=se&keywords=7+spiritual+laws+of+success&qid=1757235458&s=books&sprefix=7+spiritual+laws+of+success%2Cstripbooks-intl-ship%2C405&sr=1-8" target="_blank">The Seven Spiritual Laws of Success</a>” – Dr Deepak Chopra: A Practical Guide to the Fulfillment of Your Dreams</li>
+    <li>“<a href="https://www.amazon.com/Power-Your-Subconscious-Mind-Prosperity/dp/0735204314/ref=sr_1_1?crid=R28GWC1PG1BY&dib=eyJ2IjoiMSJ9.e0XWHeucg2ZLjaD0n0bOgOVFwqdLXXXL_tKwV8rQ9dF9-Z370t0HzNnbO16pYAxNXygoutw-hEYTO-aHgG9NOrXWqaCRoHg5I4DMp-kniKVOLWW4N0cvvssLr6E7rKctHYQA1DNofky7xADLx5vIDXMReW3tuH4YgS1il14VZtRYOgJA6EFZiDuvCD0CBofHQ6B9aOlWIuC3KkUfx71Fx39mcGNH1PUnz9I8kwrndyQ.b-UU_aAgf7lo4LzQIcyLquPBEm3mn9USYWtKPAbLZVM&dib_tag=se&keywords=power+of+your+subconscious+mind&qid=1757235581&s=books&sprefix=power+o%2Cstripbooks-intl-ship%2C407&sr=1-1" target="_blank">The Power of Your Subconscious Mind</a>” – Joseph Murphy: There Are No Limits to the Prosperity, Happiness, and Peace of Mind You Can Achieve Simply by Using the Power of the Subconscious Mind</li>
+  </ol>
+
+  <p style="text-align:center; font-style:italic; margin-bottom:15px;">Every page is a doorway to a new world.</p>
+</div>
+
     </div>
   </div>
 
-  <div id="modal2" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modal2')">&times;</span>
-      <h2>Mindful Breathing</h2>
-      <p>Slow down with intentional breaths. Inhale for 4 counts, hold for 4, exhale for 6. This helps ground you in the present and reduce stress.</p>
+    <!-- Healthy Body & Mind Modal (UPDATED) -->
+<div id="modalHealthyBody&Mind" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalHealthyBody&Mind')">&times;</span>
+    <h2>Healthy Body & Mind 🌿</h2>
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">
+      Nourish your body, strengthen your mind, and find balance.
+    </p>
+
+    <!-- Movement & Fitness -->
+<h3 style="margin:20px 0 10px 0; color:#243B36;">🌿 Movement & Fitness</h3>
+<p style="font-style:italic; margin-bottom:15px">
+  Movement fuels the body, clears the mind, and strengthens resilience. Every step you take is an investment in your future self.
+</p>
+<div class="modal-resources">
+  <div class="resource-card">
+    <iframe src="https://www.youtube.com/embed/z-fJTXyLxlc" frameborder="0" allowfullscreen></iframe>
+    <p>10-Minute Morning Yoga Flow 🌅</p>
+  </div>
+  <div class="resource-card">
+    <iframe src="https://www.youtube.com/embed/FyFUowFFYC4" frameborder="0" allowfullscreen></iframe>
+    <p>Full-Body Beginner Workout 💪</p>
+  </div>
+  <div class="resource-card">
+    <iframe src="https://www.youtube.com/embed/37UhELFvPec" frameborder="0" allowfullscreen></iframe>
+    <p>Desk-Friendly Stretch Routine 🧘‍♀️</p>
+  </div>
+</div>
+
+    <!-- Nutrition -->
+    <h3 style="margin:20px 0 10px 0; color:#243B36;">Nutrition & Healthy Eating 🥗</h3>
+    <p style="font-style:italic; margin-bottom:15px;">Food is fuel for both body and soul—what you eat shapes your energy, mood, and longevity.</p>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <!-- replaced Harvard with NHS Eatwell (working, authoritative) -->
+        <a href="https://www.nhs.uk/live-well/eat-well/" target="_blank">
+          NHS – Eatwell Guide (Practical healthy-eating guidance)
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://www.eatrightindia.gov.in/" target="_blank">
+          Eat Right India (Govt. Initiative)
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://nutritionfacts.org/" target="_blank">
+          NutritionFacts.org – Science-based Nutrition
+        </a>
+      </div>
+    </div>
+
+    <!-- Breathing Exercises -->
+    <h3 style="margin:20px 0 10px 0; color:#243B36;">Breathing Exercises 🌬️</h3>
+    <p style="font-style:italic; margin-bottom:15px;">With every deep breath, stress melts away and calm finds its way back home.</p>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/LiUnFJ8P4gM" allowfullscreen></iframe>
+        <p>4-7-8 Breathing</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/oN8xV3Kb5-Q" allowfullscreen></iframe>
+        <p>Box Breathing</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  <!-- Digital Detox Modal -->
+<div id="modalDigitalWellness" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
+    <h2>Digital Wellness 🌿</h2>
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">
+      Tired of the digital world? A digital detox offers a much-needed pause from screens, scrolling, and constant pings. By unplugging—even for a few hours—you give your mind space to reset, reduce stress, and reconnect with what truly matters. Stepping away from endless notifications helps you sleep better, focus deeper, and enjoy real-life moments with more presence. Whether it’s a weekend offline or an evening phone-free, a digital detox is a simple step toward calmer thoughts, clearer priorities, and genuine balance. See these videos and articles about digital detox to get started.
+    </p>
+
+    <!-- Digital Detox Videos -->
+    <h3 style="margin-bottom:10px; color:#243B36;">Guided Digital Detox Videos 🎥</h3>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/oB6qJ9I__0A" allowfullscreen></iframe>
+        <p>Digital Detox: Unplug & Recharge</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/gh2m0dj_lFk" allowfullscreen></iframe>
+        <p>How to Detox from Technology Mindfully</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/fSwicxvGrn0" allowfullscreen></iframe>
+        <p>7-Day Digital Detox Challenge</p>
+      </div>
+    </div>
+
+    <!-- Digital Detox Articles -->
+    <h3 style="margin:20px 0 10px 0; color:#243B36;">Articles on Digital Detox 📖</h3>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <a href="https://www.cureus.com/articles/336341-digital-detox-strategies-and-mental-health-a-comprehensive-scoping-review-of-why-where-and-how#!/" target="_blank">
+          Digital Detox Strategies & Mental Health – Cureus
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://www.verywellmind.com/why-and-how-to-do-a-digital-detox-4771321" target="_blank">
+          Why and How to Do a Digital Detox – Verywell Mind
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+  <!-- CBT & Self Tests Modal -->
+<div id="modalCBTTests" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalCBTTests')">&times;</span>
+    <h2>CBT & Self Tests 🧠</h2>
+
+    <!-- short disclaimer -->
+    <p style="text-align:center; color:#555; margin-bottom:12px;">
+      These are self-screening tools to help you check symptoms. They are not a clinical diagnosis — seek professional advice if results are concerning.
+    </p>
+
+    <div class="modal-resources">
+      <div class="resource-card">
+        <p><strong>PHQ-9 — Depression</strong></p>
+        <a href="https://screening.mhanational.org/screening-tools/depression/" target="_blank" rel="noopener noreferrer">
+          Take PHQ-9 (Mental Health America)
+        </a>
+      </div>
+
+      <div class="resource-card">
+        <p><strong>GAD-7 — Anxiety</strong></p>
+        <a href="https://psychology-tools.com/test/gad-7" target="_blank" rel="noopener noreferrer">
+          Take GAD-7 (Psychology Tools)
+        </a>
+      </div>
+
+      <div class="resource-card">
+        <p><strong>GHQ-12 — General Health Questionnaire</strong></p>
+        <a href="https://www.360psyche.com/ghq-12-assessment-test/?srsltid=AfmBOoq2zsQGQ_rL9rlqZ26C2Ss4cPIo57UkjIyUwXK-0Vk0_3R_ILcg&utm_source=chatgpt.com" target="_blank" rel="noopener noreferrer">
+          Take GHQ-12 (Carepatron)
+        </a>
+      </div>
+
+      <div class="resource-card">
+        <p><strong>More validated screens</strong></p>
+        <a href="https://screening.mhanational.org/screening-tools/" target="_blank" rel="noopener noreferrer">
+          Explore MHA screening hub (depression, anxiety, PTSD, substance use, etc.)
+        </a>
+      </div>
     </div>
   </div>
+</div>
 
-  <div id="modal3" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modal3')">&times;</span>
-      <h2>Journaling</h2>
-      <p>Writing your thoughts and emotions on paper can provide clarity, release stress, and track your growth over time.</p>
-    </div>
-  </div>
 
-  <div id="modal4" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modal4')">&times;</span>
-      <h2>Meditation</h2>
-      <p>Spend a few minutes each day focusing on your breath or a calming visualization. Meditation can lower anxiety and improve emotional resilience.</p>
-    </div>
-  </div>
 
-  <!-- Footer -->
   <footer>
     <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
 
-  <!-- Scripts -->
   <script>
-    function toggleMode() {
-      document.body.classList.toggle('dark');
-    }
-
+    function toggleMode() { document.body.classList.toggle('dark'); }
     function toggleUserPopup() {
       const popup = document.getElementById('user-popup');
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
     }
-
-    function openModal(id) {
-      document.getElementById(id).style.display = 'block';
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
-    }
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     window.onclick = function(event) {
       const modals = document.querySelectorAll('.modal');
-      modals.forEach(modal => {
-        if (event.target == modal) {
-          modal.style.display = "none";
-        }
-      });
+      modals.forEach(modal => { if(event.target==modal){ modal.style.display="none"; } });
       const popup = document.getElementById('user-popup');
       if (!event.target.matches('.user-icon') && !popup.contains(event.target)) {
         popup.style.display = 'none';
