@@ -118,6 +118,7 @@ seed_sample_data()
 def home():
     return redirect(url_for("login"))
 
+# --- Authentication ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -143,7 +144,6 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         
-        # Check if user already exists
         if users_col.find_one({"username": username}):
             flash("User already exists", "error")
         else:
@@ -159,6 +159,13 @@ def register():
             return redirect(url_for("login"))
     return render_template("register.html")
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for("login"))
+
+# --- Dashboard ---
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
@@ -200,11 +207,9 @@ def add_journal():
     }
     
     try:
-        result = journals_col.insert_one(entry)
-        print(f"✅ Inserted journal with ID: {entry['journal_id']}")
+        journals_col.insert_one(entry)
         return jsonify({"message": "Journal added successfully", "id": entry["journal_id"]}), 201
     except Exception as e:
-        print(f"❌ Error inserting journal: {e}")
         return jsonify({"error": "Failed to save journal"}), 500
 
 @app.route("/get_journals/<username>", methods=["GET"])
@@ -215,8 +220,8 @@ def get_journals(username):
     user_entries = list(journals_col.find({"user_id": session["user_id"]}).sort("journal_id", -1))
     for e in user_entries:
         e["_id"] = str(e["_id"])
-        e["id"] = e["journal_id"]  # For frontend compatibility
-        e["content"] = e["entry"]  # For frontend compatibility
+        e["id"] = e["journal_id"]
+        e["content"] = e["entry"]
     return jsonify(user_entries)
 
 @app.route("/delete_journal/<int:entry_id>", methods=["DELETE"])
@@ -229,7 +234,7 @@ def delete_journal(entry_id):
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "not found"}), 404
 
-# --- Mood Tracking Routes ---
+# --- Mood Tracking ---
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     if "user_id" not in session:
@@ -238,7 +243,6 @@ def save_mood():
     data = request.get_json()
     mood = data.get("mood")
     
-    # Validate mood
     valid_moods = ['Very Happy', 'Feeling Blessed', 'Happy', 'Mind Blown', 'Frustrated', 'Sad', 'Angry', 'Crying']
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood value"}), 400
@@ -271,10 +275,8 @@ def download_csv():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's mood data
     moods = list(moodtracking_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Create CSV in memory
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Date", "Time", "Mood"])
@@ -283,7 +285,6 @@ def download_csv():
         dt = mood["datetime"]
         writer.writerow([dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S"), mood["mood"]])
     
-    # Convert to BytesIO for file download
     output.seek(0)
     file_data = io.BytesIO()
     file_data.write(output.getvalue().encode('utf-8'))
@@ -294,22 +295,19 @@ def download_csv():
                      as_attachment=True,
                      download_name=f'moods_{session["username"]}.csv')
 
-# --- Appointments Routes ---
+# --- Appointments ---
 @app.route("/appointments")
 def appointments():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's appointments
     user_appointments = list(appointments_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Get counselor info for each appointment
     for appointment in user_appointments:
         counselor = counselors_col.find_one({"counselor_id": appointment["counselor_id"]})
         appointment["counselor_name"] = counselor["name"] if counselor else "Unknown"
         appointment["_id"] = str(appointment["_id"])
     
-    # Get all counselors for booking
     all_counselors = list(counselors_col.find({}))
     for counselor in all_counselors:
         counselor["_id"] = str(counselor["_id"])
@@ -347,7 +345,7 @@ def book_appointment():
     except Exception as e:
         return jsonify({"error": "Failed to book appointment"}), 500
 
-# --- Resources Routes ---
+# --- Resources ---
 @app.route("/resources")
 def resources():
     if "user_id" not in session:
@@ -361,60 +359,113 @@ def resources():
                          resources=all_resources,
                          username=session["username"])
 
-# --- Peer Support Routes ---
-@app.route("/peer_support")
-def peer_support():
+# --- Peer Forum ---
+@app.route("/peer")
+def peer():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
-    posts = list(peersupportposts_col.find({}).sort("datetime", -1))
-    
-    # Add username for non-anonymous posts
+
+    # Fetch posts (newest first)
+    posts = list(peersupportposts_col.find().sort("datetime", -1))
+
+    # Current user role
+    current_user_role = session.get("role", "User").lower()
+
     for post in posts:
-        if not post["is_anonymous"]:
-            user = users_col.find_one({"user_id": post["user_id"]})
-            post["username"] = user["username"] if user else "Unknown"
+        # Attach username (or Anonymous)
+        user = users_col.find_one({"user_id": post["user_id"]})
+        if not post.get("is_anonymous", False) and user:
+            post["username"] = user.get("username", "Unknown")
         else:
             post["username"] = "Anonymous"
-        post["_id"] = str(post["_id"])
-    
-    return render_template("peer_support.html", 
-                         posts=posts,
-                         username=session["username"])
+
+        post["_id"] = str(post["_id"])  # Make ObjectId JSON safe
+
+        # Convert reply ObjectIds
+        for reply in post.get("replies", []):
+            # If reply has _id as ObjectId, convert to string; if already string, leave it
+            try:
+                reply["_id"] = str(reply["_id"])
+            except Exception:
+                pass
+
+    return render_template(
+        "peer.html",
+        posts=posts,
+        username=session.get("username", "Guest"),
+        user_type=current_user_role
+    )
+
 
 @app.route("/add_post", methods=["POST"])
 def add_post():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
+
     data = request.get_json()
     content = data.get("content", "").strip()
     is_anonymous = data.get("is_anonymous", False)
-    
+
     if not content:
         return jsonify({"error": "Content is required"}), 400
-    
+
+    user_role = session.get("role", "User").lower()
+
     post = {
-        "post_id": get_next_id(peersupportposts_col, "post_id"),
         "user_id": session["user_id"],
         "datetime": datetime.now(),
         "content": content,
-        "is_anonymous": bool(is_anonymous)
+        "is_anonymous": bool(is_anonymous),
+        "likes": 0,
+        "dislikes": 0,
+        "replies": [],
+        "flagged": False,
+        "isStudentVol": (user_role == "studentvol")
     }
-    
-    try:
-        peersupportposts_col.insert_one(post)
-        return jsonify({"message": "Post added successfully!"})
-    except Exception as e:
-        return jsonify({"error": "Failed to add post"}), 500
 
-# --- Admin Routes ---
+    try:
+        result = peersupportposts_col.insert_one(post)
+        post["_id"] = str(result.inserted_id)
+        return jsonify({"message": "Post added successfully!", "post": post})
+    except Exception as e:
+        return jsonify({"error": f"Failed to add post: {str(e)}"}), 500
+
+
+@app.route("/add_reply/<post_id>", methods=["POST"])
+def add_reply(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    reply_content = data.get("reply", "").strip()
+    if not reply_content:
+        return jsonify({"error": "Reply content is required"}), 400
+
+    reply = {
+        "_id": ObjectId(),
+        "user_id": session["user_id"],
+        "username": session["username"],
+        "datetime": datetime.now(),
+        "content": reply_content
+    }
+
+    try:
+        # push reply into replies array of the post
+        peersupportposts_col.update_one(
+            {"_id": ObjectId(post_id)},
+            {"$push": {"replies": reply}}
+        )
+        reply["_id"] = str(reply["_id"])
+        return jsonify({"message": "Reply added successfully!", "reply": reply})
+    except Exception as e:
+        return jsonify({"error": f"Failed to add reply: {str(e)}"}), 500
+
+# --- Admin ---
 @app.route("/admin")
 def admin_dashboard():
     if "user_id" not in session or session["role"] != "Admin":
         return redirect(url_for("login"))
     
-    # Get statistics
     stats = {
         "total_users": users_col.count_documents({"role": "User"}),
         "total_journals": journals_col.count_documents({}),
@@ -426,7 +477,7 @@ def admin_dashboard():
                          username=session["username"],
                          stats=stats)
 
-# --- Debug Routes ---
+# --- Debug ---
 @app.route("/debug/all_collections")
 def debug_all_collections():
     if "user_id" not in session or session["role"] != "Admin":
@@ -434,8 +485,6 @@ def debug_all_collections():
     
     try:
         collections_info = {}
-        
-        # Get info for each collection
         collections = {
             "users": users_col,
             "journals": journals_col,
@@ -465,12 +514,6 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Logout ---
-@app.route("/logout", methods=["POST"])
-def logout():
-    session.clear()
-    flash('Logged out successfully', 'success')
-    return redirect(url_for("login"))
-
+# --- Run App ---
 if __name__ == "__main__":
     app.run(debug=True)
