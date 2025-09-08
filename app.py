@@ -109,6 +109,15 @@ def seed_sample_data():
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
 
+def check(content: str) -> bool:
+    """
+    AI moderation stub.
+    Returns True if content is inappropriate (flagged), False otherwise.
+    Replace later with actual AI model.
+    """
+    return False
+
+
 # Initialize default data
 create_default_admin()
 seed_sample_data()
@@ -359,43 +368,130 @@ def resources():
                          resources=all_resources,
                          username=session["username"])
 
-# --- Peer Forum ---
+# # --- Peer Forum ---
+# @app.route("/peer")
+# def peer():
+#     if "user_id" not in session:
+#         return redirect(url_for("login"))
+
+#     # Fetch posts (newest first)
+#     posts = list(peersupportposts_col.find().sort("datetime", -1))
+
+#     # Current user role
+#     current_user_role = session.get("role", "User").lower()
+
+#     for post in posts:
+#         # Attach username (or Anonymous)
+#         user = users_col.find_one({"user_id": post["user_id"]})
+#         if not post.get("is_anonymous", False) and user:
+#             post["username"] = user.get("username", "Unknown")
+#         else:
+#             post["username"] = "Anonymous"
+
+#         post["_id"] = str(post["_id"])  # Make ObjectId JSON safe
+
+#         # Convert reply ObjectIds
+#         for reply in post.get("replies", []):
+#             # If reply has _id as ObjectId, convert to string; if already string, leave it
+#             try:
+#                 reply["_id"] = str(reply["_id"])
+#             except Exception:
+#                 pass
+
+#     return render_template(
+#         "peer.html",
+#         posts=posts,
+#         username=session.get("username", "Guest"),
+#         user_type=current_user_role
+#     )
+
+
+# @app.route("/add_post", methods=["POST"])
+# def add_post():
+#     if "user_id" not in session:
+#         return jsonify({"error": "Not logged in"}), 401
+
+#     data = request.get_json()
+#     content = data.get("content", "").strip()
+#     is_anonymous = data.get("is_anonymous", False)
+
+#     if not content:
+#         return jsonify({"error": "Content is required"}), 400
+
+#     user_role = session.get("role", "User").lower()
+
+#     post = {
+#         "user_id": session["user_id"],
+#         "datetime": datetime.now(),
+#         "content": content,
+#         "is_anonymous": bool(is_anonymous),
+#         "likes": 0,
+#         "dislikes": 0,
+#         "replies": [],
+#         "flagged": False,
+#         "isStudentVol": (user_role == "studentvol")
+#     }
+
+#     try:
+#         result = peersupportposts_col.insert_one(post)
+#         post["_id"] = str(result.inserted_id)
+#         return jsonify({"message": "Post added successfully!", "post": post})
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to add post: {str(e)}"}), 500
+
+
+# @app.route("/add_reply/<post_id>", methods=["POST"])
+# def add_reply(post_id):
+#     if "user_id" not in session:
+#         return jsonify({"error": "Not logged in"}), 401
+
+#     data = request.get_json()
+#     reply_content = data.get("reply", "").strip()
+#     if not reply_content:
+#         return jsonify({"error": "Reply content is required"}), 400
+
+#     reply = {
+#         "_id": ObjectId(),
+#         "user_id": session["user_id"],
+#         "username": session["username"],
+#         "datetime": datetime.now(),
+#         "content": reply_content
+#     }
+
+#     try:
+#         # push reply into replies array of the post
+#         peersupportposts_col.update_one(
+#             {"_id": ObjectId(post_id)},
+#             {"$push": {"replies": reply}}
+#         )
+#         reply["_id"] = str(reply["_id"])
+#         return jsonify({"message": "Reply added successfully!", "reply": reply})
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to add reply: {str(e)}"}), 500
+
+# --- Peer Forum Routes ---
 @app.route("/peer")
 def peer():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Fetch posts (newest first)
-    posts = list(peersupportposts_col.find().sort("datetime", -1))
-
-    # Current user role
-    current_user_role = session.get("role", "User").lower()
-
-    for post in posts:
-        # Attach username (or Anonymous)
-        user = users_col.find_one({"user_id": post["user_id"]})
-        if not post.get("is_anonymous", False) and user:
-            post["username"] = user.get("username", "Unknown")
-        else:
-            post["username"] = "Anonymous"
-
-        post["_id"] = str(post["_id"])  # Make ObjectId JSON safe
-
-        # Convert reply ObjectIds
-        for reply in post.get("replies", []):
-            # If reply has _id as ObjectId, convert to string; if already string, leave it
-            try:
-                reply["_id"] = str(reply["_id"])
-            except Exception:
-                pass
-
     return render_template(
         "peer.html",
-        posts=posts,
         username=session.get("username", "Guest"),
-        user_type=current_user_role
+        user_type=session.get("role", "User").lower()
     )
 
+@app.route("/peer_data")
+def peer_data():
+    """Return all posts + replies as JSON"""
+    posts = list(peersupportposts_col.find().sort("datetime", -1))
+    for post in posts:
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else (user["username"] if user else "Unknown")
+        post["_id"] = str(post["_id"])
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+    return jsonify(posts)
 
 @app.route("/add_post", methods=["POST"])
 def add_post():
@@ -410,26 +506,23 @@ def add_post():
         return jsonify({"error": "Content is required"}), 400
 
     user_role = session.get("role", "User").lower()
+    flagged = check(content)
 
     post = {
         "user_id": session["user_id"],
         "datetime": datetime.now(),
         "content": content,
         "is_anonymous": bool(is_anonymous),
-        "likes": 0,
-        "dislikes": 0,
+        "likes": [],
+        "dislikes": [],
         "replies": [],
-        "flagged": False,
+        "flagged": flagged,
         "isStudentVol": (user_role == "studentvol")
     }
 
-    try:
-        result = peersupportposts_col.insert_one(post)
-        post["_id"] = str(result.inserted_id)
-        return jsonify({"message": "Post added successfully!", "post": post})
-    except Exception as e:
-        return jsonify({"error": f"Failed to add post: {str(e)}"}), 500
-
+    result = peersupportposts_col.insert_one(post)
+    post["_id"] = str(result.inserted_id)
+    return jsonify({"message": "Post added successfully!", "post": post})
 
 @app.route("/add_reply/<post_id>", methods=["POST"])
 def add_reply(post_id):
@@ -446,19 +539,128 @@ def add_reply(post_id):
         "user_id": session["user_id"],
         "username": session["username"],
         "datetime": datetime.now(),
-        "content": reply_content
+        "content": reply_content,
+        "flagged": check(reply_content),
+        "likes": [],
+        "dislikes": [],
+        "isStudentVol": (session.get("role", "").lower() == "studentvol")
     }
 
-    try:
-        # push reply into replies array of the post
-        peersupportposts_col.update_one(
-            {"_id": ObjectId(post_id)},
-            {"$push": {"replies": reply}}
-        )
-        reply["_id"] = str(reply["_id"])
-        return jsonify({"message": "Reply added successfully!", "reply": reply})
-    except Exception as e:
-        return jsonify({"error": f"Failed to add reply: {str(e)}"}), 500
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$push": {"replies": reply}}
+    )
+    reply["_id"] = str(reply["_id"])
+    return jsonify({"message": "Reply added successfully!", "reply": reply})
+
+@app.route("/like_post/<post_id>", methods=["POST"])
+def like_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")  # "like" or "dislike"
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    likes = post.get("likes", [])
+    dislikes = post.get("dislikes", [])
+
+    # Toggle logic
+    if action == "like":
+        if user_id in likes:
+            likes.remove(user_id)  # undo like
+        else:
+            likes.append(user_id)
+            if user_id in dislikes:
+                dislikes.remove(user_id)  # can't like and dislike
+    elif action == "dislike":
+        if user_id in dislikes:
+            dislikes.remove(user_id)  # undo dislike
+        else:
+            dislikes.append(user_id)
+            if user_id in likes:
+                likes.remove(user_id)
+    else:
+        return jsonify({"error": "Invalid action"}), 400
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"likes": likes, "dislikes": dislikes}}
+    )
+
+    return jsonify({"likes": len(likes), "dislikes": len(dislikes)})
+
+@app.route("/like_reply/<post_id>/<reply_id>", methods=["POST"])
+def like_reply(post_id, reply_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    replies = post.get("replies", [])
+    for reply in replies:
+        if str(reply["_id"]) == reply_id:
+            likes = reply.get("likes", [])
+            dislikes = reply.get("dislikes", [])
+
+            if action == "like":
+                if user_id in likes:
+                    likes.remove(user_id)
+                else:
+                    likes.append(user_id)
+                    if user_id in dislikes:
+                        dislikes.remove(user_id)
+            elif action == "dislike":
+                if user_id in dislikes:
+                    dislikes.remove(user_id)
+                else:
+                    dislikes.append(user_id)
+                    if user_id in likes:
+                        likes.remove(user_id)
+            else:
+                return jsonify({"error": "Invalid action"}), 400
+
+            reply["likes"] = likes
+            reply["dislikes"] = dislikes
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"replies": replies}}
+    )
+
+    return jsonify({"message": "Action recorded"})
+
+
+@app.route("/moderate/unflag/<post_id>", methods=["POST"])
+def unflag_post(post_id):
+    if "user_id" not in session or session["role"] != "Admin":
+        return jsonify({"error": "Admin access required"}), 403
+    peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
+    return jsonify({"message": "Post unflagged"})
+
+@app.route("/moderate/delete/<post_id>", methods=["DELETE"])
+def delete_post(post_id):
+    if "user_id" not in session or session["role"] != "Admin":
+        return jsonify({"error": "Admin access required"}), 403
+    peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+    return jsonify({"message": "Post deleted"})
+
+
+
+
+
+
+
 
 # --- Admin ---
 @app.route("/admin")

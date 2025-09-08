@@ -4,605 +4,197 @@
   <meta charset="UTF-8">
   <title>SoulAce - Peer Support</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- === CSS === -->
   <style>
-    body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#7B9B8B; }
-    .header-left { display:flex; align-items:center; gap:15px; }
-    .header-text h1 { margin:0; font-size:1.8rem; color:#fff; }
-    .header-text h3 { margin:0; font-size:1rem; color:#FFF7E4; }
-    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
-    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:140px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding:10px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); }
-    .popup-btn:hover { background:#f2f2f2; }
-    main { padding:2rem; max-width:1200px; margin:0 auto; }
-    h2 { color:#243B36; }
-    input, textarea, select { width:100%; padding:12px; margin:12px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
-    textarea { min-height:100px; resize:vertical; }
-    button { background:linear-gradient(135deg, #657A74 , #243B36); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
-    button:hover { background:linear-gradient(45deg, #657A74 , #243B36); transform:translateY(-2px); }
-    button.secondary { background:#E0E0E0; color:#333; }
-    button.secondary:hover { background:#D0D0D0; }
-    button.danger { background:#b33a3a; color:white; }
-    button.danger:hover { background:#a02a2a; }
-    
-    /* Forum specific styles */
-    .forum-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
-    .search-container { display:flex; gap:10px; margin:15px 0; }
-    .search-container input { margin:0; }
-    
-    .post-form { background:white; padding:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:30px; }
-    .post-form h3 { margin-top:0; color:#243B36; }
-    .anonymity-toggle { display:flex; align-items:center; gap:8px; margin:10px 0; }
-    
-    .post { background:white; padding:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
-    .post-header { display:flex; justify-content:space-between; margin-bottom:10px; }
-    .post-author { font-weight:600; color:#243B36; }
-    .post-date { color:#777; font-size:0.9rem; }
-    .post-content { margin:15px 0; line-height:1.5; }
-    .post-actions { display:flex; gap:15px; margin-top:15px; }
-    .action-btn { display:flex; align-items:center; gap:5px; background:none; border:none; color:#657A74; cursor:pointer; padding:5px 10px; border-radius:5px; }
-    .action-btn:hover { background:#f5f5f5; }
-    .action-btn.liked { color:#D64B4B; }
-    .action-btn.disliked { color:#4B69D6; }
-    
-    .replies { margin-left:30px; margin-top:15px; }
-    .reply-form { margin-top:15px; display:none; }
-    .reply { background:#F9F9F9; padding:15px; border-radius:8px; margin-bottom:10px; border-left:3px solid #7B9B8B; }
-    .reply-header { display:flex; justify-content:space-between; margin-bottom:8px; }
-    .reply-author { font-weight:500; color:#243B36; font-size:0.95rem; }
-    .reply-date { color:#777; font-size:0.85rem; }
-    .reply-actions { display:flex; gap:10px; margin-top:10px; }
-    
-    .studentvol-badge {
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      color: #000;
-      font-size: 0.7rem;
-      font-weight: bold;
-      padding: 2px 8px;
-      border-radius: 10px;
-      margin-left: 8px;
-    }
-    
-    .flagged { 
-      background-color: #fff0f0; 
-      border-left: 3px solid #ff6b6b;
-    }
-    
-    .moderation-actions { 
-      display: flex; 
-      gap: 10px; 
-      margin-top: 10px; 
-    }
-    
-    body.dark { background:#121212; color:#e0e0e0; }
-    body.dark header { background:#1f1f1f; }
-    body.dark .post, body.dark .post-form { background:#2a2a2a; color:#e0e0e0; }
-    body.dark .reply { background:#333; }
-    body.dark .flagged { background:#3a2a2a; }
-    body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
-    body.dark .action-btn:hover { background:#333; }
-    
-    @media (max-width: 768px) {
-      .forum-header { flex-direction:column; align-items:flex-start; }
-      .replies { margin-left:15px; }
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #F5F7F2; color: #333; margin: 0; padding: 20px; }
+    h2 { color: #243B36; }
+    .post, .reply { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .reply { background: #F9F9F9; margin-left: 20px; }
+    .flagged { background: #fff0f0; border-left: 3px solid #ff6b6b; }
+    .studentvol-badge { background: gold; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; }
+    #form { margin: 15px 0; }
+    textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 8px; }
+    button { margin-right: 5px; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-      </div>
-      <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="user-icon-container">
-        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-        <div id="user-popup" class="user-popup">
-          <a href="{{ url_for('dashboard') }}" class="popup-btn">🏠 Home</a>
-          <a href="{{ url_for('journal') }}" class="popup-btn">📓 Journal</a>
-          <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
-          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">🚪 Logout</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </header>
+  <!-- === HTML === -->
+  <h2>Peer Support Forum</h2>
+  <button onclick="showForm()">+ New Post</button>
+  
+  <div id="form" style="display:none;">
+    <textarea id="content" placeholder="Share something..."></textarea>
+    <label><input type="checkbox" id="anonymous"> Post anonymously</label>
+    <br>
+    <button onclick="submitPost()">Submit</button>
+  </div>
 
-  <main>
-    <div class="forum-header">
-      <h2>Peer Support Forum</h2>
-      <button onclick="showPostForm()">+ New Post</button>
-    </div>
-    
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="Search posts or users...">
-      <button onclick="searchPosts()">Search</button>
-      <button onclick="clearSearch()" class="secondary">Clear</button>
-    </div>
-    
-    <div id="post-form" class="post-form" style="display:none;">
-      <h3>Create a New Post</h3>
-      <input type="text" id="post-title" placeholder="Post title">
-      <textarea id="post-content" placeholder="Share your thoughts..."></textarea>
-      <div class="anonymity-toggle">
-        <input type="checkbox" id="anonymous-toggle">
-        <label for="anonymous-toggle">Post anonymously</label>
-      </div>
-      <div>
-        <button onclick="submitPost()">Submit Post</button>
-        <button onclick="hidePostForm()" class="secondary">Cancel</button>
-      </div>
-    </div>
-    
-    <div id="posts-container">
-      <!-- Posts will be loaded here -->
-    </div>
-  </main>
+  <div id="posts"></div>
 
-  <footer style="background:#7B9B8B; color:white; text-align:center; padding:15px; margin-top:30px;">
-    <p>&copy; 2025 SoulAce. All rights reserved.</p>
-  </footer>
-
+  <!-- === JavaScript === -->
   <script>
-    // User information - in a real app, this would come from the server
-    const currentUser = {
-      username: "{{ username }}",
-      isStudentVol: {{ 'true' if user_type == 'studentvol' else 'false' }} // This would come from your backend
-    };
-    
-    // Sample data - in a real app, this would come from a database
-    let posts = [
-      {
-        id: 1,
-        title: "Feeling overwhelmed with work",
-        content: "Lately I've been feeling completely overwhelmed with my workload. I can't seem to focus and I'm falling behind on deadlines. Has anyone else experienced this? How did you cope?",
-        author: "JaneDoe",
-        anonymous: false,
-        date: "2025-03-15",
-        time: "14:30",
-        likes: 3,
-        dislikes: 1,
-        liked: false,
-        disliked: false,
-        flagged: false,
-        replies: [
-          { 
-            id: 1, 
-            author: "SupportiveFriend", 
-            content: "I've been there! What helped me was breaking tasks into smaller chunks and using the Pomodoro technique. You got this!", 
-            date: "2025-03-15", 
-            time: "15:45",
-            likes: 2,
-            dislikes: 0,
-            liked: false,
-            disliked: false,
-            flagged: false,
-            isStudentVol: true
-          },
-          { 
-            id: 2, 
-            author: "Anonymous", 
-            content: "Remember to take breaks and breathe. It's okay to ask for extensions if you need them.", 
-            date: "2025-03-15", 
-            time: "16:20", 
-            anonymous: true,
-            likes: 0,
-            dislikes: 1,
-            liked: false,
-            disliked: false,
-            flagged: false,
-            isStudentVol: false
-          }
-        ]
-      },
-      {
-        id: 2,
-        title: "Struggling with sleep",
-        content: "I haven't been able to sleep properly for weeks. I lie awake for hours with racing thoughts. Any suggestions for calming the mind before bed?",
-        author: "Anonymous",
-        anonymous: true,
-        date: "2025-03-14",
-        time: "21:15",
-        likes: 5,
-        dislikes: 0,
-        liked: true,
-        disliked: false,
-        flagged: false,
-        replies: [
-          { 
-            id: 1, 
-            author: "SleepWell", 
-            content: "I found meditation apps really helpful. Also, try avoiding screens an hour before bed.", 
-            date: "2025-03-14", 
-            time: "22:30",
-            likes: 3,
-            dislikes: 0,
-            liked: false,
-            disliked: false,
-            flagged: false,
-            isStudentVol: false
-          }
-        ]
-      }
-    ];
+  let posts = [];
 
-    // DOM elements
-    const postsContainer = document.getElementById('posts-container');
-    const searchInput = document.getElementById('search-input');
-    
-    // Initialize the forum
-    document.addEventListener('DOMContentLoaded', function() {
-      renderPosts(posts);
-    });
+  // Load all posts from backend
+  document.addEventListener("DOMContentLoaded", loadPosts);
 
-    // Toggle user popup
-    function toggleUserPopup() {
-      const popup = document.getElementById("user-popup");
-      popup.style.display = (popup.style.display === "block") ? "none" : "block";
+  async function loadPosts() {
+    try {
+      const res = await fetch("/peer_data");
+      posts = await res.json();
+      renderPosts();
+    } catch (err) {
+      console.error("Failed to load posts", err);
+    }
+  }
+
+  // Render posts and replies
+  function renderPosts() {
+    const container = document.getElementById("posts");
+    container.innerHTML = "";
+
+    if (posts.length === 0) {
+      container.innerHTML = "<p>No posts yet. Be the first to share!</p>";
+      return;
     }
 
-    // Toggle dark/light mode
-    function toggleMode() { 
-      document.body.classList.toggle("dark"); 
-    }
-
-    // Show/hide post form
-    function showPostForm() {
-      document.getElementById('post-form').style.display = 'block';
-    }
-    
-    function hidePostForm() {
-      document.getElementById('post-form').style.display = 'none';
-      document.getElementById('post-title').value = '';
-      document.getElementById('post-content').value = '';
-      document.getElementById('anonymous-toggle').checked = false;
-    }
-    
-    // Submit a new post
-    function submitPost() {
-      const title = document.getElementById('post-title').value.trim();
-      const content = document.getElementById('post-content').value.trim();
-      const anonymous = document.getElementById('anonymous-toggle').checked;
-      
-      if (!title || !content) {
-        alert('Please add a title and content to your post');
-        return;
-      }
-      
-      const now = new Date();
-      const newPost = {
-        id: posts.length + 1,
-        title,
-        content,
-        author: currentUser.username,
-        anonymous,
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().split(' ')[0].substring(0, 5),
-        likes: 0,
-        dislikes: 0,
-        liked: false,
-        disliked: false,
-        flagged: false,
-        replies: [],
-        isStudentVol: currentUser.isStudentVol
-      };
-      
-      posts.unshift(newPost); // Add to beginning of array
-      renderPosts(posts);
-      hidePostForm();
-    }
-    
-    // Like a post
-    function likePost(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        if (post.liked) {
-          post.likes--;
-          post.liked = false;
-        } else {
-          post.likes++;
-          post.liked = true;
-          // If previously disliked, remove dislike
-          if (post.disliked) {
-            post.dislikes--;
-            post.disliked = false;
-          }
-        }
-        renderPosts(posts);
-      }
-    }
-    
-    // Dislike a post
-    function dislikePost(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        if (post.disliked) {
-          post.dislikes--;
-          post.disliked = false;
-        } else {
-          post.dislikes++;
-          post.disliked = true;
-          // If previously liked, remove like
-          if (post.liked) {
-            post.likes--;
-            post.liked = false;
-          }
-        }
-        renderPosts(posts);
-      }
-    }
-    
-    // Like a reply
-    function likeReply(postId, replyId) {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        const reply = post.replies.find(r => r.id === replyId);
-        if (reply) {
-          if (reply.liked) {
-            reply.likes--;
-            reply.liked = false;
-          } else {
-            reply.likes++;
-            reply.liked = true;
-            // If previously disliked, remove dislike
-            if (reply.disliked) {
-              reply.dislikes--;
-              reply.disliked = false;
-            }
-          }
-          renderPosts(posts);
-        }
-      }
-    }
-    
-    // Dislike a reply
-    function dislikeReply(postId, replyId) {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        const reply = post.replies.find(r => r.id === replyId);
-        if (reply) {
-          if (reply.disliked) {
-            reply.dislikes--;
-            reply.disliked = false;
-          } else {
-            reply.dislikes++;
-            reply.disliked = true;
-            // If previously liked, remove like
-            if (reply.liked) {
-              reply.likes--;
-              reply.liked = false;
-            }
-          }
-          renderPosts(posts);
-        }
-      }
-    }
-    
-    // Flag a post or reply
-    function flagContent(postId, replyId = null) {
-      if (!currentUser.isStudentVol) return;
-      
-      if (replyId) {
-        // Flag a reply
-        const post = posts.find(p => p.id === postId);
-        if (post) {
-          const reply = post.replies.find(r => r.id === replyId);
-          if (reply) {
-            reply.flagged = !reply.flagged;
-            renderPosts(posts);
-          }
-        }
-      } else {
-        // Flag a post
-        const post = posts.find(p => p.id === postId);
-        if (post) {
-          post.flagged = !post.flagged;
-          renderPosts(posts);
-        }
-      }
-    }
-    
-    // Delete a post or reply
-    function deleteContent(postId, replyId = null) {
-      if (!currentUser.isStudentVol) return;
-      
-      if (replyId) {
-        // Delete a reply
-        const post = posts.find(p => p.id === postId);
-        if (post) {
-          post.replies = post.replies.filter(r => r.id !== replyId);
-          renderPosts(posts);
-        }
-      } else {
-        // Delete a post
-        posts = posts.filter(p => p.id !== postId);
-        renderPosts(posts);
-      }
-    }
-    
-    // Show/hide reply form
-    function toggleReplyForm(postId) {
-      const form = document.getElementById(`reply-form-${postId}`);
-      form.style.display = form.style.display === 'block' ? 'none' : 'block';
-    }
-    
-    // Submit a reply
-    function submitReply(postId) {
-      const replyContent = document.getElementById(`reply-content-${postId}`).value.trim();
-      if (!replyContent) return;
-      
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        const now = new Date();
-        const newReply = {
-          id: post.replies.length + 1,
-          author: currentUser.username,
-          content: replyContent,
-          date: now.toISOString().split('T')[0],
-          time: now.toTimeString().split(' ')[0].substring(0, 5),
-          anonymous: document.getElementById(`reply-anonymous-${postId}`).checked,
-          likes: 0,
-          dislikes: 0,
-          liked: false,
-          disliked: false,
-          flagged: false,
-          isStudentVol: currentUser.isStudentVol
-        };
+    posts.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "post" + (p.flagged ? " flagged" : "");
+      div.innerHTML = `
+        <strong>${p.is_anonymous ? "Anonymous" : p.username}</strong>
+        ${p.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
+        <p>${p.content}</p>
         
-        post.replies.push(newReply);
-        renderPosts(posts);
-      }
-    }
-    
-    // Search posts
-    function searchPosts() {
-      const query = searchInput.value.toLowerCase().trim();
-      if (!query) {
-        renderPosts(posts);
-        return;
-      }
-      
-      const filteredPosts = posts.filter(post => {
-        // Search in title, content, author, and replies
-        return (
-          post.title.toLowerCase().includes(query) ||
-          post.content.toLowerCase().includes(query) ||
-          (!post.anonymous && post.author.toLowerCase().includes(query)) ||
-          post.replies.some(reply => 
-            reply.content.toLowerCase().includes(query) ||
-            (!reply.anonymous && reply.author.toLowerCase().includes(query))
-          )
-        );
-      });
-      
-      renderPosts(filteredPosts);
-    }
-    
-    // Clear search
-    function clearSearch() {
-      searchInput.value = '';
-      renderPosts(posts);
-    }
-    
-    // Sort replies with student volunteer replies first, then by likes, then by timestamp
-    function sortReplies(replies) {
-      return replies.sort((a, b) => {
-        // Student volunteer replies first
+        <button onclick="likePost('${p._id}', 'like')">👍 ${p.likes.length}</button>
+        <button onclick="likePost('${p._id}', 'dislike')">👎 ${p.dislikes.length}</button>
+
+        <button onclick="showReplyForm('${p._id}')">💬 Reply</button>
+        <div id="replies-${p._id}"></div>
+        <div id="reply-form-${p._id}" style="display:none; margin-top:10px;">
+          <textarea id="reply-content-${p._id}" placeholder="Write your reply..."></textarea>
+          <button onclick="submitReply('${p._id}')">Submit Reply</button>
+        </div>
+      `;
+
+      // sort replies: volunteers > likes > datetime
+      let replies = p.replies || [];
+      replies.sort((a, b) => {
         if (a.isStudentVol && !b.isStudentVol) return -1;
         if (!a.isStudentVol && b.isStudentVol) return 1;
-        
-        // Then by net likes (likes - dislikes)
-        const aNetLikes = a.likes - a.dislikes;
-        const bNetLikes = b.likes - b.dislikes;
-        if (aNetLikes !== bNetLikes) return bNetLikes - aNetLikes;
-        
-        // Then by timestamp (newest first)
-        const aDate = new Date(`${a.date} ${a.time}`);
-        const bDate = new Date(`${b.date} ${b.time}`);
-        return bDate - aDate;
+        const aNet = (a.likes || 0) - (a.dislikes || 0);
+        const bNet = (b.likes || 0) - (b.dislikes || 0);
+        if (aNet !== bNet) return bNet - aNet;
+        return new Date(b.datetime) - new Date(a.datetime);
       });
-    }
-    
-    // Render posts to the page
-    function renderPosts(postsArray) {
-      postsContainer.innerHTML = '';
-      
-      if (postsArray.length === 0) {
-        postsContainer.innerHTML = '<p>No posts found. Be the first to share!</p>';
-        return;
-      }
-      
-      postsArray.forEach(post => {
-        const postElement = document.createElement('div');
-        postElement.className = `post ${post.flagged ? 'flagged' : ''}`;
-        
-        // Sort replies according to our rules
-        const sortedReplies = sortReplies([...post.replies]);
-        
-        postElement.innerHTML = `
-          <div class="post-header">
-            <span class="post-author">
-              ${post.anonymous ? 'Anonymous' : post.author}
-              ${post.isStudentVol ? '<span class="studentvol-badge">Student Volunteer</span>' : ''}
-            </span>
-            <span class="post-date">${post.date} • ${post.time}</span>
-          </div>
-          <h3>${post.title}</h3>
-          <div class="post-content">${post.content}</div>
-          <div class="post-actions">
-            <button class="action-btn ${post.liked ? 'liked' : ''}" onclick="likePost(${post.id})">
-              👍 ${post.likes}
-            </button>
-            <button class="action-btn ${post.disliked ? 'disliked' : ''}" onclick="dislikePost(${post.id})">
-              👎 ${post.dislikes}
-            </button>
-            <button class="action-btn" onclick="toggleReplyForm(${post.id})">
-              💬 Reply
-            </button>
-            ${currentUser.isStudentVol ? `
-              <button class="action-btn ${post.flagged ? 'flagged' : ''}" onclick="flagContent(${post.id})">
-                ${post.flagged ? '🚩 Flagged' : '🚩 Flag'}
-              </button>
-              <button class="action-btn danger" onclick="deleteContent(${post.id})">
-                🗑️ Delete
-              </button>
-            ` : ''}
-          </div>
-          
-          <div id="reply-form-${post.id}" class="reply-form">
-            <textarea id="reply-content-${post.id}" placeholder="Write your reply..."></textarea>
-            <div class="anonymity-toggle">
-              <input type="checkbox" id="reply-anonymous-${post.id}">
-              <label for="reply-anonymous-${post.id}">Reply anonymously</label>
-            </div>
-            <div>
-              <button onclick="submitReply(${post.id})">Submit Reply</button>
-              <button onclick="toggleReplyForm(${post.id})" class="secondary">Cancel</button>
-            </div>
-          </div>
-          
-          <div class="replies">
-            ${sortedReplies.map(reply => `
-              <div class="reply ${reply.flagged ? 'flagged' : ''}">
-                <div class="reply-header">
-                  <span class="reply-author">
-                    ${reply.anonymous ? 'Anonymous' : reply.author}
-                    ${reply.isStudentVol ? '<span class="studentvol-badge">Student Volunteer</span>' : ''}
-                  </span>
-                  <span class="reply-date">${reply.date} • ${reply.time}</span>
-                </div>
-                <div class="reply-content">${reply.content}</div>
-                <div class="reply-actions">
-                  <button class="action-btn ${reply.liked ? 'liked' : ''}" onclick="likeReply(${post.id}, ${reply.id})">
-                    👍 ${reply.likes}
-                  </button>
-                  <button class="action-btn ${reply.disliked ? 'disliked' : ''}" onclick="dislikeReply(${post.id}, ${reply.id})">
-                    👎 ${reply.dislikes}
-                  </button>
-                  ${currentUser.isStudentVol ? `
-                    <button class="action-btn ${reply.flagged ? 'flagged' : ''}" onclick="flagContent(${post.id}, ${reply.id})">
-                      ${reply.flagged ? '🚩 Flagged' : '🚩 Flag'}
-                    </button>
-                    <button class="action-btn danger" onclick="deleteContent(${post.id}, ${reply.id})">
-                      🗑️ Delete
-                    </button>
-                  ` : ''}
-                </div>
-              </div>
-            `).join('')}
+
+      replies.forEach(r => {
+        div.querySelector(`#replies-${p._id}`).innerHTML += `
+          <div class="reply ${r.flagged ? "flagged" : ""}">
+            <strong>${r.username}</strong> ${r.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
+            <p>${r.content}</p>
+            
+            <button onclick="likeReply('${p._id}','${r._id}','like')">👍 ${r.likes.length}</button>
+            <button onclick="likeReply('${p._id}','${r._id}','dislike')">👎 ${r.dislikes.length}</button>
+
           </div>
         `;
-        
-        postsContainer.appendChild(postElement);
       });
+
+
+      container.appendChild(div);
+    });
+  }
+
+  // Show new post form
+  function showForm() {
+    document.getElementById("form").style.display = "block";
+  }
+
+  // Submit a new post
+  async function submitPost() {
+    const content = document.getElementById("content").value.trim();
+    const is_anonymous = document.getElementById("anonymous").checked;
+
+    if (!content) {
+      alert("Please enter some content before posting.");
+      return;
     }
+
+    const res = await fetch("/add_post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, is_anonymous })
+    });
+
+    if (res.ok) {
+      document.getElementById("content").value = "";
+      document.getElementById("anonymous").checked = false;
+      loadPosts();
+    } else {
+      console.error("Failed to add post");
+    }
+  }
+
+  // Show reply form for a post
+  function showReplyForm(postId) {
+    document.getElementById(`reply-form-${postId}`).style.display = "block";
+  }
+
+  // Submit a reply
+  async function submitReply(postId) {
+    const content = document.getElementById(`reply-content-${postId}`).value.trim();
+    if (!content) {
+      alert("Reply cannot be empty.");
+      return;
+    }
+
+    const res = await fetch(`/add_reply/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reply: content })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to add reply");
+    }
+  }
+
+  // Like or dislike a post
+  async function likePost(id, action) {
+    const res = await fetch(`/like_post/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to record action");
+    }
+  }
+
+  async function likeReply(postId, replyId, action) {
+    const res = await fetch(`/like_reply/${postId}/${replyId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to record reply action");
+    }
+  }
+
+
+
   </script>
 </body>
 </html>
