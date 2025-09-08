@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 import io
+import sentiment_analysis as sa
 
 # --- Load environment variables ---
 load_dotenv()
@@ -293,6 +294,14 @@ def download_csv():
                      mimetype='text/csv',
                      as_attachment=True,
                      download_name=f'moods_{session["username"]}.csv')
+
+@app.route("/download_chart")
+def download_chart():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    file_path = sa.generate_user_chart(session["user_id"], moodtracking_col)
+    return send_file(file_path, as_attachment=True)
+
 
 # --- Appointments Routes ---
 @app.route("/appointments")
