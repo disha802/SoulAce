@@ -1,538 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SoulAce - Your Mental Health Companion</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #F5F7F2;
-      color: #333;
-      transition: background 0.4s, color 0.4s;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SoulAce - Your Mental Health Companion</title>
+<style>
+  body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition: background 0.4s, color 0.4s; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
+  .header-left { display:flex; align-items:center; gap:15px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .header-text { display:flex; flex-direction:column; }
+  .logo-container { width:60px; height:60px; }
+  .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+  .logout-btn, .toggle-btn { padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
+  header h1 { margin:0; font-size:1.8rem; color:#fff; }
+  .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
+  .user-icon-container { position:relative; }
+  .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
+  .toggle-btn { background:#fff; border:2px solid #ccc; padding:0.4rem 0.8rem; border-radius:20px; cursor:pointer; font-size:0.9rem; transition: all 0.3s; }
+  .toggle-btn:hover { background:#fcd58d; }
+  .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
+  .user-popup .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; }
+  .user-popup .popup-btn:hover { background:#f2f2f2; }
+  .hero { text-align:center; padding:4rem 2rem; background:#F5F7F2; }
+  .hero h2 { font-size:2.2rem; margin-bottom:1rem; color:#243B36; }
+  .hero p { font-size:1.1rem; max-width:600px; margin:0 auto; }
+  .mood-tracker { text-align:center; margin:2rem 0; }
+  .moods { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:20px; }
+  .mood-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+  .mood-btn { font-size:25px; cursor:pointer; border:2px solid #ccc; border-radius:50%; padding:10px; background:white; transition:0.2s; margin-bottom:8px; }
+  .mood-btn:hover { border-color:#555; }
+  .label { font-size:16px; font-weight:bold; }
+  button, .popup-btn { background:linear-gradient(135deg, #657A74 , #243B36); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
+  button:hover, .popup-btn:hover { background:linear-gradient(45deg, #657A74 , #243B36); transform:translateY(-2px); box-shadow:0 6px 10px rgba(0,0,0,0.25); }
+  .features { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; padding:2rem; }
+  .feature-card { background:#fff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:transform 0.3s; display:block; text-decoration:none; color:inherit; }
+  .feature-card:hover { transform:translateY(-5px); }
+  .feature-card span img { width:80px; height:80px; object-fit:contain; display:block; margin:0 auto 0.5rem; }
+  .feature-card p { color:#657A74; }
+  footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
 
-    header {
-    display: flex;
-    justify-content: space-between; /* left-right spread */
-    align-items: center; /* vertically centered */
-    padding: 10px 20px;
-    background-color: #7B9B8B; /* or whatever color */
-    }
-
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px; /* space between logo and title */
-        background-color: #7B9B8B;
-    }
-
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 10px; /* space between buttons */
-    }
-    
-    .header-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .logo-container {
-        width: 60px;
-        height: 60px;
-    }
-
-    .logo-container img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .logout-btn {
-        padding: 8px 12px;
-        border-radius: 8px;
-        background: #fff;
-        color: #333;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .logout-btn, .toggle-btn {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-
-    header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      color: #FFFFFF;
-    }
-
-    .header-text h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: normal;
-    color: #FFF7E4; /* optional */
-    }
-
-    .user-icon-container {
-        position: relative;
-    }
-
-    .user-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%; /* circular */
-        cursor: pointer;
-    }
-
-
-    .toggle-btn {
-      background: #fff;
-      border: 2px solid #ccc;
-      padding: 0.4rem 0.8rem;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.3s;
-    }
-
-    .toggle-btn:hover {
-      background: #fcd58d;
-    }
-
-    .user-icon-container {
-        position: relative; /* so popup is positioned relative to icon */
-    }
-
-    .user-popup {
-        display: none; /* hidden by default */
-        position: absolute;
-        top: 50px; /* below the icon */
-        right: 0;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        padding: 10px;
-        z-index: 100;
-        min-width: 140px;
-    }
-
-
-    .user-popup .popup-btn {
-      display: block;
-      width: 100%;
-      padding: 8px;
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
-    }
-    .user-popup .popup-btn:hover {
-      background: #f2f2f2;
-    }
-
-
-    body.dark .user-popup {
-        background: #333;
-        color: #f9e6d0;
-    }
-
-
-    .hero {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: #F5F7F2;
-    }
-
-    .hero h2 {
-      font-size: 2.2rem;
-      margin-bottom: 1rem;
-      color: #243B36;
-    }
-
-    .hero p {
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .mood-tracker {
-      text-align: center;
-      margin: 2rem 0;
-    }
-
-    .moods {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      flex-wrap: wrap;
-      margin: 20px;
-    }
-    .mood-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-    }
-    .mood-btn {
-      font-size: 25px;
-      cursor: pointer;
-      border: 2px solid #ccc;
-      border-radius: 50%;
-      padding: 10px;
-      background: white;
-      transition: 0.2s;
-      margin-bottom: 8px;
-    }
-    .mood-btn:hover {
-      border-color: #555;
-    }
-    .label {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .popup-btn {
-      background: #FFFFFF;
-      color: #243B36;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }   
-
-    button {
-      background: linear-gradient(135deg, #657A74 , #243B36);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      background: linear-gradient(45deg, #657A74 , #243B36);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
-    }
-
-    button:active {
-      transform: translateY(0);
-      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    }
-
-
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.5rem;
-      padding: 2rem;
-    }
-
-    .feature-card {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 16px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: transform 0.3s;
-      display: block;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-      text-decoration: none;
-    }
-
-    .feature-card span {
-      font-size: 2rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    .feature-card span img {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto 0.5rem;
-    }
-
-
-    .feature-card p{
-      color: #657A74;
-    }
-
-
-
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-      background: #ffeecf;
-      border-top: 2px solid #fcd58d;
-      margin-top: 2rem;
-    }
-
-    /* Dark mode styles */
-    body.dark {
-        background: #121212;
-        color: #e0e0e0;
-    }
-
-    body.dark header {
-        background-color: #1f1f1f;
-        color: #f9e6d0;
-    }
-
-    body.dark .header-text h3 {
-        color: #ccc; /* lighter for subtitle */
-    }
-
-    body.dark .logo-container img {
-        /* optional: add a subtle border for logo visibility */
-        border: 2px solid #444;
-    }
-
-    body.dark .header-right {
-        color: #f9e6d0;
-    }
-
-    body.dark .user-popup {
-        background: #2a2a2a;
-        color: #f9e6d0;
-        border: 1px solid #444;
-    }
-
-    body.dark .user-popup .popup-btn {
-        color: #f9e6d0;
-    }
-
-    body.dark .toggle-btn {
-        background: #444;
-        color: #f9e6d0;
-        border: 1px solid #666;
-    }
-
-    body.dark .hero {
-        background: #1f1f1f;
-        color: #e0e0e0;
-    }
-
-    body.dark .feature-card {
-        background: #2a2a2a;
-        color: #e0e0e0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-
-    body.dark footer {
-        background: #1f1f1f;
-        color: #e0e0e0;
-        border-top: 2px solid #444;
-    }
-
-
-  </style>
+  body.dark { background:#121212; color:#e0e0e0; }
+  body.dark header { background-color:#1f1f1f; color:#f9e6d0; }
+  body.dark .header-text h3 { color:#ccc; }
+  body.dark .logo-container img { border:2px solid #444; }
+  body.dark .header-right { color:#f9e6d0; }
+  body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
+  body.dark .user-popup .popup-btn { color:#f9e6d0; }
+  body.dark .toggle-btn { background:#444; color:#f9e6d0; border:1px solid #666; }
+  body.dark .hero { background:#1f1f1f; color:#e0e0e0; }
+  body.dark .feature-card { background:#2a2a2a; color:#e0e0e0; box-shadow:0 2px 6px rgba(0,0,0,0.5); }
+  body.dark footer { background:#1f1f1f; color:#e0e0e0; border-top:2px solid #444; }
+</style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-      </div>
-      <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
-      </div>
+
+<header>
+  <div class="header-left">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
     </div>
-
-    <div class="header-right">
-        <div class="user-icon-container">
-            <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
-                alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-            <!-- move popup inside this container -->
-            <div id="user-popup" class="user-popup">
-                <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
-                <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-                    <button type="submit" class="popup-btn">Logout</button>
-                </form>
-            </div>
-        </div>
+    <div class="header-text">
+      <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलएस">SoulAce</h1>
+      <h3 data-en="Wellness begins here." data-ur="یہاں سے فلاح و بہبود شروع ہوتی ہے۔" data-hi="यहां से वेलनेस शुरू होती है।">Wellness begins here.</h3>
     </div>
-
-
-  </header>
-
-  <div class="user-popup">
-    <a href="{{ url_for('dashboard') }}">
-      <button type="popup-button" class="popup-btn">🏠 Home</button>
-    </a>
-
-    <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
-
-    <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-      <button type="submit" class="popup-btn">🚪 Log Out</button>
-    </form>
   </div>
 
+  <div class="header-right">
+    <div class="user-icon-container">
+      <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+           alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
 
+      <div id="user-popup" class="user-popup">
+        <div style="margin-bottom:10px;">
+          <label for="lang-select" style="font-weight:bold;">🌐 Language:</label>
+          <select id="lang-select">
+            <option value="en">English</option>
+            <option value="ur">Urdu</option>
+            <option value="hi">Hindi</option>
+          </select>
+        </div>
+        <button onclick="toggleMode()" class="popup-btn" data-en="Change Mode" data-ur="موڈ تبدیل کریں" data-hi="मोड बदलें">Change Mode</button>
+        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+          <button type="submit" class="popup-btn" data-en="Logout" data-ur="لاگ آؤٹ" data-hi="लॉग आउट">Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
 
-
-
-  <section class="hero">
-    <h2>Hey {{username}}, you’re not alone 💛</h2>
-    <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.</p>
-  </section>
+<section class="hero">
+  <h2 data-en="Hey {{username}}, you’re not alone 💛" data-ur="ہیلو {{username}}، آپ اکیلے نہیں ہیں 💛" data-hi="हाय {{username}}, आप अकेले नहीं हैं 💛">
+    Hey {{username}}, you’re not alone 💛
+  </h2>
+  <p data-en="SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free."
+     data-ur="SoulAce آپ کے لیے ایک محفوظ جگہ ہے تاکہ آپ مدد، وسائل تلاش کریں اور ساتھیوں سے جڑیں — سب کچھ پرائیویٹ اور بغیر کسی داغ کے۔"
+     data-hi="SoulAce आपकी सुरक्षित जगह है, मदद, संसाधनों को खोजने और साथियों से जुड़ने के लिए — सब कुछ निजी और बिना किसी कलंक के।">
+    SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.
+  </p>
+</section>
 
 <section class="mood-tracker">
-  <h2>How are you feeling?</h2>
-
+  <h2 data-en="How are you feeling?" data-ur="آپ کیسا محسوس کر رہے ہیں؟" data-hi="आप कैसा महसूस कर रहे हैं?">How are you feeling?</h2>
   <div class="moods">
     <div class="mood-option" onclick="setMood('Very Happy')">
       <div class="mood-btn">😁</div>
-      <div class="label">Very Happy</div>
+      <div class="label" data-en="Very Happy" data-ur="بہت خوش" data-hi="बहुत खुश">Very Happy</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Feeling Blessed')">
       <div class="mood-btn">😇</div>
-      <div class="label">Feeling Blessed</div>
+      <div class="label" data-en="Feeling Blessed" data-ur="خوش قسمت محسوس کر رہا ہوں" data-hi="आभारी महसूस कर रहा हूँ">Feeling Blessed</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Happy')">
       <div class="mood-btn">🙂</div>
-      <div class="label">Happy</div>
+      <div class="label" data-en="Happy" data-ur="خوش" data-hi="खुश">Happy</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Mind Blown')">
       <div class="mood-btn">🤯</div>
-      <div class="label">Mind Blown</div>
+      <div class="label" data-en="Mind Blown" data-ur="دماغ اڑ گیا" data-hi="मन उड़ा">Mind Blown</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Frustrated')">
       <div class="mood-btn">😤</div>
-      <div class="label">Frustrated</div>
+      <div class="label" data-en="Frustrated" data-ur="مایوس" data-hi="निराश">Frustrated</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Sad')">
       <div class="mood-btn">😔</div>
-      <div class="label">Sad</div>
+      <div class="label" data-en="Sad" data-ur="اداس" data-hi="उदास">Sad</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Angry')">
       <div class="mood-btn">😡</div>
-      <div class="label">Angry</div>
+      <div class="label" data-en="Angry" data-ur="غصہ" data-hi="गुस्सा">Angry</div>
     </div>
-
     <div class="mood-option" onclick="setMood('Crying')">
       <div class="mood-btn">😭</div>
-      <div class="label">Crying</div>
+      <div class="label" data-en="Crying" data-ur="رونا" data-hi="रोना">Crying</div>
     </div>
   </div>
-
-
-
   <form action="/download_moods" method="get">
-      <button type="submit">📥 Download history</button>
+    <button type="submit" data-en="📥 Download history" data-ur="تاریخ ڈاؤن لوڈ کریں" data-hi="इतिहास डाउनलोड करें">📥 Download history</button>
   </form>
-
 </section>
-
 
   <section class="features">
     <div class="feature-card">
-      <span><img src = "{{ url_for('static', filename='chatbot.png') }}"></span>
-      <h3>AI Support</h3>
-      <p>Chat with our AI guide for coping strategies and next steps.</p>
+      <span><img src="{{ url_for('static', filename='chatbot.png') }}"></span>
+      <h3 data-en="AI Support" data-ur="AI مدد" data-hi="एआई समर्थन">AI Support</h3>
+      <p data-en="Chat with our AI guide for coping strategies and next steps."
+         data-ur="ہمارے AI گائیڈ کے ساتھ بات کریں تاکہ حکمت عملی اور اگلے اقدامات پر رہنمائی حاصل ہو۔"
+         data-hi="हमारे एआई गाइड से बात करें, सामना करने की रणनीतियों और अगले कदमों के लिए।">
+         Chat with our AI guide for coping strategies and next steps.
+      </p>
     </div>
+
     <div class="feature-card">
-      <span><img src = "{{ url_for('static', filename='appointment.png') }}"></span>
-      <h3>Confidential Booking</h3>
-      <p>Book sessions with counsellors without fear of judgment.</p>
+      <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
+      <h3 data-en="Confidential Booking" data-ur="رازدارانہ بکنگ" data-hi="गोपनीय बुकिंग">Confidential Booking</h3>
+      <p data-en="Book sessions with counsellors without fear of judgment."
+         data-ur="کاؤنسلرز کے ساتھ سیشن بک کریں بغیر کسی خوف کے۔"
+         data-hi="काउंसलर के साथ सत्र बुक करें बिना किसी डर के।">
+         Book sessions with counsellors without fear of judgment.
+      </p>
     </div>
-    <div class="feature-card">
-      <a href="{{ url_for('resources') }}" class="feature-card">
-        <span><img src = "{{ url_for('static', filename='wellness.png') }}"></span>
-        <h3>Wellness Resources</h3>
-        <p>Access guides, audios, and videos in your own language.</p>
-      </a>
-    </div>
-    <div class="feature-card">
-      <a href="{{ url_for('dashboard') }}" class="feature-card">
-        <span><img src = "{{ url_for('static', filename='peer support.png') }}"></span>
-        <h3>Peer Support</h3>
-        <p>Join moderated forums to share and support each other.</p>
-      </a>
-    </div>
-    
-    <div class="feature-card">
-      <a href="{{ url_for('journal') }}" class="feature-card">
-        <span><img src = "{{ url_for('static', filename='journal.png') }}"></span>
-        <h3>Journal</h3>
-        <p>Pen down your thoughts and feelings of the day.</p>
-      </a>
-    </div>
-    
+
+    <a href="{{ url_for('resources') }}" class="feature-card">
+      <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>
+      <h3 data-en="Wellness Resources" data-ur="وسائل فلاح و بہبود" data-hi="वेलनेस संसाधन">Wellness Resources</h3>
+      <p data-en="Access guides, audios, and videos in your own language."
+         data-ur="اپنی زبان میں گائیڈز، آڈیوز، اور ویڈیوز تک رسائی حاصل کریں۔"
+         data-hi="अपनी भाषा में गाइड, ऑडियो और वीडियो तक पहुँचें।">
+         Access guides, audios, and videos in your own language.
+      </p>
+    </a>
+
+    <a href="{{ url_for('dashboard') }}" class="feature-card">
+      <span><img src="{{ url_for('static', filename='peer support.png') }}"></span>
+      <h3 data-en="Peer Support" data-ur="ساتھیوں کی مدد" data-hi="सहकर्मी समर्थन">Peer Support</h3>
+      <p data-en="Join moderated forums to share and support each other."
+         data-ur="ماڈریٹڈ فورمز میں شامل ہوں تاکہ ایک دوسرے کی مدد کریں۔"
+         data-hi="मॉडरेटेड फोरम में शामिल हों और एक दूसरे का समर्थन करें।">
+         Join moderated forums to share and support each other.
+      </p>
+    </a>
+
+    <a href="{{ url_for('journal') }}" class="feature-card">
+      <span><img src="{{ url_for('static', filename='journal.png') }}"></span>
+      <h3 data-en="Journal" data-ur="جرنل" data-hi="जर्नल">Journal</h3>
+      <p data-en="Pen down your thoughts and feelings of the day."
+         data-ur="اپنے دن کے خیالات اور جذبات لکھیں۔"
+         data-hi="दिन के अपने विचार और भावनाओं को लिखें।">
+         Pen down your thoughts and feelings of the day.
+      </p>
+    </a>
   </section>
 
-  <footer>
-    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
-  </footer>
+<footer>
+  <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" 
+     data-ur="سول ایس © 2025 — SynapSix کے ساتھ بنایا گیا 💙" 
+     data-hi="SoulAce © 2025 — SynapSix द्वारा 💙 के साथ निर्मित">SoulAce © 2025 — Built with 💙 by SynapSix</p>
+</footer>
 
-  <script>
-    function toggleMode() {
-      document.body.classList.toggle('dark');
-      const btn = document.querySelector('.toggle-btn');
-      if (document.body.classList.contains('dark')) {
-        btn.textContent = '☀️ Light Mode';
-      } else {
-        btn.textContent = '🌙 Dark Mode';
-      }
-    }
+<script>
+function toggleMode(){ document.body.classList.toggle('dark'); }
+function toggleUserPopup(){ const popup = document.getElementById('user-popup'); popup.style.display = popup.style.display==='block'?'none':'block'; }
+async function setMood(mood){ const res = await fetch("/save_mood",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mood})}); const r=await res.json(); alert(r.message);}
+window.addEventListener('click', e=>{ const popup = document.getElementById('user-popup'); const icon = document.querySelector('.user-icon'); if(!popup.contains(e.target) && e.target!==icon) popup.style.display='none'; });
 
-    function toggleUserPopup() {
-        const popup = document.getElementById('user-popup');
-        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function setMood(mood) {
-      const response = await fetch("/save_mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: mood })
-      });
-
-      const result = await response.json();
-      alert(result.message); // popup confirmation
-    }
-
-
-    // Optional: click outside to close
-    window.addEventListener('click', function(e) {
-        const popup = document.getElementById('user-popup');
-        const icon = document.querySelector('.user-icon');
-        if (!popup.contains(e.target) && e.target !== icon) {
-            popup.style.display = 'none';
-        }
-    });
-
-  </script>
+// Language switcher
+const langSelect=document.getElementById('lang-select');
+langSelect.addEventListener('change', ()=>{
+  const lang=langSelect.value;
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    el.textContent=el.getAttribute('data-'+lang);
+  });
+});
+</script>
 </body>
 </html>
