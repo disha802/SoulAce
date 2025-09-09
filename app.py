@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
+from datetime import datetime
 import io
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -27,9 +28,71 @@ moodtracking_col = db["moodtracking"]
 journals_col = db["journals"]
 resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
-crisis_col = db["crisis_logs"]
+crisis_col = db["crisis"]
 
 print("✅ Connected to MongoDB:", client.list_database_names())
+
+# --- AI Moderation Setup ---
+class AIModerator:
+    def __init__(self):
+        self.model_name = "unitary/toxic-bert"
+        self.tokenizer = None
+        self.model = None
+        self.load_model()
+        
+    def load_model(self):
+        """Load the AI model for content moderation"""
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            print("✅ AI Moderation model loaded successfully")
+        except Exception as e:
+            print(f"❌ Error loading AI model: {e}")
+            self.model = None
+            
+    def moderate(self, text):
+        """
+        Analyze text for toxic content using AI model
+        Returns: (is_toxic, confidence_score, categories)
+        """
+        if not self.model or not text or not isinstance(text, str):
+            return False, 0.0, []
+            
+        try:
+            # Tokenize input
+            inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+            
+            # Get model prediction
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+            
+            # Apply sigmoid to get probabilities
+            probs = torch.sigmoid(outputs.logits).squeeze().tolist()
+            
+            # Define toxicity categories (based on model's training)
+            categories = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+            
+            # Check if any category exceeds threshold
+            threshold = 0.7
+            max_prob = max(probs) if isinstance(probs, list) else probs
+            is_toxic = max_prob > threshold
+            
+            # Get the categories that exceeded threshold
+            toxic_categories = []
+            if isinstance(probs, list):
+                for i, prob in enumerate(probs):
+                    if prob > threshold and i < len(categories):
+                        toxic_categories.append(categories[i])
+            elif probs > threshold:
+                toxic_categories = ["toxic"]
+                
+            return is_toxic, max_prob, toxic_categories
+        except Exception as e:
+            print(f"Error in AI moderation: {e}")
+            return False, 0.0, []
+
+# Initialize AI Moderator
+ai_moderator = AIModerator()
 
 # --- Flask setup ---
 app = Flask(__name__)
@@ -45,17 +108,31 @@ def get_next_id(collection, id_field):
 
 def create_default_Admin():
     """Create default Admin user if doesn't exist"""
-    Admin_exists = users_col.find_one({"role": "Admin"})
+    Admin_exists = users_col.find_one({"role": "admin"})
     if not Admin_exists:
         Admin_user = {
             "user_id": get_next_id(users_col, "user_id"),
             "username": "Admin",
             "password_hash": generate_password_hash("adminpass"),
-            "role": "Admin",
+            "role": "admin",
             "date_joined": datetime.now()
         }
         users_col.insert_one(Admin_user)
         print("✅ Default Admin user created")
+
+    
+    # Create default studentvol user
+    stuvol_exists = users_col.find_one({"username": "studentvol"})
+    if not stuvol_exists:
+        stuvol_user = {
+            "user_id": get_next_id(users_col, "user_id"),
+            "username": "studentvol",
+            "password_hash": generate_password_hash("studentvol"),
+            "role": "studentvol",
+            "date_joined": datetime.now()
+        }
+        users_col.insert_one(stuvol_user)
+        print("✅ Default studentvol user created (username: studentvol, password: studentvol)")
 
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
@@ -112,18 +189,28 @@ def seed_sample_data():
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
 
-def check(content: str) -> bool:
+def check(content: str) -> dict:
     """
-    AI moderation stub.
-    Returns True if content is inappropriate (flagged), False otherwise.
-    Replace later with actual AI model.
+    AI moderation function.
+    Returns dict with moderation results.
     """
-    return False
+    if not content:
+        return {"flagged": False, "ai_flagged": False, "categories": []}
+    
+    is_toxic, confidence, categories = ai_moderator.moderate(content)
+    
+    return {
+        "flagged": is_toxic,
+        "ai_flagged": is_toxic,
+        "confidence": confidence,
+        "categories": categories
+    }
+
 
 # --- Helper Functions for Admin ---
 def get_all_users():
     """Fetch all users except admins"""
-    users = list(users_col.find({"role": {"$ne": "Admin"}}))  # exclude admins
+    users = list(users_col.find({"role": {"$ne": "Admin"}}))  
     for user in users:
         user["_id"] = str(user["_id"])
     return users
@@ -144,24 +231,20 @@ def get_flagged_posts():
 def update_user_role(user_id, new_role):
     users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
 
-from bson.objectid import ObjectId
-from datetime import datetime
 
 def get_crisis_logs():
-    if "user_id" not in session or session.get("role", "").lower() != "admin":
-        return "Unauthorized", 403
-
-    logs = list(db["crisis"].find({}))
-    formatted_logs = []
-    for log in logs:
-        formatted_logs.append({
-            "id": str(log.get("_id", ObjectId())),  # ensure an id is available
-            "username": log.get("username", ""),
-            "ip_address": log.get("ip_address", ""),
-            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp"))
+    logs = []
+    for log in crisis_col.find().sort("timestamp", -1):
+        logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ID as string for template
+            "username": log.get("username", "Unknown"),
+            "ip_address": log.get("ip_address", "N/A"),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") 
+                         if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
+            "resolved": log.get("resolved", False),
+            "resolved_at": log.get("resolved_at")
         })
-
-    return jsonify(formatted_logs), 200
+    return logs
 
 
 
@@ -177,6 +260,7 @@ def home():
 # --- Authentication ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -187,8 +271,8 @@ def login():
             session["username"] = username
             session["role"] = user["role"]
             
-            if user["role"] == "Admin":
-                return redirect(url_for("Admin_dashboard"))
+            if user["role"] == "admin":
+                return redirect(url_for("admin_dashboard"))
             return redirect(url_for("dashboard"))
         else:
             flash("Incorrect username or password", "error")
@@ -444,7 +528,7 @@ def peer_data():
         else:
             post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
             # Fix the role check to match the actual role value
-            post["isStudentVol"] = (user and user.get("role") == "StudentVol")
+            post["isstudentvol"] = (user and user.get("role") == "studentvol")
 
         for reply in post.get("replies", []):
             reply["_id"] = str(reply["_id"])
@@ -455,7 +539,7 @@ def peer_data():
                 reply["content"] = "Reply deleted"
             else:
                 # Fix the role check to match the actual role value
-                reply["isStudentVol"] = (reply_user and reply_user.get("role") == "StudentVol")
+                reply["isstudentvol"] = (reply_user and reply_user.get("role") == "studentvol")
                 reply["username"] = reply.get("username", reply_user.get("username", "Unknown") if reply_user else "Unknown")
 
     return jsonify(posts)
@@ -473,7 +557,7 @@ def add_post():
     if not content:
         return jsonify({"error": "Content is required"}), 400
 
-    user_role = session.get("role", "User")
+    user_role = session.get("role")
     
     # AI moderation
     moderation_result = check(content)
@@ -492,7 +576,7 @@ def add_post():
         "flagged": flagged,
         "ai_flagged": ai_flagged,
         "flag_categories": categories,
-        "isStudentVol": (user_role == "StudentVol"),
+        "isstudentvol": (user_role == "studentvol"),
         "is_deleted": False
     }
 
@@ -531,7 +615,7 @@ def add_reply(post_id):
         "flag_categories": categories,
         "likes": [],
         "dislikes": [],
-        "isStudentVol": (session.get("role") == "StudentVol"),
+        "isstudentvol": (session.get("role") == "studentvol"),
         "is_deleted": False
     }
 
@@ -648,13 +732,13 @@ def delete_own_post(post_id):
         session_user_id = str(session["user_id"])
         user_role = session.get("role")
 
-        # Allow deletion if it's the owner's post OR if user is an Admin OR StudentVol
+        # Allow deletion if it's the owner's post OR if user is an Admin OR studentvol
         if (post_user_id != session_user_id and 
-            user_role not in ["Admin", "StudentVol"]):
+            user_role not in ["Admin", "studentvol"]):
             return jsonify({"error": "Unauthorized"}), 403
 
-        # Soft delete for owners, hard delete for Admins and StudentVols
-        if user_role in ["Admin", "StudentVol"]:
+        # Soft delete for owners, hard delete for Admins and studentvols
+        if user_role in ["Admin", "studentvol"]:
             peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
             return jsonify({"message": "Post permanently deleted"})
         else:
@@ -683,12 +767,12 @@ def delete_own_reply(post_id, reply_id):
 
     for reply in replies:
         if str(reply["_id"]) == reply_id:
-            # Allow deletion if owner OR Admin OR StudentVol
+            # Allow deletion if owner OR Admin OR studentvol
             if (str(reply["user_id"]) != str(session["user_id"]) and 
-                user_role not in ["Admin", "StudentVol"]):
+                user_role not in ["Admin", "studentvol"]):
                 return jsonify({"error": "Unauthorized"}), 403
 
-            if user_role in ["Admin", "StudentVol"]:
+            if user_role in ["Admin", "studentvol"]:
                 replies = [r for r in replies if str(r["_id"]) != reply_id]  # remove reply entirely
                 updated = True
             else:
@@ -708,11 +792,11 @@ def delete_own_reply(post_id, reply_id):
     return jsonify({"message": "Reply deleted"})
 
 
-# --- Flag content (StudentVol only) ---
+# --- Flag content (studentvol only) ---
 @app.route("/flag_content/<content_type>/<content_id>", methods=["POST"])
 def flag_content(content_type, content_id):
-    if "user_id" not in session or session.get("role") != "StudentVol":
-        return jsonify({"error": "StudentVol access required"}), 403
+    if "user_id" not in session or session.get("role") != "studentvol":
+        return jsonify({"error": "studentvol access required"}), 403
 
     try:
         if content_type == "post":
@@ -749,11 +833,11 @@ def flag_content(content_type, content_id):
         return jsonify({"error": str(e)}), 500
 
 
-# --- Unflag content (Admin and StudentVol) ---
+# --- Unflag content (Admin and studentvol) ---
 @app.route("/unflag_content/<content_type>/<content_id>", methods=["POST"])
 def unflag_content(content_type, content_id):
-    if "user_id" not in session or session.get("role") not in ["Admin", "StudentVol"]:
-        return jsonify({"error": "Admin or StudentVol access required"}), 403
+    if "user_id" not in session or session.get("role") not in ["Admin", "studentvol"]:
+        return jsonify({"error": "Admin or studentvol access required"}), 403
 
     try:
         if content_type == "post":
@@ -824,13 +908,11 @@ def crisis():
     return jsonify({"message": "Crisis logged successfully"})
 
 
-#---Admin Routes---
-@app.route("/Admin", methods=["GET", "POST"])
-def Admin_dashboard():
-    if "user_id" not in session or session.get("role", "").lower() != "admin":
+@app.route("/admin", methods=["GET", "POST"])
+def admin_dashboard():
+    if "user_id" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
 
-    # Handle role updates
     if request.method == "POST":
         user_id = request.form.get("user_id")
         new_role = request.form.get("role")
@@ -844,20 +926,18 @@ def Admin_dashboard():
         "total_posts": peersupportposts_col.count_documents({})
     }
 
-    users = get_all_users()  # fetch all non-admin users
+    users = get_all_users()
+    logs = get_crisis_logs()
+    
 
-    logs = list(db["crisis"].find({}))
-    formatted_logs = []
-    for log in logs:
-        formatted_logs.append({
-            "id": str(log.get("_id")),  
-            "username": log.get("username", ""),
-            "ip_address": log.get("ip_address", ""),
-            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S")
-            if log.get("timestamp") else ""
-        })
+    return render_template(
+        "admin_dashboard.html",
+        username=session["username"],
+        stats=stats,    
+        users=users,
+        crisis_logs=logs
+    )
 
-    return render_template("Admin_dashboard.html", username=session["username"], stats=stats, users=users, crisis_logs = formatted_logs)
 
 
 @app.route("/Admin/users", methods=["GET", "POST"])
@@ -872,7 +952,7 @@ def manage_users():
             update_user_role(user_id, new_role)
 
     users = get_all_users()  # fetch only non-admin users
-    return render_template("Admin_dashboard.html", users=users)
+    return render_template("admin_dashboard.html", users=users)
 
 @app.route("/Admin/flagged_posts", methods=["GET", "POST"])
 def Admin_flagged_posts():
@@ -892,29 +972,40 @@ def Admin_flagged_posts():
 
 @app.route("/admin/crisis_logs", methods=["GET"])
 def get_crisis_logs():
-    if "user_id" not in session or session.get("role", "").lower() != "admin":
-        return "Unauthorized", 403
+    logs = []
+    for log in crisis_col.find().sort("timestamp", -1):
+        logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ID as string for template
+            "username": log.get("username", "Unknown"),
+            "ip_address": log.get("ip_address", "N/A"),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") 
+                         if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
+            "resolved": log.get("resolved", False),
+            "resolved_at": log.get("resolved_at")
+        })
+    return logs
+    
 
-    logs = list(db["crisis"].find({}, {"_id": 0}))
-    print (logs)
-    return jsonify(logs), 200
 
-@app.route("/resolve_crisis", methods=["POST"])
-def resolve_crisis():
-    if "user_id" not in session or session.get("role", "").lower() != "admin":
-        return "Unauthorized", 403
-
-    log_id = request.form.get("log_id")
-    if not log_id:
-        return "Missing log_id", 400
+@app.route("/resolve_crisis/<log_id>", methods=["POST"])
+def resolve_crisis(log_id):
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
 
     try:
-        db["crisis"].delete_one({"_id": ObjectId(log_id)})
-    except Exception as e:
-        print("Error deleting crisis log:", e)
-        return "Invalid log_id", 400
+        result = crisis_col.update_one(
+            {"_id": ObjectId(log_id)},
+            {"$set": {"resolved": True, "resolved_at": datetime.now()}}
+        )
 
-    return redirect(url_for("Admin_dashboard"))
+        if result.matched_count == 0:
+            return jsonify({"error": "Crisis log not found"}), 404
+
+        return jsonify({"message": "Crisis log resolved successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # --- Debug ---
 @app.route("/debug/all_collections")
@@ -952,6 +1043,17 @@ def debug_all_collections():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Login session verification
+@app.route("/session_info")
+def session_info():
+    if "user_id" not in session:
+        return jsonify({})
+    return jsonify({
+        "user_id": str(session["user_id"]),
+        "username": session.get("username"),
+        "role": session.get("role", "User")
+    })
 
 # --- Run App ---
 if __name__ == "__main__":

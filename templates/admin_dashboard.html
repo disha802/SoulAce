@@ -186,22 +186,22 @@
 
     /* Dark mode styles */
     body.dark {
-        background: #121212;
+      background: #121212;
         color: #e0e0e0;
     }
 
     body.dark header {
-        background-color: #1f1f1f;
-        color: #f9e6d0;
+      background-color: #1f1f1f;
+      color: #f9e6d0;
     }
-
+    
     body.dark .feature-card {
-        background: #2a2a2a;
-        color: #e0e0e0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      background: #2a2a2a;
+      color: #e0e0e0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
-
-  </style>
+    
+    </style>
 </head>
 <body>
   <header>
@@ -214,26 +214,57 @@
         <h3>Manage users and content</h3>
       </div>
     </div>
-
+    
     <div class="header-right">
-        <div class="user-icon-container">
-            <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
-                alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-            <div id="user-popup" class="user-popup">
-                <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
-                <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-                    <button type="submit" class="popup-btn">Logout</button>
-                </form>
-            </div>
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+        alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">Logout</button>
+          </form>
         </div>
+      </div>
     </div>
   </header>
-
+  
   <section class="hero">
     <h2>Welcome, Admin {{username}}</h2>
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
-
+  
+  <!-- Crisis Mode / IP Logs -->
+  <section class="admin-section">
+    <h2>Crisis Mode Logs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Time</th>
+          <th>IP Address</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in crisis_logs %}
+        <tr>
+          <td>{{ log.username }}</td>
+          <td>{{ log.timestamp }}</td>
+          <td>{{ log.ip_address }}</td>
+          <td>
+            <button class="resolve-btn" data-id="{{ log.id }}">Mark Resolved</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="text-align:center;">No crisis logs found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  
   <!-- User Management -->
   <section class="admin-section">
     <h2>User Management</h2>
@@ -302,39 +333,6 @@
     </table>
   </section>
 
-  <!-- Crisis Mode / IP Logs -->
-  <section class="admin-section">
-    <h2>Crisis Mode Logs</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Time</th>
-          <th>IP Address</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for log in crisis_logs %}
-        <tr>
-          <td>{{ log.username }}</td>
-          <td>{{ log.timestamp }}</td>
-          <td>{{ log.ip_address }}</td>
-          <td>
-            <form method="POST" action="{{ url_for('resolve_crisis') }}">
-              <input type="hidden" name="log_id" value="{{ log.id }}">
-              <button type="submit">Mark Resolved</button>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4" style="text-align:center;">No crisis logs found</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
 
   <footer>
@@ -365,6 +363,35 @@
             popup.style.display = 'none';
         }
     });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const buttons = document.querySelectorAll(".resolve-btn");
+      
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const logId = btn.dataset.id;
+
+          fetch("/resolve_crisis/" + logId, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.message) {
+              // Remove the row from the table
+              btn.closest("tr").remove();
+              console.log(data.message);
+            } else if (data.error) {
+              alert("Error: " + data.error);
+            }
+          })
+          .catch(err => console.error("Error resolving log:", err));
+        });
+      });
+    });
+
 
     window.onload = function() {
       fetch("/admin/crisis_logs")

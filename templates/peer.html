@@ -137,7 +137,6 @@
     <!-- Post form (keeps A endpoints but enhanced UI) -->
     <div id="post-form" class="post-form" style="display:none;">
       <h3>Create a New Post</h3>
-      <input type="text" id="post-title" placeholder="Post title (optional)">
       <textarea id="post-content" placeholder="Share your thoughts..."></textarea>
       <div class="anonymity-toggle">
         <input type="checkbox" id="anonymous-toggle">
@@ -188,7 +187,7 @@
           date: r.date || r.created_at || '',
           time: r.time || r.created_time || '',
           datetime: r.datetime ? new Date(r.datetime) : (r.date && r.time ? new Date(`${r.date}T${r.time}`) : new Date()),
-          isStudentVol: !!r.isStudentVol
+          isstudentvol: !!r.isstudentvol
         }));
 
         // Parse datetime if available, otherwise use current date
@@ -221,7 +220,7 @@
           date: p.date || p.created_date || postDatetime.toISOString().split('T')[0],
           time: p.time || p.created_time || postDatetime.toTimeString().split(' ')[0],
           datetime: postDatetime,
-          isStudentVol: !!p.isStudentVol
+          isstudentvol: !!p.isstudentvol
         };
       });
     }
@@ -263,7 +262,7 @@
             currentUser.username = currentUser.username || currentUser.name || currentUser.user || 'You';
             
             // Show filter if user is a Student Volunteer
-            if (isStudentVol(currentUser)) {
+            if (isstudentvol(currentUser)) {
               document.getElementById('filter-container').style.display = 'flex';
             }
           }
@@ -321,8 +320,8 @@
     }
 
     // Helper to check if user is a Student Volunteer
-    function isStudentVol(user) {
-      return user && (user.role === 'StudentVol' || user.role === 'studentvol' || user.role === 'Volunteer');
+    function isstudentvol(user) {
+      return user && (user.role === 'studentvol' || user.role === 'studentvol' || user.role === 'Volunteer');
     }
 
     // Show/hide post form
@@ -430,7 +429,7 @@
     // Flag content (StudentVol) - uses A's /flag_content/{type}/{id}
     async function flagContent(contentType, contentId, postId=null){
       if(!currentUser) { alert('You must be logged in to flag content.'); return; }
-      if(!isStudentVol(currentUser)){ alert('Only Student Volunteers can flag content.'); return; }
+      if(!isstudentvol(currentUser)){ alert('Only Student Volunteers can flag content.'); return; }
       if(!confirm('Flag this content as inappropriate?')) return;
       try{
         // contentType expected: 'post' or 'reply'
@@ -444,7 +443,7 @@
     // Unflag content (StudentVol and Admin) - uses new /unflag_content endpoint
     async function unflagContent(contentType, contentId, postId=null){
       if(!currentUser) { alert('You must be logged in to unflag content.'); return; }
-      if(!isStudentVol(currentUser) && currentUser.role !== 'Admin'){ 
+      if(!isstudentvol(currentUser) && currentUser.role !== 'Admin'){ 
         alert('Only Student Volunteers and Admins can unflag content.'); 
         return; 
       }
@@ -491,8 +490,8 @@
     // Sorting replies: StudentVol first, then net likes, then newest
     function sortReplies(replies){
       return replies.sort((a,b)=>{
-        if(!!a.isStudentVol && !b.isStudentVol) return -1;
-        if(!a.isStudentVol && !!b.isStudentVol) return 1;
+        if(!!a.isstudentvol && !b.isstudentvol) return -1;
+        if(!a.isstudentvol && !!b.isstudentvol) return 1;
         const aNet = (a.likes||0) - (a.dislikes||0);
         const bNet = (b.likes||0) - (b.dislikes||0);
         if(aNet !== bNet) return bNet - aNet;
@@ -507,7 +506,7 @@
       if(!currentUser) return false;
       const isOwner = currentUser.user_id == post.user_id || currentUser.user_id == post.userId || currentUser.user_id == post.user_id;
       const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'admin';
-      const isVolunteer = isStudentVol(currentUser);
+      const isVolunteer = isstudentvol(currentUser);
       return isOwner || isAdmin || isVolunteer;
     }
 
@@ -515,7 +514,7 @@
       if(!currentUser) return false;
       const isOwner = currentUser.user_id == reply.user_id || currentUser.user_id == reply.userId;
       const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'admin';
-      const isVolunteer = isStudentVol(currentUser);
+      const isVolunteer = isstudentvol(currentUser);
       return isOwner || isAdmin || isVolunteer;
     }
 
@@ -555,7 +554,7 @@
           }
         }
         
-        authorSpan.innerHTML = `${escapeHtml(displayName)} ${p.isStudentVol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${flagBadges}`;
+        authorSpan.innerHTML = `${escapeHtml(displayName)} ${p.isstudentvol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${flagBadges}`;
         
         const dateSpan = document.createElement('span'); 
         dateSpan.className = 'post-date'; 
@@ -590,7 +589,7 @@
         actionsDiv.appendChild(likeBtn); actionsDiv.appendChild(dislikeBtn); actionsDiv.appendChild(replyToggle);
 
         // Flag & Delete for StudentVol/Admin/Owner
-        if((isStudentVol(currentUser) || currentUser?.role === 'Admin') && !p.is_deleted){
+        if((isstudentvol(currentUser) || currentUser?.role === 'Admin') && !p.is_deleted){
           if (p.flagged) {
             const unflagBtn = document.createElement('button'); 
             unflagBtn.className = 'action-btn'; 
@@ -640,7 +639,7 @@
             }
           }
           
-          const author = document.createElement('span'); author.className = 'reply-author'; author.innerHTML = `${r.anonymous ? 'Anonymous' : escapeHtml(r.author||'Unknown')} ${r.isStudentVol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${replyFlagBadges}`;
+          const author = document.createElement('span'); author.className = 'reply-author'; author.innerHTML = `${r.anonymous ? 'Anonymous' : escapeHtml(r.author||'Unknown')} ${r.isstudentvol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${replyFlagBadges}`;
           const date = document.createElement('span'); date.className = 'reply-date'; date.innerHTML = formatDateTime(r.datetime);
           header.appendChild(author); header.appendChild(date);
 
@@ -663,7 +662,7 @@
 
           // Only show delete button if reply is not already deleted
           if(!r.is_deleted) {
-            if((isStudentVol(currentUser) || currentUser?.role === 'Admin')){ 
+            if((isstudentvol(currentUser) || currentUser?.role === 'Admin')){ 
               if (r.flagged) {
                 const unflagR = document.createElement('button'); 
                 unflagR.className = 'action-btn'; 
