@@ -368,107 +368,6 @@ def resources():
                          resources=all_resources,
                          username=session["username"])
 
-# # --- Peer Forum ---
-# @app.route("/peer")
-# def peer():
-#     if "user_id" not in session:
-#         return redirect(url_for("login"))
-
-#     # Fetch posts (newest first)
-#     posts = list(peersupportposts_col.find().sort("datetime", -1))
-
-#     # Current user role
-#     current_user_role = session.get("role", "User").lower()
-
-#     for post in posts:
-#         # Attach username (or Anonymous)
-#         user = users_col.find_one({"user_id": post["user_id"]})
-#         if not post.get("is_anonymous", False) and user:
-#             post["username"] = user.get("username", "Unknown")
-#         else:
-#             post["username"] = "Anonymous"
-
-#         post["_id"] = str(post["_id"])  # Make ObjectId JSON safe
-
-#         # Convert reply ObjectIds
-#         for reply in post.get("replies", []):
-#             # If reply has _id as ObjectId, convert to string; if already string, leave it
-#             try:
-#                 reply["_id"] = str(reply["_id"])
-#             except Exception:
-#                 pass
-
-#     return render_template(
-#         "peer.html",
-#         posts=posts,
-#         username=session.get("username", "Guest"),
-#         user_type=current_user_role
-#     )
-
-
-# @app.route("/add_post", methods=["POST"])
-# def add_post():
-#     if "user_id" not in session:
-#         return jsonify({"error": "Not logged in"}), 401
-
-#     data = request.get_json()
-#     content = data.get("content", "").strip()
-#     is_anonymous = data.get("is_anonymous", False)
-
-#     if not content:
-#         return jsonify({"error": "Content is required"}), 400
-
-#     user_role = session.get("role", "User").lower()
-
-#     post = {
-#         "user_id": session["user_id"],
-#         "datetime": datetime.now(),
-#         "content": content,
-#         "is_anonymous": bool(is_anonymous),
-#         "likes": 0,
-#         "dislikes": 0,
-#         "replies": [],
-#         "flagged": False,
-#         "isStudentVol": (user_role == "studentvol")
-#     }
-
-#     try:
-#         result = peersupportposts_col.insert_one(post)
-#         post["_id"] = str(result.inserted_id)
-#         return jsonify({"message": "Post added successfully!", "post": post})
-#     except Exception as e:
-#         return jsonify({"error": f"Failed to add post: {str(e)}"}), 500
-
-
-# @app.route("/add_reply/<post_id>", methods=["POST"])
-# def add_reply(post_id):
-#     if "user_id" not in session:
-#         return jsonify({"error": "Not logged in"}), 401
-
-#     data = request.get_json()
-#     reply_content = data.get("reply", "").strip()
-#     if not reply_content:
-#         return jsonify({"error": "Reply content is required"}), 400
-
-#     reply = {
-#         "_id": ObjectId(),
-#         "user_id": session["user_id"],
-#         "username": session["username"],
-#         "datetime": datetime.now(),
-#         "content": reply_content
-#     }
-
-#     try:
-#         # push reply into replies array of the post
-#         peersupportposts_col.update_one(
-#             {"_id": ObjectId(post_id)},
-#             {"$push": {"replies": reply}}
-#         )
-#         reply["_id"] = str(reply["_id"])
-#         return jsonify({"message": "Reply added successfully!", "reply": reply})
-#     except Exception as e:
-#         return jsonify({"error": f"Failed to add reply: {str(e)}"}), 500
-
 # --- Peer Forum Routes ---
 @app.route("/peer")
 def peer():
@@ -483,15 +382,24 @@ def peer():
 
 @app.route("/peer_data")
 def peer_data():
-    """Return all posts + replies as JSON"""
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
     posts = list(peersupportposts_col.find().sort("datetime", -1))
+
     for post in posts:
-        user = users_col.find_one({"user_id": post["user_id"]})
-        post["username"] = "Anonymous" if post.get("is_anonymous") else (user["username"] if user else "Unknown")
         post["_id"] = str(post["_id"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+        post["isStudentVol"] = (user and user.get("role", "").lower() == "studentvol")
+
         for reply in post.get("replies", []):
             reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+            reply["isStudentVol"] = (reply_user and reply_user.get("role", "").lower() == "studentvol")
+
     return jsonify(posts)
+
 
 @app.route("/add_post", methods=["POST"])
 def add_post():
