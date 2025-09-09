@@ -38,6 +38,27 @@
   .feature-card:hover { transform:translateY(-5px); }
   .feature-card span img { width:80px; height:80px; object-fit:contain; display:block; margin:0 auto 0.5rem; }
   .feature-card p { color:#657A74; }
+  .crisis-btn {position: fixed;
+  bottom: 20px;          /* distance from bottom */
+  right: 20px;           /* distance from right */
+  background: linear-gradient(135deg, #e63946, #ff6b6b);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 9999;         /* stays above other elements */
+}
+
+.crisis-btn:hover {
+  background: linear-gradient(135deg, #ff4d4d, #ff8585);
+  transform: scale(1.05);
+}
+
   footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
 
   body.dark { background:#121212; color:#e0e0e0; }
@@ -187,14 +208,14 @@
   </section>
 
   <!-- <button class="crisis-btn" onclick="location.href='{{ url_for('crisis') }}'">🚨 Crisis</button> -->
-  <button onclick="triggerCrisis()">🚨 Crisis</button>
+  <button onclick="triggerCrisis()"" class="crisis-btn">🚨 Crisis</button>
 
   <footer>
     <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
 
 <script>
-function toggleMode(){ document.body.classList.toggle('dark'); }
+  function toggleMode(){ document.body.classList.toggle('dark'); }
 function toggleUserPopup(){ const popup = document.getElementById('user-popup'); popup.style.display = popup.style.display==='block'?'none':'block'; }
 async function setMood(mood){ const res = await fetch("/save_mood",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mood})}); const r=await res.json(); alert(r.message);}
 window.addEventListener('click', e=>{ const popup = document.getElementById('user-popup'); const icon = document.querySelector('.user-icon'); if(!popup.contains(e.target) && e.target!==icon) popup.style.display='none'; });
@@ -207,40 +228,39 @@ langSelect.addEventListener('change', ()=>{
     el.textContent=el.getAttribute('data-'+lang);
   });
 });
-</script>
 
     function toggleUserPopup() {
-        const popup = document.getElementById('user-popup');
+      const popup = document.getElementById('user-popup');
         popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function setMood(mood) {
-      const response = await fetch("/save_mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: mood })
-      });
-
-      const result = await response.json();
+      }
+      
+      async function setMood(mood) {
+        const response = await fetch("/save_mood", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mood: mood })
+        });
+        
+        const result = await response.json();
       alert(result.message); // popup confirmation
     }
 
-
+    
     // Optional: click outside to close
     window.addEventListener('click', function(e) {
-        const popup = document.getElementById('user-popup');
-        const icon = document.querySelector('.user-icon');
-        if (!popup.contains(e.target) && e.target !== icon) {
-            popup.style.display = 'none';
+      const popup = document.getElementById('user-popup');
+      const icon = document.querySelector('.user-icon');
+      if (!popup.contains(e.target) && e.target !== icon) {
+        popup.style.display = 'none';
         }
     });
-
+    
     async function triggerCrisis() {
       const response = await fetch("/crisis", { method: "POST" });
       const result = await response.json();
       alert(result.message);
     }
-
+    
   </script>
 
 </body>

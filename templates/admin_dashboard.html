@@ -226,14 +226,48 @@
                 </form>
             </div>
         </div>
-    </div>
-  </header>
-
-  <section class="hero">
-    <h2>Welcome, Admin {{username}}</h2>
-    <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
-  </section>
-
+      </div>
+    </header>
+    
+    <section class="hero">
+      <h2>Welcome, Admin {{username}}</h2>
+      <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
+    </section>
+    
+    <!-- Crisis Mode / IP Logs -->
+    <section class="admin-section">
+      <h2>Crisis Mode Logs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Time</th>
+            <th>IP Address</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in crisis_logs %}
+          <tr>
+            <td>{{ log.username }}</td>
+            <td>{{ log.timestamp }}</td>
+            <td>{{ log.ip_address }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('resolve_crisis') }}">
+                <input type="hidden" name="log_id" value="{{ log.id }}">
+                <button type="submit">Mark Resolved</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center;">No crisis logs found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
   <!-- User Management -->
   <section class="admin-section">
     <h2>User Management</h2>
@@ -302,39 +336,6 @@
     </table>
   </section>
 
-  <!-- Crisis Mode / IP Logs -->
-  <section class="admin-section">
-    <h2>Crisis Mode Logs</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Time</th>
-          <th>IP Address</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for log in crisis_logs %}
-        <tr>
-          <td>{{ log.username }}</td>
-          <td>{{ log.timestamp }}</td>
-          <td>{{ log.ip_address }}</td>
-          <td>
-            <form method="POST" action="{{ url_for('resolve_crisis') }}">
-              <input type="hidden" name="log_id" value="{{ log.id }}">
-              <button type="submit">Mark Resolved</button>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4" style="text-align:center;">No crisis logs found</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
 
   <footer>
