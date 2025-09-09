@@ -53,6 +53,19 @@ def create_default_admin():
         }
         users_col.insert_one(admin_user)
         print("✅ Default admin user created")
+    
+    # Create default StudentVol user
+    stuvol_exists = users_col.find_one({"username": "studentvol"})
+    if not stuvol_exists:
+        stuvol_user = {
+            "user_id": get_next_id(users_col, "user_id"),
+            "username": "studentvol",
+            "password_hash": generate_password_hash("studentvol"),
+            "role": "StudentVol",
+            "date_joined": datetime.now()
+        }
+        users_col.insert_one(stuvol_user)
+        print("✅ Default StudentVol user created (username: studentvol, password: studentvol)")
 
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
@@ -380,6 +393,7 @@ def peer():
         user_type=session.get("role", "User").lower()
     )
 
+
 @app.route("/peer_data")
 def peer_data():
     if "user_id" not in session:
@@ -390,13 +404,26 @@ def peer_data():
     for post in posts:
         post["_id"] = str(post["_id"])
         user = users_col.find_one({"user_id": post["user_id"]})
-        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
-        post["isStudentVol"] = (user and user.get("role", "").lower() == "studentvol")
+
+        if post.get("is_deleted"):
+            post["username"] = "Deleted User"
+            post["content"] = "Post deleted"
+        else:
+            post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+            # Fix the role check to match the actual role value
+            post["isStudentVol"] = (user and user.get("role") == "StudentVol")
 
         for reply in post.get("replies", []):
             reply["_id"] = str(reply["_id"])
             reply_user = users_col.find_one({"user_id": reply["user_id"]})
-            reply["isStudentVol"] = (reply_user and reply_user.get("role", "").lower() == "studentvol")
+
+            if reply.get("is_deleted"):
+                reply["username"] = "Deleted User"
+                reply["content"] = "Reply deleted"
+            else:
+                # Fix the role check to match the actual role value
+                reply["isStudentVol"] = (reply_user and reply_user.get("role") == "StudentVol")
+                reply["username"] = reply.get("username", reply_user.get("username", "Unknown") if reply_user else "Unknown")
 
     return jsonify(posts)
 
@@ -413,7 +440,7 @@ def add_post():
     if not content:
         return jsonify({"error": "Content is required"}), 400
 
-    user_role = session.get("role", "User").lower()
+    user_role = session.get("role", "User")
     flagged = check(content)
 
     post = {
@@ -425,12 +452,14 @@ def add_post():
         "dislikes": [],
         "replies": [],
         "flagged": flagged,
-        "isStudentVol": (user_role == "studentvol")
+        "isStudentVol": (user_role == "StudentVol"),
+        "is_deleted": False
     }
 
     result = peersupportposts_col.insert_one(post)
     post["_id"] = str(result.inserted_id)
     return jsonify({"message": "Post added successfully!", "post": post})
+
 
 @app.route("/add_reply/<post_id>", methods=["POST"])
 def add_reply(post_id):
@@ -442,16 +471,20 @@ def add_reply(post_id):
     if not reply_content:
         return jsonify({"error": "Reply content is required"}), 400
 
+    user = users_col.find_one({"user_id": session["user_id"]})
+    username = user.get("username", "Unknown") if user else "Unknown"
+
     reply = {
         "_id": ObjectId(),
         "user_id": session["user_id"],
-        "username": session["username"],
+        "username": username,
         "datetime": datetime.now(),
         "content": reply_content,
         "flagged": check(reply_content),
         "likes": [],
         "dislikes": [],
-        "isStudentVol": (session.get("role", "").lower() == "studentvol")
+        "isStudentVol": (session.get("role") == "StudentVol"),
+        "is_deleted": False
     }
 
     peersupportposts_col.update_one(
@@ -461,13 +494,14 @@ def add_reply(post_id):
     reply["_id"] = str(reply["_id"])
     return jsonify({"message": "Reply added successfully!", "reply": reply})
 
+
 @app.route("/like_post/<post_id>", methods=["POST"])
 def like_post(post_id):
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
 
     data = request.get_json()
-    action = data.get("action")  # "like" or "dislike"
+    action = data.get("action")
     user_id = session["user_id"]
 
     post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
@@ -477,17 +511,16 @@ def like_post(post_id):
     likes = post.get("likes", [])
     dislikes = post.get("dislikes", [])
 
-    # Toggle logic
     if action == "like":
         if user_id in likes:
-            likes.remove(user_id)  # undo like
+            likes.remove(user_id)
         else:
             likes.append(user_id)
             if user_id in dislikes:
-                dislikes.remove(user_id)  # can't like and dislike
+                dislikes.remove(user_id)
     elif action == "dislike":
         if user_id in dislikes:
-            dislikes.remove(user_id)  # undo dislike
+            dislikes.remove(user_id)
         else:
             dislikes.append(user_id)
             if user_id in likes:
@@ -501,6 +534,7 @@ def like_post(post_id):
     )
 
     return jsonify({"likes": len(likes), "dislikes": len(dislikes)})
+
 
 @app.route("/like_reply/<post_id>/<reply_id>", methods=["POST"])
 def like_reply(post_id, reply_id):
@@ -549,26 +583,141 @@ def like_reply(post_id, reply_id):
     return jsonify({"message": "Action recorded"})
 
 
+# --- Soft delete for users ---
+# --- User deleting own post ---
+@app.route("/delete_post/<post_id>", methods=["DELETE"])
+def delete_own_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    try:
+        post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+
+        # Convert both IDs to strings for comparison
+        post_user_id = str(post["user_id"])
+        session_user_id = str(session["user_id"])
+        user_role = session.get("role")
+
+        # Allow deletion if it's the owner's post OR if user is an Admin OR StudentVol
+        if (post_user_id != session_user_id and 
+            user_role not in ["Admin", "StudentVol"]):
+            return jsonify({"error": "Unauthorized"}), 403
+
+        # Soft delete for owners, hard delete for Admins and StudentVols
+        if user_role in ["Admin", "StudentVol"]:
+            peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+            return jsonify({"message": "Post permanently deleted"})
+        else:
+            peersupportposts_col.update_one(
+                {"_id": ObjectId(post_id)},
+                {"$set": {"content": "Post deleted", "is_deleted": True}}
+            )
+            return jsonify({"message": "Post deleted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- User deleting own reply ---
+@app.route("/delete_reply/<post_id>/<reply_id>", methods=["DELETE"])
+def delete_own_reply(post_id, reply_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    replies = post.get("replies", [])
+    updated = False
+    user_role = session.get("role")
+
+    for reply in replies:
+        if str(reply["_id"]) == reply_id:
+            # Allow deletion if owner OR Admin OR StudentVol
+            if (str(reply["user_id"]) != str(session["user_id"]) and 
+                user_role not in ["Admin", "StudentVol"]):
+                return jsonify({"error": "Unauthorized"}), 403
+
+            if user_role in ["Admin", "StudentVol"]:
+                replies = [r for r in replies if str(r["_id"]) != reply_id]  # remove reply entirely
+                updated = True
+            else:
+                reply["content"] = "Reply deleted"
+                reply["is_deleted"] = True
+                updated = True
+            break
+
+    if not updated:
+        return jsonify({"error": "Reply not found"}), 404
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"replies": replies}}
+    )
+
+    return jsonify({"message": "Reply deleted"})
+
+
+# --- Flag content (StudentVol only) ---
+@app.route("/flag_content/<content_type>/<content_id>", methods=["POST"])
+def flag_content(content_type, content_id):
+    if "user_id" not in session or session.get("role") != "StudentVol":
+        return jsonify({"error": "StudentVol access required"}), 403
+
+    try:
+        if content_type == "post":
+            result = peersupportposts_col.update_one(
+                {"_id": ObjectId(content_id)},
+                {"$set": {"flagged": True}}
+            )
+            if result.modified_count == 1:
+                return jsonify({"message": "Post flagged successfully"})
+            else:
+                return jsonify({"error": "Post not found"}), 404
+                
+        elif content_type == "reply":
+            # For replies, we need to find the post first
+            post = peersupportposts_col.find_one({"replies._id": ObjectId(content_id)})
+            if not post:
+                return jsonify({"error": "Reply not found"}), 404
+                
+            # Update the specific reply's flagged status
+            result = peersupportposts_col.update_one(
+                {"_id": post["_id"], "replies._id": ObjectId(content_id)},
+                {"$set": {"replies.$.flagged": True}}
+            )
+            
+            if result.modified_count == 1:
+                return jsonify({"message": "Reply flagged successfully"})
+            else:
+                return jsonify({"error": "Failed to flag reply"}), 500
+                
+        else:
+            return jsonify({"error": "Invalid content type"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- Admin-only moderation (hard delete) ---
 @app.route("/moderate/unflag/<post_id>", methods=["POST"])
 def unflag_post(post_id):
-    if "user_id" not in session or session["role"] != "Admin":
+    if "user_id" not in session or session.get("role") != "Admin":
         return jsonify({"error": "Admin access required"}), 403
+
     peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
     return jsonify({"message": "Post unflagged"})
 
+
 @app.route("/moderate/delete/<post_id>", methods=["DELETE"])
-def delete_post(post_id):
-    if "user_id" not in session or session["role"] != "Admin":
+def admin_delete_post(post_id):
+    if "user_id" not in session or session.get("role") != "Admin":
         return jsonify({"error": "Admin access required"}), 403
+
     peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
-    return jsonify({"message": "Post deleted"})
-
-
-
-
-
-
-
+    return jsonify({"message": "Post permanently deleted"})
 
 # --- Admin ---
 @app.route("/admin")
@@ -623,6 +772,17 @@ def debug_all_collections():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Login session verification
+@app.route("/session_info")
+def session_info():
+    if "user_id" not in session:
+        return jsonify({})
+    return jsonify({
+        "user_id": str(session["user_id"]),
+        "username": session.get("username"),
+        "role": session.get("role", "User")
+    })
 
 # --- Run App ---
 if __name__ == "__main__":
