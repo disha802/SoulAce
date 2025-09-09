@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce Admin Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #7B9B8B;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .logo-container img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .logout-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #fff;
+        color: #333;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .toggle-btn {
+      background: #fff;
+      border: 2px solid #ccc;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: #fcd58d;
+    }
+
+    .user-icon-container {
+        position: relative;
+    }
+
+    .user-popup {
+        display: none;
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        padding: 10px;
+        z-index: 100;
+        min-width: 140px;
+    }
+
+    .user-popup .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .user-popup .popup-btn:hover {
+      background: #f2f2f2;
+    }
+
+    h2 {
+      color: #243B36;
+      margin-bottom: 1rem;
+    }
+
+    section {
+      padding: 2rem;
+    }
+
+    select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    }
+
+    select:hover {
+    border-color: #657A74;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+
+    .admin-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #7B9B8B;
+      color: white;
+    }
+
+    button {
+      background: linear-gradient(135deg, #657A74 , #243B36);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      margin-right: 5px;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #657A74 , #243B36);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ffeecf;
+      border-top: 2px solid #fcd58d;
+      margin-top: 2rem;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+        background: #121212;
+        color: #e0e0e0;
+    }
+
+    body.dark header {
+        background-color: #1f1f1f;
+        color: #f9e6d0;
+    }
+
+    body.dark .feature-card {
+        background: #2a2a2a;
+        color: #e0e0e0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce Admin</h1>
+        <h3>Manage users and content</h3>
+      </div>
+    </div>
+
+    <div class="header-right">
+        <div class="user-icon-container">
+            <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+                alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+            <div id="user-popup" class="user-popup">
+                <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+                <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+                    <button type="submit" class="popup-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h2>Welcome, Admin {{username}}</h2>
+    <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
+  </section>
+
+  <!-- User Management -->
+  <section class="admin-section">
+    <h2>User Management</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Change Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+            <form method="POST" action="{{ url_for('manage_users') }}">
+                <input type="hidden" name="user_id" value="{{ user._id }}">
+                <select name="role">
+                <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                <option value="studentvol" {% if user.role == 'studentvol' %}selected{% endif %}>Volunteer</option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- Mood Stats -->
+  <section class="admin-section">
+    <h2>Mood Statistics</h2>
+    <div id="mood-stats">
+      <!-- You can render charts using Chart.js here -->
+    </div>
+  </section>
+
+  <!-- Booking Status -->
+  <section class="admin-section">
+    <h2>Booking Status</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>User</th>
+          <th>Therapist</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>{{ booking.id }}</td>
+          <td>{{ booking.username }}</td>
+          <td>{{ booking.therapist }}</td>
+          <td>{{ booking.date }}</td>
+          <td>{{ booking.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Crisis Mode / IP Logs -->
+  <section class="admin-section">
+    <h2>Crisis Mode Logs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Time</th>
+          <th>IP Address</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in crisis_logs %}
+        <tr>
+          <td>{{ log.username }}</td>
+          <td>{{ log.timestamp }}</td>
+          <td>{{ log.ip_address }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('resolve_crisis') }}">
+              <input type="hidden" name="log_id" value="{{ log.id }}">
+              <button type="submit">Mark Resolved</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="text-align:center;">No crisis logs found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+  <script>
+    function toggleMode() {
+      document.body.classList.toggle('dark');
+      const btn = document.querySelector('.toggle-btn');
+      if (document.body.classList.contains('dark')) {
+        btn.textContent = '☀️ Light Mode';
+      } else {
+        btn.textContent = '🌙 Dark Mode';
+      }
+    }
+
+    function toggleUserPopup() {
+        const popup = document.getElementById('user-popup');
+        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Optional: click outside to close
+    window.addEventListener('click', function(e) {
+        const popup = document.getElementById('user-popup');
+        const icon = document.querySelector('.user-icon');
+        if (!popup.contains(e.target) && e.target !== icon) {
+            popup.style.display = 'none';
+        }
+    });
+
+    window.onload = function() {
+      fetch("/admin/crisis_logs")
+        .then(response => response.json())
+        .then(data => {
+          console.log("Crisis Logs:", data);
+          // TODO: append data to your table / UI
+        })
+        .catch(err => console.error("Error fetching crisis logs:", err));
+    };
+  </script>
+</body>
+</html>

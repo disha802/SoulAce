@@ -26,6 +26,7 @@ moodtracking_col = db["moodtracking"]
 journals_col = db["journals"]
 resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
+crisis_col = db["crisis_logs"]
 
 print("✅ Connected to MongoDB:", client.list_database_names())
 
@@ -41,19 +42,19 @@ def get_next_id(collection, id_field):
         return int(last_doc[id_field]) + 1
     return 1
 
-def create_default_admin():
-    """Create default admin user if doesn't exist"""
-    admin_exists = users_col.find_one({"role": "Admin"})
-    if not admin_exists:
-        admin_user = {
+def create_default_Admin():
+    """Create default Admin user if doesn't exist"""
+    Admin_exists = users_col.find_one({"role": "Admin"})
+    if not Admin_exists:
+        Admin_user = {
             "user_id": get_next_id(users_col, "user_id"),
-            "username": "admin",
+            "username": "Admin",
             "password_hash": generate_password_hash("adminpass"),
             "role": "Admin",
             "date_joined": datetime.now()
         }
-        users_col.insert_one(admin_user)
-        print("✅ Default admin user created")
+        users_col.insert_one(Admin_user)
+        print("✅ Default Admin user created")
 
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
@@ -110,8 +111,61 @@ def seed_sample_data():
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
 
+def check(content: str) -> bool:
+    """
+    AI moderation stub.
+    Returns True if content is inappropriate (flagged), False otherwise.
+    Replace later with actual AI model.
+    """
+    return False
+
+# --- Helper Functions for Admin ---
+def get_all_users():
+    """Fetch all users except admins"""
+    users = list(users_col.find({"role": {"$ne": "Admin"}}))  # exclude admins
+    for user in users:
+        user["_id"] = str(user["_id"])
+    return users
+
+def get_flagged_posts():
+    """Fetch all flagged posts."""
+    posts = list(peersupportposts_col.find({"flagged": True}).sort("datetime", -1))
+    for post in posts:
+        post["_id"] = str(post["_id"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+            reply["username"] = reply_user.get("username", "Unknown") if reply_user else "Unknown"
+    return posts
+
+def update_user_role(user_id, new_role):
+    users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+
+from bson.objectid import ObjectId
+from datetime import datetime
+
+def get_crisis_logs():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    logs = list(db["crisis"].find({}))
+    formatted_logs = []
+    for log in logs:
+        formatted_logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ensure an id is available
+            "username": log.get("username", ""),
+            "ip_address": log.get("ip_address", ""),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp"))
+        })
+
+    return jsonify(formatted_logs), 200
+
+
+
 # Initialize default data
-create_default_admin()
+create_default_Admin()
 seed_sample_data()
 
 # --- Routes ---
@@ -119,6 +173,7 @@ seed_sample_data()
 def home():
     return redirect(url_for("login"))
 
+# --- Authentication ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -132,7 +187,7 @@ def login():
             session["role"] = user["role"]
             
             if user["role"] == "Admin":
-                return redirect(url_for("admin_dashboard"))
+                return redirect(url_for("Admin_dashboard"))
             return redirect(url_for("dashboard"))
         else:
             flash("Incorrect username or password", "error")
@@ -144,7 +199,6 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         
-        # Check if user already exists
         if users_col.find_one({"username": username}):
             flash("User already exists", "error")
         else:
@@ -152,7 +206,7 @@ def register():
                 "user_id": get_next_id(users_col, "user_id"),
                 "username": username,
                 "password_hash": generate_password_hash(password),
-                "role": "User",
+                "role": "student",
                 "date_joined": datetime.now()
             }
             users_col.insert_one(new_user)
@@ -160,6 +214,13 @@ def register():
             return redirect(url_for("login"))
     return render_template("register.html")
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for("login"))
+
+# --- Dashboard ---
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
@@ -237,11 +298,9 @@ def add_journal():
     }
     
     try:
-        result = journals_col.insert_one(entry)
-        print(f"✅ Inserted journal with ID: {entry['journal_id']}")
+        journals_col.insert_one(entry)
         return jsonify({"message": "Journal added successfully", "id": entry["journal_id"]}), 201
     except Exception as e:
-        print(f"❌ Error inserting journal: {e}")
         return jsonify({"error": "Failed to save journal"}), 500
 
 @app.route("/get_journals/<username>", methods=["GET"])
@@ -252,8 +311,8 @@ def get_journals(username):
     user_entries = list(journals_col.find({"user_id": session["user_id"]}).sort("journal_id", -1))
     for e in user_entries:
         e["_id"] = str(e["_id"])
-        e["id"] = e["journal_id"]  # For frontend compatibility
-        e["content"] = e["entry"]  # For frontend compatibility
+        e["id"] = e["journal_id"]
+        e["content"] = e["entry"]
     return jsonify(user_entries)
 
 @app.route("/delete_journal/<int:entry_id>", methods=["DELETE"])
@@ -267,7 +326,7 @@ def delete_journal(entry_id):
     return jsonify({"success": False, "error": "not found"}), 404
     
 
-# --- Mood Tracking Routes ---
+# --- Mood Tracking ---
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     if "user_id" not in session:
@@ -275,6 +334,8 @@ def save_mood():
     
     data = request.get_json()
     mood = data.get("mood")
+    
+    valid_moods = ['Very Happy', 'Feeling Blessed', 'Happy', 'Mind Blown', 'Frustrated', 'Sad', 'Angry', 'Crying']
 
     # ✅ Define valid moods
     valid_moods = [
@@ -335,10 +396,8 @@ def download_csv():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's mood data
     moods = list(moodtracking_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Create CSV in memory
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Date", "Time", "Mood"])
@@ -347,7 +406,6 @@ def download_csv():
         dt = mood["datetime"]
         writer.writerow([dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S"), mood["mood"]])
     
-    # Convert to BytesIO for file download
     output.seek(0)
     file_data = io.BytesIO()
     file_data.write(output.getvalue().encode('utf-8'))
@@ -358,6 +416,7 @@ def download_csv():
                      as_attachment=True,
                      download_name=f'moods_{session["username"]}.csv')
 
+# --- Appointments ---
 @app.route("/download_chart")
 def download_chart():
     if "user_id" not in session:
@@ -372,16 +431,13 @@ def appointments():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's appointments
     user_appointments = list(appointments_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Get counselor info for each appointment
     for appointment in user_appointments:
         counselor = counselors_col.find_one({"counselor_id": appointment["counselor_id"]})
         appointment["counselor_name"] = counselor["name"] if counselor else "Unknown"
         appointment["_id"] = str(appointment["_id"])
     
-    # Get all counselors for booking
     all_counselors = list(counselors_col.find({}))
     for counselor in all_counselors:
         counselor["_id"] = str(counselor["_id"])
@@ -419,7 +475,7 @@ def book_appointment():
     except Exception as e:
         return jsonify({"error": "Failed to book appointment"}), 500
 
-# --- Resources Routes ---
+# --- Resources ---
 @app.route("/resources")
 def resources():
     if "user_id" not in session:
@@ -433,72 +489,314 @@ def resources():
                          resources=all_resources,
                          username=session["username"])
 
-# --- Peer Support Routes ---
-@app.route("/peer_support")
-def peer_support():
+# --- Peer Forum Routes ---
+@app.route("/peer")
+def peer():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
-    posts = list(peersupportposts_col.find({}).sort("datetime", -1))
-    
-    # Add username for non-anonymous posts
+
+    return render_template(
+        "peer.html",
+        username=session.get("username", "Guest"),
+        user_type=session.get("role", "User").lower()
+    )
+
+@app.route("/peer_data")
+def peer_data():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    posts = list(peersupportposts_col.find().sort("datetime", -1))
+
     for post in posts:
-        if not post["is_anonymous"]:
-            user = users_col.find_one({"user_id": post["user_id"]})
-            post["username"] = user["username"] if user else "Unknown"
-        else:
-            post["username"] = "Anonymous"
         post["_id"] = str(post["_id"])
-    
-    return render_template("peer_support.html", 
-                         posts=posts,
-                         username=session["username"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+        post["isStudentVol"] = (user and user.get("role", "").lower() == "studentvol")
+
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+            reply["isStudentVol"] = (reply_user and reply_user.get("role", "").lower() == "studentvol")
+
+    return jsonify(posts)
+
 
 @app.route("/add_post", methods=["POST"])
 def add_post():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
+
     data = request.get_json()
     content = data.get("content", "").strip()
     is_anonymous = data.get("is_anonymous", False)
-    
+
     if not content:
         return jsonify({"error": "Content is required"}), 400
-    
+
+    user_role = session.get("role", "User").lower()
+    flagged = check(content)
+
     post = {
-        "post_id": get_next_id(peersupportposts_col, "post_id"),
         "user_id": session["user_id"],
         "datetime": datetime.now(),
         "content": content,
-        "is_anonymous": bool(is_anonymous)
+        "is_anonymous": bool(is_anonymous),
+        "likes": [],
+        "dislikes": [],
+        "replies": [],
+        "flagged": flagged,
+        "isStudentVol": (user_role == "studentvol")
     }
-    
-    try:
-        peersupportposts_col.insert_one(post)
-        return jsonify({"message": "Post added successfully!"})
-    except Exception as e:
-        return jsonify({"error": "Failed to add post"}), 500
 
-# --- Admin Routes ---
-@app.route("/admin")
-def admin_dashboard():
+    result = peersupportposts_col.insert_one(post)
+    post["_id"] = str(result.inserted_id)
+    return jsonify({"message": "Post added successfully!", "post": post})
+
+@app.route("/add_reply/<post_id>", methods=["POST"])
+def add_reply(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    reply_content = data.get("reply", "").strip()
+    if not reply_content:
+        return jsonify({"error": "Reply content is required"}), 400
+
+    reply = {
+        "_id": ObjectId(),
+        "user_id": session["user_id"],
+        "username": session["username"],
+        "datetime": datetime.now(),
+        "content": reply_content,
+        "flagged": check(reply_content),
+        "likes": [],
+        "dislikes": [],
+        "isStudentVol": (session.get("role", "").lower() == "studentvol")
+    }
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$push": {"replies": reply}}
+    )
+    reply["_id"] = str(reply["_id"])
+    return jsonify({"message": "Reply added successfully!", "reply": reply})
+
+@app.route("/like_post/<post_id>", methods=["POST"])
+def like_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")  # "like" or "dislike"
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    likes = post.get("likes", [])
+    dislikes = post.get("dislikes", [])
+
+    # Toggle logic
+    if action == "like":
+        if user_id in likes:
+            likes.remove(user_id)  # undo like
+        else:
+            likes.append(user_id)
+            if user_id in dislikes:
+                dislikes.remove(user_id)  # can't like and dislike
+    elif action == "dislike":
+        if user_id in dislikes:
+            dislikes.remove(user_id)  # undo dislike
+        else:
+            dislikes.append(user_id)
+            if user_id in likes:
+                likes.remove(user_id)
+    else:
+        return jsonify({"error": "Invalid action"}), 400
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"likes": likes, "dislikes": dislikes}}
+    )
+
+    return jsonify({"likes": len(likes), "dislikes": len(dislikes)})
+
+@app.route("/like_reply/<post_id>/<reply_id>", methods=["POST"])
+def like_reply(post_id, reply_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    replies = post.get("replies", [])
+    for reply in replies:
+        if str(reply["_id"]) == reply_id:
+            likes = reply.get("likes", [])
+            dislikes = reply.get("dislikes", [])
+
+            if action == "like":
+                if user_id in likes:
+                    likes.remove(user_id)
+                else:
+                    likes.append(user_id)
+                    if user_id in dislikes:
+                        dislikes.remove(user_id)
+            elif action == "dislike":
+                if user_id in dislikes:
+                    dislikes.remove(user_id)
+                else:
+                    dislikes.append(user_id)
+                    if user_id in likes:
+                        likes.remove(user_id)
+            else:
+                return jsonify({"error": "Invalid action"}), 400
+
+            reply["likes"] = likes
+            reply["dislikes"] = dislikes
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"replies": replies}}
+    )
+
+    return jsonify({"message": "Action recorded"})
+
+
+@app.route("/moderate/unflag/<post_id>", methods=["POST"])
+def unflag_post(post_id):
     if "user_id" not in session or session["role"] != "Admin":
+        return jsonify({"error": "Admin access required"}), 403
+    peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
+    return jsonify({"message": "Post unflagged"})
+
+@app.route("/moderate/delete/<post_id>", methods=["DELETE"])
+def delete_post(post_id):
+    if "user_id" not in session or session["role"] != "Admin":
+        return jsonify({"error": "Admin access required"}), 403
+    peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+    return jsonify({"message": "Post deleted"})
+
+#---Crisis---
+
+@app.route("/crisis", methods=["POST"])
+def crisis():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    username = session["username"]
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+    crisis_doc = {
+        "username": username,
+        "ip_address": ip_address,
+        "timestamp": datetime.utcnow()
+    }
+    db["crisis"].insert_one(crisis_doc)
+
+    return jsonify({"message": "Crisis logged successfully"})
+
+
+#---Admin Routes---
+@app.route("/Admin", methods=["GET", "POST"])
+def Admin_dashboard():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
         return redirect(url_for("login"))
-    
-    # Get statistics
+
+    # Handle role updates
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
     stats = {
-        "total_users": users_col.count_documents({"role": "User"}),
+        "total_users": users_col.count_documents({"role": {"$ne": "admin"}}),
         "total_journals": journals_col.count_documents({}),
         "total_appointments": appointments_col.count_documents({}),
         "total_posts": peersupportposts_col.count_documents({})
     }
-    
-    return render_template("admin_dashboard.html", 
-                         username=session["username"],
-                         stats=stats)
 
-# --- Debug Routes ---
+    users = get_all_users()  # fetch all non-admin users
+
+    logs = list(db["crisis"].find({}))
+    formatted_logs = []
+    for log in logs:
+        formatted_logs.append({
+            "id": str(log.get("_id")),  
+            "username": log.get("username", ""),
+            "ip_address": log.get("ip_address", ""),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S")
+            if log.get("timestamp") else ""
+        })
+
+    return render_template("Admin_dashboard.html", username=session["username"], stats=stats, users=users, crisis_logs = formatted_logs)
+
+
+@app.route("/Admin/users", methods=["GET", "POST"])
+def manage_users():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
+    users = get_all_users()  # fetch only non-admin users
+    return render_template("Admin_dashboard.html", users=users)
+
+@app.route("/Admin/flagged_posts", methods=["GET", "POST"])
+def Admin_flagged_posts():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        action = request.form.get("action")  # delete/unflag
+        post_id = request.form.get("post_id")
+        if action == "delete" and post_id:
+            peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+        elif action == "unflag" and post_id:
+            peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
+
+    posts = get_flagged_posts()
+    return render_template("Admin_flagged_posts.html", posts=posts)
+
+@app.route("/admin/crisis_logs", methods=["GET"])
+def get_crisis_logs():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    logs = list(db["crisis"].find({}, {"_id": 0}))
+    print (logs)
+    return jsonify(logs), 200
+
+@app.route("/resolve_crisis", methods=["POST"])
+def resolve_crisis():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    log_id = request.form.get("log_id")
+    if not log_id:
+        return "Missing log_id", 400
+
+    try:
+        db["crisis"].delete_one({"_id": ObjectId(log_id)})
+    except Exception as e:
+        print("Error deleting crisis log:", e)
+        return "Invalid log_id", 400
+
+    return redirect(url_for("Admin_dashboard"))
+
+# --- Debug ---
 @app.route("/debug/all_collections")
 def debug_all_collections():
     if "user_id" not in session or session["role"] != "Admin":
@@ -506,8 +804,6 @@ def debug_all_collections():
     
     try:
         collections_info = {}
-        
-        # Get info for each collection
         collections = {
             "users": users_col,
             "journals": journals_col,
@@ -537,12 +833,6 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Logout ---
-@app.route("/logout", methods=["POST"])
-def logout():
-    session.clear()
-    flash('Logged out successfully', 'success')
-    return redirect(url_for("login"))
-
+# --- Run App ---
 if __name__ == "__main__":
     app.run(debug=True)

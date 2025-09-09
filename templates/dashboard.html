@@ -161,43 +161,37 @@
          Book sessions with counsellors without fear of judgment.
       </p>
     </div>
-
-    <a href="{{ url_for('resources') }}" class="feature-card">
-      <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>
-      <h3 data-en="Wellness Resources" data-ur="وسائل فلاح و بہبود" data-hi="वेलनेस संसाधन">Wellness Resources</h3>
-      <p data-en="Access guides, audios, and videos in your own language."
-         data-ur="اپنی زبان میں گائیڈز، آڈیوز، اور ویڈیوز تک رسائی حاصل کریں۔"
-         data-hi="अपनी भाषा में गाइड, ऑडियो और वीडियो तक पहुँचें।">
-         Access guides, audios, and videos in your own language.
-      </p>
-    </a>
-
-    <a href="{{ url_for('dashboard') }}" class="feature-card">
-      <span><img src="{{ url_for('static', filename='peer support.png') }}"></span>
-      <h3 data-en="Peer Support" data-ur="ساتھیوں کی مدد" data-hi="सहकर्मी समर्थन">Peer Support</h3>
-      <p data-en="Join moderated forums to share and support each other."
-         data-ur="ماڈریٹڈ فورمز میں شامل ہوں تاکہ ایک دوسرے کی مدد کریں۔"
-         data-hi="मॉडरेटेड फोरम में शामिल हों और एक दूसरे का समर्थन करें।">
-         Join moderated forums to share and support each other.
-      </p>
-    </a>
-
-    <a href="{{ url_for('journal') }}" class="feature-card">
-      <span><img src="{{ url_for('static', filename='journal.png') }}"></span>
-      <h3 data-en="Journal" data-ur="جرنل" data-hi="जर्नल">Journal</h3>
-      <p data-en="Pen down your thoughts and feelings of the day."
-         data-ur="اپنے دن کے خیالات اور جذبات لکھیں۔"
-         data-hi="दिन के अपने विचार और भावनाओं को लिखें।">
-         Pen down your thoughts and feelings of the day.
-      </p>
-    </a>
+    <div class="feature-card">
+      <a href="{{ url_for('resources') }}" class="feature-card">
+        <span><img src = "{{ url_for('static', filename='wellness.png') }}"></span>
+        <h3>Wellness Resources</h3>
+        <p>Access guides, audios, and videos in your own language.</p>
+      </a>
+    </div>
+    <div class="feature-card">
+      <a href="{{ url_for('peer') }}" class="feature-card">
+        <span><img src = "{{ url_for('static', filename='peer support.png') }}"></span>
+        <h3>Peer Support</h3>
+        <p>Join moderated forums to share and support each other.</p>
+      </a>
+    </div>
+    
+    <div class="feature-card">
+      <a href="{{ url_for('journal') }}" class="feature-card">
+        <span><img src = "{{ url_for('static', filename='journal.png') }}"></span>
+        <h3>Journal</h3>
+        <p>Pen down your thoughts and feelings of the day.</p>
+      </a>
+    </div>
+    
   </section>
 
-<footer>
-  <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" 
-     data-ur="سول ایس © 2025 — SynapSix کے ساتھ بنایا گیا 💙" 
-     data-hi="SoulAce © 2025 — SynapSix द्वारा 💙 के साथ निर्मित">SoulAce © 2025 — Built with 💙 by SynapSix</p>
-</footer>
+  <!-- <button class="crisis-btn" onclick="location.href='{{ url_for('crisis') }}'">🚨 Crisis</button> -->
+  <button onclick="triggerCrisis()">🚨 Crisis</button>
+
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
 
 <script>
 function toggleMode(){ document.body.classList.toggle('dark'); }
@@ -214,5 +208,40 @@ langSelect.addEventListener('change', ()=>{
   });
 });
 </script>
+
+    function toggleUserPopup() {
+        const popup = document.getElementById('user-popup');
+        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function setMood(mood) {
+      const response = await fetch("/save_mood", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: mood })
+      });
+
+      const result = await response.json();
+      alert(result.message); // popup confirmation
+    }
+
+
+    // Optional: click outside to close
+    window.addEventListener('click', function(e) {
+        const popup = document.getElementById('user-popup');
+        const icon = document.querySelector('.user-icon');
+        if (!popup.contains(e.target) && e.target !== icon) {
+            popup.style.display = 'none';
+        }
+    });
+
+    async function triggerCrisis() {
+      const response = await fetch("/crisis", { method: "POST" });
+      const result = await response.json();
+      alert(result.message);
+    }
+
+  </script>
+
 </body>
 </html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SoulAce - Peer Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- === CSS === -->
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #F5F7F2; color: #333; margin: 0; padding: 20px; }
+    h2 { color: #243B36; }
+    .post, .reply { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .reply { background: #F9F9F9; margin-left: 20px; }
+    .flagged { background: #fff0f0; border-left: 3px solid #ff6b6b; }
+    .studentvol-badge { background: gold; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; }
+    #form { margin: 15px 0; }
+    textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 8px; }
+    button { margin-right: 5px; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <!-- === HTML === -->
+  <h2>Peer Support Forum</h2>
+  <button onclick="showForm()">+ New Post</button>
+  
+  <div id="form" style="display:none;">
+    <textarea id="content" placeholder="Share something..."></textarea>
+    <label><input type="checkbox" id="anonymous"> Post anonymously</label>
+    <br>
+    <button onclick="submitPost()">Submit</button>
+  </div>
+
+  <div id="posts"></div>
+
+  <!-- === JavaScript === -->
+  <script>
+  let posts = [];
+
+  // Load all posts from backend
+  document.addEventListener("DOMContentLoaded", loadPosts);
+
+  async function loadPosts() {
+    try {
+      const res = await fetch("/peer_data");
+      posts = await res.json();
+      renderPosts();
+    } catch (err) {
+      console.error("Failed to load posts", err);
+    }
+  }
+
+  // Render posts and replies
+  function renderPosts() {
+    const container = document.getElementById("posts");
+    container.innerHTML = "";
+
+    if (posts.length === 0) {
+      container.innerHTML = "<p>No posts yet. Be the first to share!</p>";
+      return;
+    }
+
+    posts.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "post" + (p.flagged ? " flagged" : "");
+      div.innerHTML = `
+        <strong>${p.is_anonymous ? "Anonymous" : p.username}</strong>
+        ${p.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
+        <p>${p.content}</p>
+        
+        <button onclick="likePost('${p._id}', 'like')">👍 ${p.likes.length}</button>
+        <button onclick="likePost('${p._id}', 'dislike')">👎 ${p.dislikes.length}</button>
+
+        <button onclick="showReplyForm('${p._id}')">💬 Reply</button>
+        <div id="replies-${p._id}"></div>
+        <div id="reply-form-${p._id}" style="display:none; margin-top:10px;">
+          <textarea id="reply-content-${p._id}" placeholder="Write your reply..."></textarea>
+          <button onclick="submitReply('${p._id}')">Submit Reply</button>
+        </div>
+      `;
+
+      // sort replies: volunteers > likes > datetime
+      let replies = p.replies || [];
+      replies.sort((a, b) => {
+        if (a.isStudentVol && !b.isStudentVol) return -1;
+        if (!a.isStudentVol && b.isStudentVol) return 1;
+        const aNet = (a.likes || 0) - (a.dislikes || 0);
+        const bNet = (b.likes || 0) - (b.dislikes || 0);
+        if (aNet !== bNet) return bNet - aNet;
+        return new Date(b.datetime) - new Date(a.datetime);
+      });
+
+      replies.forEach(r => {
+        div.querySelector(`#replies-${p._id}`).innerHTML += `
+          <div class="reply ${r.flagged ? "flagged" : ""}">
+            <strong>${r.username}</strong> ${r.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
+            <p>${r.content}</p>
+            
+            <button onclick="likeReply('${p._id}','${r._id}','like')">👍 ${r.likes.length}</button>
+            <button onclick="likeReply('${p._id}','${r._id}','dislike')">👎 ${r.dislikes.length}</button>
+
+          </div>
+        `;
+      });
+
+
+      container.appendChild(div);
+    });
+  }
+
+  // Show new post form
+  function showForm() {
+    document.getElementById("form").style.display = "block";
+  }
+
+  // Submit a new post
+  async function submitPost() {
+    const content = document.getElementById("content").value.trim();
+    const is_anonymous = document.getElementById("anonymous").checked;
+
+    if (!content) {
+      alert("Please enter some content before posting.");
+      return;
+    }
+
+    const res = await fetch("/add_post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, is_anonymous })
+    });
+
+    if (res.ok) {
+      document.getElementById("content").value = "";
+      document.getElementById("anonymous").checked = false;
+      loadPosts();
+    } else {
+      console.error("Failed to add post");
+    }
+  }
+
+  // Show reply form for a post
+  function showReplyForm(postId) {
+    document.getElementById(`reply-form-${postId}`).style.display = "block";
+  }
+
+  // Submit a reply
+  async function submitReply(postId) {
+    const content = document.getElementById(`reply-content-${postId}`).value.trim();
+    if (!content) {
+      alert("Reply cannot be empty.");
+      return;
+    }
+
+    const res = await fetch(`/add_reply/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reply: content })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to add reply");
+    }
+  }
+
+  // Like or dislike a post
+  async function likePost(id, action) {
+    const res = await fetch(`/like_post/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to record action");
+    }
+  }
+
+  async function likeReply(postId, replyId, action) {
+    const res = await fetch(`/like_reply/${postId}/${replyId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action })
+    });
+
+    if (res.ok) {
+      loadPosts();
+    } else {
+      console.error("Failed to record reply action");
+    }
+  }
+
+
+
+  </script>
+</body>
+</html>
