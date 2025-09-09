@@ -266,36 +266,6 @@
     </table>
   </section>
 
-  <!-- AI-Flagged Posts -->
-  <section class="admin-section">
-    <h2>AI-Flagged Posts</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Post ID</th>
-          <th>User</th>
-          <th>Content</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for post in flagged_posts %}
-        <tr>
-          <td>{{ post.id }}</td>
-          <td>{{ post.username }}</td>
-          <td>{{ post.content }}</td>
-          <td>
-            <form method="POST" action="{{ url_for('flagged_posts') }}">
-              <input type="hidden" name="post_id" value="{{ post.id }}">
-              <button name="action" value="delete">Delete</button>
-              <button name="action" value="unflag">Unflag</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
   <!-- Mood Stats -->
   <section class="admin-section">
@@ -357,10 +327,15 @@
             </form>
           </td>
         </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="text-align:center;">No crisis logs found</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </section>
+
 
   <footer>
     <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
@@ -390,6 +365,16 @@
             popup.style.display = 'none';
         }
     });
+
+    window.onload = function() {
+      fetch("/admin/crisis_logs")
+        .then(response => response.json())
+        .then(data => {
+          console.log("Crisis Logs:", data);
+          // TODO: append data to your table / UI
+        })
+        .catch(err => console.error("Error fetching crisis logs:", err));
+    };
   </script>
 </body>
 </html>

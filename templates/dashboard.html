@@ -281,7 +281,12 @@
       color: #657A74;
     }
 
-
+    .crisis-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2000;
+    }
 
     footer {
       text-align: center;
@@ -492,6 +497,9 @@
     
   </section>
 
+  <!-- <button class="crisis-btn" onclick="location.href='{{ url_for('crisis') }}'">🚨 Crisis</button> -->
+  <button onclick="triggerCrisis()">🚨 Crisis</button>
+
   <footer>
     <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
@@ -532,6 +540,12 @@
             popup.style.display = 'none';
         }
     });
+
+    async function triggerCrisis() {
+      const response = await fetch("/crisis", { method: "POST" });
+      const result = await response.json();
+      alert(result.message);
+    }
 
   </script>
 </body>

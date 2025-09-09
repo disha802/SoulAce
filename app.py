@@ -25,6 +25,7 @@ moodtracking_col = db["moodtracking"]
 journals_col = db["journals"]
 resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
+crisis_col = db["crisis_logs"]
 
 print("✅ Connected to MongoDB:", client.list_database_names())
 
@@ -140,6 +141,26 @@ def get_flagged_posts():
 
 def update_user_role(user_id, new_role):
     users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+
+from bson.objectid import ObjectId
+from datetime import datetime
+
+def get_crisis_logs():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    logs = list(db["crisis"].find({}))
+    formatted_logs = []
+    for log in logs:
+        formatted_logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ensure an id is available
+            "username": log.get("username", ""),
+            "ip_address": log.get("ip_address", ""),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp"))
+        })
+
+    return jsonify(formatted_logs), 200
+
 
 
 # Initialize default data
@@ -587,8 +608,27 @@ def delete_post(post_id):
     peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
     return jsonify({"message": "Post deleted"})
 
+#---Crisis---
 
-#---Admin Routes
+@app.route("/crisis", methods=["POST"])
+def crisis():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    username = session["username"]
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+    crisis_doc = {
+        "username": username,
+        "ip_address": ip_address,
+        "timestamp": datetime.utcnow()
+    }
+    db["crisis"].insert_one(crisis_doc)
+
+    return jsonify({"message": "Crisis logged successfully"})
+
+
+#---Admin Routes---
 @app.route("/Admin", methods=["GET", "POST"])
 def Admin_dashboard():
     if "user_id" not in session or session.get("role", "").lower() != "admin":
@@ -610,7 +650,18 @@ def Admin_dashboard():
 
     users = get_all_users()  # fetch all non-admin users
 
-    return render_template("Admin_dashboard.html", username=session["username"], stats=stats, users=users)
+    logs = list(db["crisis"].find({}))
+    formatted_logs = []
+    for log in logs:
+        formatted_logs.append({
+            "id": str(log.get("_id")),  
+            "username": log.get("username", ""),
+            "ip_address": log.get("ip_address", ""),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S")
+            if log.get("timestamp") else ""
+        })
+
+    return render_template("Admin_dashboard.html", username=session["username"], stats=stats, users=users, crisis_logs = formatted_logs)
 
 
 @app.route("/Admin/users", methods=["GET", "POST"])
@@ -643,7 +694,31 @@ def Admin_flagged_posts():
     posts = get_flagged_posts()
     return render_template("Admin_flagged_posts.html", posts=posts)
 
+@app.route("/admin/crisis_logs", methods=["GET"])
+def get_crisis_logs():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
 
+    logs = list(db["crisis"].find({}, {"_id": 0}))
+    print (logs)
+    return jsonify(logs), 200
+
+@app.route("/resolve_crisis", methods=["POST"])
+def resolve_crisis():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    log_id = request.form.get("log_id")
+    if not log_id:
+        return "Missing log_id", 400
+
+    try:
+        db["crisis"].delete_one({"_id": ObjectId(log_id)})
+    except Exception as e:
+        print("Error deleting crisis log:", e)
+        return "Invalid log_id", 400
+
+    return redirect(url_for("Admin_dashboard"))
 
 # --- Debug ---
 @app.route("/debug/all_collections")
