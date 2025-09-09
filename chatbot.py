@@ -11,7 +11,8 @@ class EmotionalChatbot:
         os.environ["GROQ_API_KEY"] = api_key
         self.llm = LLM(
             model="groq/llama-3.1-8b-instant",
-            api_key=api_key
+            api_key=api_key,
+            max_tokens=256
         )
         self.setup_agents()
 
@@ -116,13 +117,15 @@ class EmotionalChatbot:
             llm=self.llm
         )
 
-        # Neutral Response Agent
+        # Updated Neutral Response Agent with more natural conversation style
         self.neutral_agent = Agent(
             role='Friendly Conversationalist',
-            goal='Engage in warm, friendly conversation',
-            backstory='''You are a friendly, warm conversationalist who makes people feel good.
-            You engage naturally, show interest, and maintain positive energy.
-            Be supportive, encouraging, and genuinely caring in all interactions.''',
+            goal='Engage in natural, human-like conversation',
+            backstory='''You are a warm, empathetic friend who loves having genuine conversations.
+            You respond naturally like a caring human would - sometimes with questions, sometimes with 
+            personal thoughts, sometimes with encouragement. You're genuinely interested in the person 
+            and make them feel heard and valued. You avoid being overly formal or robotic.
+            You're supportive but also authentic and relatable.''',
             verbose=False,
             allow_delegation=False,
             llm=self.llm
@@ -157,6 +160,49 @@ class EmotionalChatbot:
             if word in emotion:
                 return word
         return 'neutral'
+
+    def clean_response(self, response):
+        """Clean the response while preserving the actual conversational content"""
+        # Split into lines and clean each line
+        lines = response.split('\n')
+        clean_lines = []
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            line_lower = line.lower()
+            
+            # Skip only clear metadata lines, not actual content
+            skip_patterns = [
+                'thought:',
+                'action:',
+                'action input:',
+                'observation:',
+                'final answer:',
+                'i now can give',
+                'i can now give',
+                'agent:',
+                'task:',
+                'crew:',
+                'role:',
+                'goal:',
+                'backstory:'
+            ]
+            
+            should_skip = any(pattern in line_lower for pattern in skip_patterns)
+            
+            if not should_skip:
+                clean_lines.append(line)
+
+        # Join the clean content
+        if clean_lines:
+            cleaned_response = ' '.join(clean_lines)
+            # Apply stigmatized word filtering
+            return self.filter_stigmatized_words(cleaned_response)
+        
+        return None
 
     def generate_response(self, message, emotion):
         if emotion == "anxiety":
@@ -195,22 +241,25 @@ class EmotionalChatbot:
 
             Keep the tone calm, practical, and encouraging. Be conversational and human-like.'''
 
-        else:  # neutral
+        else:  # neutral - Enhanced prompt for natural conversation
             agent = self.neutral_agent
-            prompt = f'''The user said: "{message}"
+            prompt = f'''The user just said: "{message}"
 
-            Engage in a warm, friendly conversation that:
-            - Shows genuine interest in what they shared
-            - Responds naturally and conversationally
-            - Maintains positive, uplifting energy
-            - Makes them feel heard and valued
+            Respond naturally like a caring friend would. Be genuine and conversational. 
+            You can:
+            - Ask follow-up questions if they shared something interesting
+            - Share a related thought or experience
+            - Show genuine interest and enthusiasm
+            - Offer encouragement naturally
+            - Make observations or comments that show you're listening
 
-            Keep the tone friendly, warm, and encouraging. Be conversational and human-like.'''
+            Don't be overly formal or structured. Just be a warm, authentic human-like friend 
+            having a real conversation. Keep it natural and engaging.'''
 
         task = Task(
             description=prompt,
             agent=agent,
-            expected_output="A warm, human-like response"
+            expected_output="A natural, conversational response"
         )
 
         crew = Crew(
@@ -219,38 +268,36 @@ class EmotionalChatbot:
             verbose=False
         )
 
-        result = crew.kickoff()
-        response = str(result).strip()
-
-        # Clean up the response - remove unwanted metadata but keep actual content
-        lines = response.split('\n')
-        clean_lines = []
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            line_lower = line.lower()
-            # Skip obvious metadata lines
-            if (line_lower.startswith('thought:') or
-                line_lower.startswith('action:') or
-                line_lower.startswith('final answer:') or
-                'i now can give' in line_lower or
-                'i can now give' in line_lower):
-                continue
-                
-            clean_lines.append(line)
-
-        # Return the cleaned response or fallback
-        if clean_lines:
-            return '\n'.join(clean_lines)
-        else:
-            # Generate a simple fallback based on emotion
-            if emotion == "neutral":
-                return "Hello! I'm doing well, thank you for asking. How are you doing today?"
+        try:
+            result = crew.kickoff()
+            response = str(result).strip()
+            
+            # Clean the response
+            cleaned_response = self.clean_response(response)
+            
+            if cleaned_response and len(cleaned_response.strip()) > 10:
+                return cleaned_response
             else:
-                return "I'm here to support you. Could you tell me more about how you're feeling?"
+                # Only use fallback if cleaning completely failed
+                if emotion == "neutral":
+                    return "I'd love to hear more about that! What's been going well for you today?"
+                elif emotion == "depression":
+                    return "I hear you, and I want you to know that what you're feeling is valid. Depression can feel so heavy and overwhelming. You're not alone in this, and reaching out shows real strength. Would you like to talk about what's been weighing on you lately?"
+                elif emotion == "anxiety":
+                    return "I can sense you're feeling anxious right now. That's completely understandable - anxiety can feel so overwhelming. Let's take this one moment at a time. Can you try taking a slow, deep breath with me?"
+                else:  # stress
+                    return "It sounds like you're dealing with a lot right now. Stress can feel so overwhelming when everything piles up. You're handling more than you think you are. What's feeling most pressing for you today?"
+                    
+        except Exception as e:
+            # Silent fallback without showing errors
+            if emotion == "neutral":
+                return "That sounds interesting! Tell me more about what's on your mind."
+            elif emotion == "depression":
+                return "I hear you, and I want you to know that what you're feeling is valid. Depression can feel so heavy and overwhelming. You're not alone in this."
+            elif emotion == "anxiety":
+                return "I can sense you're feeling anxious right now. That's completely understandable. Let's take this one moment at a time."
+            else:  # stress
+                return "It sounds like you're dealing with a lot right now. You're handling more than you think you are."
 
     def chat(self, message):
         emotion = self.classify_emotion(message)
@@ -258,8 +305,8 @@ class EmotionalChatbot:
         return response
 
 def main():
-    print("🤗 Welcome to your Emotional Support Chatbot!")
-    print("I'm here to listen, understand, and help you feel better.\n")
+    print("                                     Welcome to SoulAce\n")
+    print("                                Your Emotional Support Chatbot!\n")
 
     # Get API key from environment variable
     api_key = os.getenv("GROQ_API_KEY")
@@ -271,25 +318,21 @@ def main():
 
     try:
         # Initialize chatbot
-        print("\n🔄 Setting up your chatbot...")
         chatbot = EmotionalChatbot(api_key)
-        print("✅ Chatbot ready! Let's start our conversation.\n")
-        print("💡 Tip: Type 'quit' or 'exit' to end the conversation.\n")
 
         # Start conversation loop
         while True:
             user_input = input("You: ").strip()
 
             # Check for quit commands
-            if user_input.lower() in ['quit', 'exit', 'bye']:
-                print("\n🌟 Take care of yourself! Remember, you're stronger than you know. Goodbye! 💙")
+            if user_input.lower() in ['bye']:
+                print("\n Take care of yourself! Remember, you're stronger than you know. 💙")
                 break
 
             if not user_input:
                 print("Bot: I'm here whenever you're ready to talk. 😊")
                 continue
 
-            print("\n🤔 Thinking...")
             try:
                 response = chatbot.chat(user_input)
                 print(f"\nBot: {response}\n")

@@ -174,6 +174,7 @@ def dashboard():
 #         return redirect(url_for("login"))
 #     return render_template("journal.html", username=session["username"])
 
+
 @app.route("/journal", methods=["GET", "POST"])
 def journal():
     if "user_id" not in session:
