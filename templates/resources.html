@@ -83,38 +83,49 @@
 
   <!-- Tiles -->
   <div class="tile-grid">
-    <div class="tile" onclick="openModal('modalExternalResources')">External Resources</div>
     <div class="tile" onclick="openModal('modalMeditation')">Meditations</div>
     <div class="tile" onclick="openModal('modalPodcastsBooks')">Podcasts & Books</div>
     <div class="tile" onclick="openModal('modalHealthyBodyMind')">Healthy Body & Mind</div>
     <div class="tile" onclick="openModal('modalDigitalWellness')">Digital Wellness</div>
   </div>
 
-  <!-- Example Modal (External Resources) -->
-  <div id="modalExternalResources" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalExternalResources')">&times;</span>
-      <h2>External Resources 🌐</h2>
-      <p>Explore simple, mindful tools from around the web — no login, no personal info required.</p>
+  <!-- Meditation Modal -->
+<div id="modalMeditation" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
+    <h2>Meditations 🧘‍♂️</h2>
+    <p>Meditation is the pause that lets the mind breathe.</p>
 
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.pixelthoughts.co/" allowfullscreen></iframe>
-          <p>🌌 Pixel Thoughts — A 60-second meditation</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://soundrown.com/" allowfullscreen></iframe>
-          <p>🎶 Soundrown — Relaxing ambient sounds</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://donothingfor2minutes.org/" allowfullscreen></iframe>
-          <p>⏳ Do Nothing for 2 Minutes — Pause & breathe</p>
-        </div>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/60Gnd8Wy0gE" allowfullscreen></iframe>
+        <p>Morning Mindful Start</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/4ZtihFRxK28" allowfullscreen></iframe>
+        <p>Midday Reset Meditation</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/YRJ6xoiRcpQ" allowfullscreen></iframe>
+        <p>Evening Calm Wind-down</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/cF-w7jzVWcM" allowfullscreen></iframe>
+        <p>Deep Relaxation Journey</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/yDGakic4UAk" allowfullscreen></iframe>
+        <p>Sleep Mindfulness Session</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/Rcofz-30dnU" allowfullscreen></iframe>
+        <p>Stress Relief Meditation</p>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- (Keep other modals same as your code, just cleaned: no data-en/ur/hi attributes) -->
+
   <!-- Podcasts & Books Modal -->
 <div id="modalPodcastsBooks" class="modal">
   <div class="modal-content">
@@ -209,21 +220,70 @@
   </div>
 </div>
 
+<!-- Healthy Body & Mind Modal -->
+<div id="modalHealthyBodyMind" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
+    <h2>Healthy Body & Mind 🌿</h2>
+    <p>
+      Nourish your body, strengthen your mind, and find balance.
+    </p>
+
+    <h3 style="margin-top:20px;">📰 Articles on Healthy Living</h3>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/hidden-lifestyle-threats-to-heart-health-how-sleep-stress-pollution-gut-health-and-sugar-fuel-cardiovascular-risk/articleshow/123683120.cms?utm_source=chatgpt.com" target="_blank">
+          ❤️ Hidden Lifestyle Threats to Heart Health
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/3-simple-habits-to-keep-the-brain-young-according-to-a-top-neurosurgeon/photostory/123757718.cms?utm_source=chatgpt.com" target="_blank">
+          🧠 3 Simple Habits to Keep the Brain Young
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/eat-right-for-a-better-life-dieticians-simple-guide-to-healthy-eating/articleshow/123780631.cms?utm_source=chatgpt.com" target="_blank">
+          🥗 Eat Right for a Better Life – A Dietician’s Guide
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Digital Wellness Modal -->
 <div id="modalDigitalWellness" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
     <h2>Digital Wellness 🌿</h2>
     <p>Take a break from screens and find balance in your digital life.</p>
-    
+
+    <p>
+      Tired of the digital world? A digital detox offers a much-needed pause from screens, scrolling, 
+      and constant pings. Read the articles about digital detox to get started.
+    </p>
+
     <div class="modal-resources">
       <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/oB6qJ9I__0A" allowfullscreen></iframe>
-        <p>Digital Detox: Unplug & Recharge</p>
+        <a href="https://www.ndtv.com/india-news/karnataka-government-announces-digital-detox-initiative-to-encourage-mindful-use-of-social-media-4975460?utm_source=chatgpt.com" target="_blank">
+          📰 Karnataka Govt announces Digital Detox Initiative
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://cmhlp.org/imho/blog/indias-digital-mental-health-landscape-government-initiatives-and-challenges/?utm_source=chatgpt.com" target="_blank">
+          🌐 India’s Digital Mental Health Landscape – Govt Initiatives & Challenges
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/city/nagpur/digital-obesity-silent-epidemic-among-students-vnit-director/articleshow/121834472.cms?utm_source=chatgpt.com" target="_blank">
+          ⚠️ Digital Obesity – A Silent Epidemic Among Students
+        </a>
       </div>
     </div>
   </div>
 </div>
+
 
 
   <footer>
