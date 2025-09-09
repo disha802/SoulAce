@@ -152,15 +152,15 @@
       </p>
     </div>
 
-    <div class="feature-card">
-      <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
-      <h3 data-en="Confidential Booking" data-ur="رازدارانہ بکنگ" data-hi="गोपनीय बुकिंग">Confidential Booking</h3>
-      <p data-en="Book sessions with counsellors without fear of judgment."
+   <a href="{{ url_for('appointment') }}" class="feature-card">
+       <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
+       <h3 data-en="Confidential Booking" data-ur="رازدارانہ بکنگ" data-hi="गोपनीय बुकिंग">Confidential Booking</h3>
+       <p data-en="Book sessions with counsellors without fear of judgment."
          data-ur="کاؤنسلرز کے ساتھ سیشن بک کریں بغیر کسی خوف کے۔"
          data-hi="काउंसलर के साथ सत्र बुक करें बिना किसी डर के।">
          Book sessions with counsellors without fear of judgment.
-      </p>
-    </div>
+       </p>
+   </a> 
 
     <a href="{{ url_for('resources') }}" class="feature-card">
       <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>

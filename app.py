@@ -25,6 +25,9 @@ moodtracking_col = db["moodtracking"]
 journals_col = db["journals"]
 resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
+therapists_col = db['therapists']
+slots_col = db['slots']        # timeslot documents
+bookings_col = db['bookings']  # bookings
 
 print("✅ Connected to MongoDB:", client.list_database_names())
 
@@ -464,6 +467,156 @@ def debug_all_collections():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/appointment')
+def appointment():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('booking.html', username=session['username'])
+
+
+@app.route('/api/therapists', methods=['GET'])
+def get_therapists():
+    docs = list(therapists_col.find({}))
+    result = []
+    for d in docs:
+        result.append({
+            "_id": str(d["_id"]),
+            "name": d.get("name"),
+            "expertise": d.get("expertise"),
+            "years_experience": d.get("years_experience"),
+            "location": d.get("location")
+        })
+    return jsonify(result), 200
+
+@app.route('/api/therapists/<therapist_id>/slots', methods=['GET'])
+def get_slots(therapist_id):
+    date = request.args.get('date')
+    if not date:
+        abort(400, "Missing date param")
+    try:
+        # find slots for therapist + date
+        t_oid = ObjectId(therapist_id)
+    except:
+        abort(400, "Invalid therapist id")
+    docs = list(slots_col.find({"therapist_id": t_oid, "date": date}))
+    slots = []
+    for s in docs:
+        slots.append({
+            "_id": str(s["_id"]),
+            "therapist_id": str(s["therapist_id"]),
+            "date": s["date"],
+            "time": s["time"],
+            "status": s.get("status", "available"),
+            "booked_by": s.get("booked_by")  # can be user id
+        })
+    return jsonify({"slots": slots}), 200
+
+@app.route('/api/book', methods=['POST'])
+def book_slot():
+    payload = request.get_json() or {}
+    therapist_id = payload.get('therapist_id')   # may be null -> server auto-match
+    slot_id = payload.get('slot_id')             # optional: if client selected exact slot
+    date = payload.get('date')
+    time = payload.get('time')
+    user_id = payload.get('user_id')
+    session_type = payload.get('session_type', 'individual')
+    concerns = payload.get('concerns', '')
+
+    if not date or not time or not user_id:
+        return jsonify({"error":"Missing fields"}), 400
+
+    # If slot_id provided, attempt atomic update: only mark booked if status == 'available'
+    if slot_id:
+        try:
+            s_oid = ObjectId(slot_id)
+        except:
+            return jsonify({"error":"Invalid slot id"}), 400
+
+        res = slots_col.update_one(
+            {"_id": s_oid, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot already booked or unavailable"}), 409
+
+        # create booking record
+        booking = {
+          "slot_id": s_oid,
+          "therapist_id": ObjectId(therapist_id),
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message": "Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s_oid),
+            "date": date,
+            "time": time
+        }), 200
+
+    # If no slot_id, attempt server-side find+book: find first available slot for therapist on that date/time
+    if therapist_id:
+        try:
+            t_oid = ObjectId(therapist_id)
+        except:
+            return jsonify({"error":"Invalid therapist id"}),400
+        # find a slot for that exact time and date and try to book
+        res = slots_col.update_one(
+            {"therapist_id": t_oid, "date": date, "time": time, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot not available"}), 409
+        # find the slot doc now
+        s = slots_col.find_one({"therapist_id": t_oid, "date": date, "time": time})
+        booking = {
+          "slot_id": s["_id"],
+          "therapist_id": t_oid,
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message":"Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s["_id"]),
+            "date": date,
+            "time": time
+        }), 200
+
+    # Auto-match: if therapist_id omitted, find any therapist with available slot for date/time
+    # (basic example: first matching slot)
+    slot_doc = slots_col.find_one_and_update(
+      {"date": date, "time": time, "status": "available"},
+      {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+    )
+    if not slot_doc:
+      return jsonify({"error":"No available slots"}), 409
+    booking = {
+      "slot_id": slot_doc["_id"],
+      "therapist_id": slot_doc["therapist_id"],
+      "user_id": user_id,
+      "date": date,
+      "time": time,
+      "session_type": session_type,
+      "concerns": concerns,
+      "created_at": datetime.utcnow()
+    }
+    bid = bookings_col.insert_one(booking).inserted_id
+    return jsonify({"message":"Booked", "booking_id": str(bid), "therapist_id": str(slot_doc["therapist_id"]), "slot_id": str(slot_doc["_id"]), "date": date, "time": time}), 200
+
 
 # --- Logout ---
 @app.route("/logout", methods=["POST"])
