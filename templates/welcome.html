@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulAce - Your Mental Health Companion</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+        :root {
+            --dark-green: #243B36;
+            --sage-green: #7B9B8B;
+            --cream: #f9e6d0;
+            --light-cream: #F5F7F2;
+            --warm-yellow: #fcd58d;
+            --soft-white: #FFF7E4;
+            --kashmir-blue: #2E86AB;
+            --saffron: #F18F01;
+            --mountain-gray: #6B705C;
+            --snow-white: #FEFEFE;
+            --font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+            --serif-family: 'Playfair Display', serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--light-cream) 0%, #E8F5E8 50%, var(--cream) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+            color: #333;
+        }
+
+        /* Cultural Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(46, 134, 171, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(241, 143, 1, 0.05) 0%, transparent 50%);
+            background-size: 400px 400px;
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        /* Floating Cultural Elements */
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-shape {
+            position: absolute;
+            opacity: 0.15;
+            animation: culturalFloat 8s ease-in-out infinite;
+            font-size: 2rem;
+        }
+
+        .floating-shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
+        .floating-shape:nth-child(2) { top: 25%; right: 15%; animation-delay: 2s; }
+        .floating-shape:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 4s; }
+        .floating-shape:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 6s; }
+
+        @keyframes culturalFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.2; }
+        }
+
+        /* Header */
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--sage-green) 0%, var(--kashmir-blue) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-circle {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--soft-white), var(--saffron));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 6px 20px rgba(241, 143, 1, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(241, 143, 1, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(241, 143, 1, 0.5); }
+        }
+
+        .logo-text h1 {
+            color: white;
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-text p {
+            color: var(--soft-white);
+            font-size: 0.95rem;
+            margin: 0;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--saffron), #e67e00);
+            color: white;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(241, 143, 1, 0.4);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(241, 143, 1, 0.6);
+            background: linear-gradient(135deg, #e67e00, var(--saffron));
+        }
+
+        /* Main Content */
+        main {
+            position: relative;
+            z-index: 5;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 50px;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .cultural-accent {
+            display: inline-block;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            animation: gentle-sway 4s ease-in-out infinite;
+        }
+
+        @keyframes gentle-sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+
+        .hero-title {
+            font-family: var(--serif-family);
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            font-weight: 600;
+            color: var(--dark-green);
+            margin-bottom: 15px;
+            line-height: 1.3;
+            animation: fadeInUp 1s ease-out;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            color: var(--kashmir-blue);
+            margin-bottom: 25px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+            font-weight: 500;
+        }
+
+        .hero-description {
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            color: var(--mountain-gray);
+            max-width: 650px;
+            margin: 0 auto 35px;
+            line-height: 1.7;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .cultural-quote {
+            font-style: italic;
+            color: var(--sage-green);
+            font-size: 1.1rem;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Features Grid */
+        .features-section {
+            padding: 50px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features-title {
+            text-align: center;
+            font-family: var(--serif-family);
+            font-size: 2.2rem;
+            color: var(--dark-green);
+            margin-bottom: 45px;
+            font-weight: 600;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, white 0%, #f8fffe 100%);
+            padding: 35px 25px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
+            border-radius: 20px 20px 0 0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border-color: rgba(46, 134, 171, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            display: block;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .feature-card h3 {
+            color: var(--dark-green);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--mountain-gray);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* FAQ Section - Redesigned */
+        .faq-section {
+            padding: 60px 20px;
+            max-width: 900px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .faq-container {
+            background: linear-gradient(135deg, white 0%, #fafcff 100%);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(46, 134, 171, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faq-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
+        }
+
+        .faq-title {
+            text-align: center;
+            font-family: var(--serif-family);
+            font-size: 2.3rem;
+            color: var(--dark-green);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .faq-subtitle {
+            text-align: center;
+            color: var(--mountain-gray);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(123, 155, 139, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .faq-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #fdfdfd 0%, #f9f9f9 100%);
+        }
+
+        .faq-question:hover {
+            background: linear-gradient(135deg, #f5f8ff 0%, #e8f4f8 100%);
+        }
+
+        .faq-question h3 {
+            color: var(--dark-green);
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .faq-icon {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--sage-green), var(--kashmir-blue));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            margin-left: 20px;
+            box-shadow: 0 4px 10px rgba(123, 155, 139, 0.3);
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+            background: linear-gradient(135deg, var(--saffron), #e67e00);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            background: white;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 250px;
+        }
+
+        .faq-answer-content {
+            padding: 0 30px 25px 30px;
+            color: var(--mountain-gray);
+            line-height: 1.7;
+            font-size: 1rem;
+            border-top: 1px solid rgba(123, 155, 139, 0.1);
+            padding-top: 20px;
+        }
+
+        /* Call to Action */
+        .cta-section {
+            background: linear-gradient(135deg, var(--kashmir-blue) 0%, var(--sage-green) 50%, var(--dark-green) 100%);
+            padding: 70px 20px;
+            text-align: center;
+            margin-top: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+                radial-gradient(circle, rgba(241,143,1,0.1) 1px, transparent 1px);
+            background-size: 50px 50px, 100px 100px;
+            animation: moveBackground 25s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-50px, -50px) rotate(360deg); }
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 2;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-family: var(--serif-family);
+            font-size: 2.3rem;
+            color: white;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-text {
+            font-size: 1.15rem;
+            color: var(--soft-white);
+            margin-bottom: 35px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--saffron), #e67e00);
+            color: white;
+            padding: 18px 45px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(241, 143, 1, 0.4);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(241, 143, 1, 0.6);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--warm-yellow) 0%, #f4d03f 100%);
+            color: var(--dark-green);
+            text-align: center;
+            padding: 35px 20px;
+            margin-top: 0;
+            border-top: 3px solid var(--sage-green);
+        }
+
+        footer p {
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        /* Dark Mode Styles */
+        body.dark {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            color: #e0e0e0;
+        }
+
+        body.dark::before {
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(46, 134, 171, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(241, 143, 1, 0.08) 0%, transparent 50%);
+        }
+
+        body.dark header {
+            background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+        }
+
+        body.dark .feature-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            border-color: rgba(123, 155, 139, 0.2);
+        }
+
+        body.dark .feature-card h3,
+        body.dark .hero-title,
+        body.dark .features-title {
+            color: #f9e6d0;
+        }
+
+        body.dark .faq-container {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+        }
+
+        body.dark .faq-item {
+            background: #333;
+            border-color: rgba(123, 155, 139, 0.2);
+        }
+
+        body.dark .faq-question {
+            background: linear-gradient(135deg, #3a3a3a 0%, #2f2f2f 100%);
+        }
+
+        body.dark .faq-question:hover {
+            background: linear-gradient(135deg, #404040 0%, #353535 100%);
+        }
+
+        body.dark .faq-question h3,
+        body.dark .faq-title {
+            color: #f9e6d0;
+        }
+
+        body.dark .faq-answer {
+            background: #333;
+        }
+
+        body.dark .faq-answer-content {
+            color: #e0e0e0;
+            border-top-color: rgba(123, 155, 139, 0.2);
+        }
+
+        body.dark footer {
+            background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+            color: #e0e0e0;
+            border-top-color: #444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            .logo-text h1 { font-size: 1.6rem; }
+            .hero { padding: 50px 20px 40px; }
+            .features-grid { grid-template-columns: 1fr; gap: 20px; }
+            .faq-container { padding: 35px 25px; }
+            .faq-question { padding: 20px 25px; }
+            .faq-answer-content { padding: 0 25px 20px 25px; }
+            .cta-title { font-size: 2rem; }
+            .header-right { gap: 10px; }
+            .mode-toggle { padding: 8px 12px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Cultural Elements -->
+    <div class="floating-elements">
+        <div class="floating-shape">🏔️</div>
+        <div class="floating-shape">🌸</div>
+        <div class="floating-shape">🕊️</div>
+        <div class="floating-shape">🍃</div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-circle">
+                🌺
+            </div>
+            <div class="logo-text">
+                <h1>SoulAce</h1>
+                <p>जहाँ से शुरू होती है खुशी</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button onclick="toggleMode()" class="mode-toggle">🌙 Dark Mode</button>
+            <a href="login.html" class="login-btn">Login</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="cultural-accent">🏔️ ✨ 🌸</div>
+            <h1 class="hero-title">Begin Your Wellness Journey in the Valley of Peace</h1>
+            <h2 class="hero-subtitle">Anonymous • Safe • Culturally Sensitive</h2>
+            <p class="hero-description">
+                Like the serene valleys of Kashmir, find your inner peace through our compassionate platform. 
+                Connect with licensed therapists, access AI-powered support, and discover healing in a 
+                stigma-free environment that honors your cultural values.
+            </p>
+            <div class="cultural-quote">
+                "तेरे दिल में शांति हो, तेरे मन में सुकून हो" • "دل میں سکون ہو، زندگی میں خوشی ہو"
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <h2 class="features-title">Why Choose SoulAce for Your Mental Wellness?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3>AI Companion (24/7)</h3>
+                    <p>Your digital friend that understands emotions and provides support in Hindi, Urdu, and English with cultural sensitivity.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">👩‍⚕️</span>
+                    <h3>Licensed Professionals</h3>
+                    <p>Connect with qualified therapists who understand South Asian culture and mental health perspectives.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>Complete Privacy</h3>
+                    <p>Your identity stays protected. Get help without family or social judgment in our secure, anonymous platform.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🗣️</span>
+                    <h3>Multilingual Support</h3>
+                    <p>Express yourself comfortably in Hindi (हिंदी), Urdu (اردو), or English with culturally aware responses.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📔</span>
+                    <h3>Personal Reflection</h3>
+                    <p>Track your emotional journey with intelligent prompts that respect your cultural background and values.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🤝</span>
+                    <h3>Community Support</h3>
+                    <p>Connect with others who share similar experiences in moderated, culturally sensitive peer forums.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="faq-container">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            <p class="faq-subtitle">Your concerns matter to us. Here are answers to common questions.</p>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h3>Will my family or community know I'm using this platform?</h3>
+                    <div class="faq-icon">+</div>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Absolutely not. We understand the importance of privacy in our culture. Your identity is completely anonymous - no real names, phone numbers, or identifiable information is required. All sessions are confidential and your data is protected with end-to-end encryption. Your mental health journey remains private.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h3>How does the AI understand our cultural context and emotions?</h3>
+                    <div class="faq-icon">+</div>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Our AI is trained with cultural sensitivity in mind, understanding the unique emotional expressions and family dynamics common in South Asian communities. It responds in Hindi, Urdu, and English, recognizing cultural phrases and providing coping strategies that align with our values while maintaining modern therapeutic approaches.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h3>Are the therapists familiar with our cultural background?</h3>
+                    <div class="faq-icon">+</div>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Yes! Our licensed therapists are specifically chosen for their understanding of South Asian culture, family structures, and mental health stigmas. They specialize in culturally competent care for issues like family pressure, arranged marriages, career expectations, and intergenerational trauma while respecting religious and cultural values.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Find Your Inner Peace?</h2>
+            <p class="cta-text">
+                Join our community of individuals who have found healing, support, and hope through SoulAce. 
+                Your mental wellness matters, and culturally sensitive help is just one click away.
+            </p>
+            <a href="login.html" class="cta-button">Start Your Journey Today</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Enhanced parallax effect
+            window.addEventListener('scroll', () => {
+                const scrolled = window.pageYOffset;
+                const parallax = document.querySelector('.floating-elements');
+                const culturalAccent = document.querySelector('.cultural-accent');
+                
+                if (parallax) {
+                    parallax.style.transform = `translateY(${scrolled * 0.3}px)`;
+                }
+                
+                if (culturalAccent) {
+                    culturalAccent.style.transform = `translateY(${scrolled * 0.1}px) rotate(${scrolled * 0.02}deg)`;
+                }
+            });
+
+            // Staggered animations for feature cards
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe feature cards with staggered animation
+            document.querySelectorAll('.feature-card').forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                card.style.transition = `opacity 0.8s ease ${index * 0.15}s, transform 0.8s ease ${index * 0.15}s`;
+                observer.observe(card);
+            });
+
+            // Observe FAQ items
+            document.querySelectorAll('.faq-item').forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(30px)';
+                item.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                observer.observe(item);
+            });
+
+            // Cultural element interactions
+            document.querySelectorAll('.floating-shape').forEach(shape => {
+                shape.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.5) rotate(360deg)';
+                    this.style.opacity = '0.3';
+                });
+                
+                shape.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1) rotate(0deg)';
+                    this.style.opacity = '0.15';
+                });
+            });
+        });
+
+        // Enhanced theme toggle
+        function toggleMode() {
+            document.body.classList.toggle('dark');
+            const button = document.querySelector('.mode-toggle');
+            const isDark = document.body.classList.contains('dark');
+            
+            if (isDark) {
+                button.innerHTML = '☀️ Light Mode';
+                // Add subtle animation when switching to dark mode
+                document.body.style.transition = 'all 0.5s ease';
+            } else {
+                button.innerHTML = '🌙 Dark Mode';
+                document.body.style.transition = 'all 0.5s ease';
+            }
+            
+            // Store preference in localStorage
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        // Enhanced FAQ Toggle with smooth animations
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            const faqAnswer = faqItem.querySelector('.faq-answer');
+            const faqIcon = element.querySelector('.faq-icon');
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQ items with animation
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const answer = item.querySelector('.faq-answer');
+                const icon = item.querySelector('.faq-icon');
+                
+                item.classList.remove('active');
+                answer.style.maxHeight = '0px';
+                icon.style.transform = 'rotate(0deg)';
+            });
+            
+            // Open clicked item if it wasn't already active
+            if (!isActive) {
+                faqItem.classList.add('active');
+                // Calculate the scroll height for smooth animation
+                faqAnswer.style.maxHeight = faqAnswer.scrollHeight + 'px';
+                faqIcon.style.transform = 'rotate(45deg)';
+                
+                // Add a subtle bounce effect
+                setTimeout(() => {
+                    faqItem.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        faqItem.style.transform = 'scale(1)';
+                    }, 150);
+                }, 100);
+            }
+        }
+
+        // Load saved theme preference
+        window.addEventListener('load', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                document.body.classList.add('dark');
+                document.querySelector('.mode-toggle').innerHTML = '☀️ Light Mode';
+            }
+        });
+
+        // Add gentle hover effects to cultural elements
+        document.addEventListener('mousemove', function(e) {
+            const culturalAccent = document.querySelector('.cultural-accent');
+            if (culturalAccent) {
+                const rect = culturalAccent.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const deltaX = (e.clientX - centerX) * 0.01;
+                const deltaY = (e.clientY - centerY) * 0.01;
+                
+                culturalAccent.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${deltaX * 0.5}deg)`;
+            }
+        });
+
+        // Cultural greeting based on time of day
+        function updateCulturalGreeting() {
+            // Removed time-based greeting - keeping static text
+            const logoText = document.querySelector('.logo-text p');
+            logoText.textContent = 'जहाँ से शुरू होती है खुशी';
+        }
+
+        // Set the static greeting once
+        updateCulturalGreeting();
+    </script>
+</body>
+</html>

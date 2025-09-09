@@ -131,7 +131,7 @@ update_existing_users_disclaimer()
 # --- Routes ---
 @app.route("/")
 def home():
-    return redirect(url_for("login"))
+    return render_template("welcome.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
