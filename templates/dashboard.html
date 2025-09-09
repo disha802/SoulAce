@@ -37,7 +37,8 @@
   .feature-card { background:#fff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:transform 0.3s; display:block; text-decoration:none; color:inherit; }
   .feature-card:hover { transform:translateY(-5px); }
   .feature-card span img { width:80px; height:80px; object-fit:contain; display:block; margin:0 auto 0.5rem; }
-  .feature-card p { color:#657A74; }
+  .feature-card h3 { margin:0.5rem 0; }
+  .feature-card p { color:#657A74; margin:0; }
   footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
 
   body.dark { background:#121212; color:#e0e0e0; }
@@ -137,11 +138,11 @@
     <p>Chat with our AI guide for coping strategies and next steps.</p>
   </div>
 
-  <div class="feature-card">
+  <a href="{{ url_for('appointment') }}" class="feature-card">
     <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
     <h3>Confidential Booking</h3>
     <p>Book sessions with counsellors without fear of judgment.</p>
-  </div>
+  </a>
 
   <a href="{{ url_for('resources') }}" class="feature-card">
     <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>
