@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 import io
+import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # --- Load environment variables ---
 load_dotenv()
@@ -27,6 +29,68 @@ resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
 
 print("✅ Connected to MongoDB:", client.list_database_names())
+
+# --- AI Moderation Setup ---
+class AIModerator:
+    def __init__(self):
+        self.model_name = "unitary/toxic-bert"
+        self.tokenizer = None
+        self.model = None
+        self.load_model()
+        
+    def load_model(self):
+        """Load the AI model for content moderation"""
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            print("✅ AI Moderation model loaded successfully")
+        except Exception as e:
+            print(f"❌ Error loading AI model: {e}")
+            self.model = None
+            
+    def moderate(self, text):
+        """
+        Analyze text for toxic content using AI model
+        Returns: (is_toxic, confidence_score, categories)
+        """
+        if not self.model or not text or not isinstance(text, str):
+            return False, 0.0, []
+            
+        try:
+            # Tokenize input
+            inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+            
+            # Get model prediction
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+            
+            # Apply sigmoid to get probabilities
+            probs = torch.sigmoid(outputs.logits).squeeze().tolist()
+            
+            # Define toxicity categories (based on model's training)
+            categories = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+            
+            # Check if any category exceeds threshold
+            threshold = 0.7
+            max_prob = max(probs) if isinstance(probs, list) else probs
+            is_toxic = max_prob > threshold
+            
+            # Get the categories that exceeded threshold
+            toxic_categories = []
+            if isinstance(probs, list):
+                for i, prob in enumerate(probs):
+                    if prob > threshold and i < len(categories):
+                        toxic_categories.append(categories[i])
+            elif probs > threshold:
+                toxic_categories = ["toxic"]
+                
+            return is_toxic, max_prob, toxic_categories
+        except Exception as e:
+            print(f"Error in AI moderation: {e}")
+            return False, 0.0, []
+
+# Initialize AI Moderator
+ai_moderator = AIModerator()
 
 # --- Flask setup ---
 app = Flask(__name__)
@@ -122,14 +186,22 @@ def seed_sample_data():
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
 
-def check(content: str) -> bool:
+def check(content: str) -> dict:
     """
-    AI moderation stub.
-    Returns True if content is inappropriate (flagged), False otherwise.
-    Replace later with actual AI model.
+    AI moderation function.
+    Returns dict with moderation results.
     """
-    return False
-
+    if not content:
+        return {"flagged": False, "ai_flagged": False, "categories": []}
+    
+    is_toxic, confidence, categories = ai_moderator.moderate(content)
+    
+    return {
+        "flagged": is_toxic,
+        "ai_flagged": is_toxic,
+        "confidence": confidence,
+        "categories": categories
+    }
 
 # Initialize default data
 create_default_admin()
@@ -441,7 +513,12 @@ def add_post():
         return jsonify({"error": "Content is required"}), 400
 
     user_role = session.get("role", "User")
-    flagged = check(content)
+    
+    # AI moderation
+    moderation_result = check(content)
+    flagged = moderation_result["flagged"]
+    ai_flagged = moderation_result["ai_flagged"]
+    categories = moderation_result.get("categories", [])
 
     post = {
         "user_id": session["user_id"],
@@ -452,6 +529,8 @@ def add_post():
         "dislikes": [],
         "replies": [],
         "flagged": flagged,
+        "ai_flagged": ai_flagged,
+        "flag_categories": categories,
         "isStudentVol": (user_role == "StudentVol"),
         "is_deleted": False
     }
@@ -474,13 +553,21 @@ def add_reply(post_id):
     user = users_col.find_one({"user_id": session["user_id"]})
     username = user.get("username", "Unknown") if user else "Unknown"
 
+    # AI moderation for replies
+    moderation_result = check(reply_content)
+    flagged = moderation_result["flagged"]
+    ai_flagged = moderation_result["ai_flagged"]
+    categories = moderation_result.get("categories", [])
+
     reply = {
         "_id": ObjectId(),
         "user_id": session["user_id"],
         "username": username,
         "datetime": datetime.now(),
         "content": reply_content,
-        "flagged": check(reply_content),
+        "flagged": flagged,
+        "ai_flagged": ai_flagged,
+        "flag_categories": categories,
         "likes": [],
         "dislikes": [],
         "isStudentVol": (session.get("role") == "StudentVol"),
@@ -670,7 +757,7 @@ def flag_content(content_type, content_id):
         if content_type == "post":
             result = peersupportposts_col.update_one(
                 {"_id": ObjectId(content_id)},
-                {"$set": {"flagged": True}}
+                {"$set": {"flagged": True, "ai_flagged": False}}
             )
             if result.modified_count == 1:
                 return jsonify({"message": "Post flagged successfully"})
@@ -686,7 +773,7 @@ def flag_content(content_type, content_id):
             # Update the specific reply's flagged status
             result = peersupportposts_col.update_one(
                 {"_id": post["_id"], "replies._id": ObjectId(content_id)},
-                {"$set": {"replies.$.flagged": True}}
+                {"$set": {"replies.$.flagged": True, "replies.$.ai_flagged": False}}
             )
             
             if result.modified_count == 1:
@@ -701,16 +788,52 @@ def flag_content(content_type, content_id):
         return jsonify({"error": str(e)}), 500
 
 
+# --- Unflag content (Admin and StudentVol) ---
+@app.route("/unflag_content/<content_type>/<content_id>", methods=["POST"])
+def unflag_content(content_type, content_id):
+    if "user_id" not in session or session.get("role") not in ["Admin", "StudentVol"]:
+        return jsonify({"error": "Admin or StudentVol access required"}), 403
+
+    try:
+        if content_type == "post":
+            result = peersupportposts_col.update_one(
+                {"_id": ObjectId(content_id)},
+                {"$set": {"flagged": False, "ai_flagged": False, "flag_categories": []}}
+            )
+            if result.modified_count == 1:
+                return jsonify({"message": "Post unflagged successfully"})
+            else:
+                return jsonify({"error": "Post not found"}), 404
+                
+        elif content_type == "reply":
+            # For replies, we need to find the post first
+            post = peersupportposts_col.find_one({"replies._id": ObjectId(content_id)})
+            if not post:
+                return jsonify({"error": "Reply not found"}), 404
+                
+            # Update the specific reply's flagged status
+            result = peersupportposts_col.update_one(
+                {"_id": post["_id"], "replies._id": ObjectId(content_id)},
+                {"$set": {
+                    "replies.$.flagged": False, 
+                    "replies.$.ai_flagged": False,
+                    "replies.$.flag_categories": []
+                }}
+            )
+            
+            if result.modified_count == 1:
+                return jsonify({"message": "Reply unflagged successfully"})
+            else:
+                return jsonify({"error": "Failed to unflag reply"}), 500
+                
+        else:
+            return jsonify({"error": "Invalid content type"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # --- Admin-only moderation (hard delete) ---
-@app.route("/moderate/unflag/<post_id>", methods=["POST"])
-def unflag_post(post_id):
-    if "user_id" not in session or session.get("role") != "Admin":
-        return jsonify({"error": "Admin access required"}), 403
-
-    peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
-    return jsonify({"message": "Post unflagged"})
-
-
 @app.route("/moderate/delete/<post_id>", methods=["DELETE"])
 def admin_delete_post(post_id):
     if "user_id" not in session or session.get("role") != "Admin":
@@ -732,9 +855,20 @@ def admin_dashboard():
         "total_posts": peersupportposts_col.count_documents({})
     }
     
+    # Get flagged content for moderation
+    flagged_posts = list(peersupportposts_col.find({
+        "$or": [{"flagged": True}, {"ai_flagged": True}]
+    }).sort("datetime", -1))
+    
+    for post in flagged_posts:
+        post["_id"] = str(post["_id"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = user.get("username", "Unknown") if user else "Unknown"
+    
     return render_template("admin_dashboard.html", 
                          username=session["username"],
-                         stats=stats)
+                         stats=stats,
+                         flagged_posts=flagged_posts)
 
 # --- Debug ---
 @app.route("/debug/all_collections")
