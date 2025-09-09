@@ -275,21 +275,21 @@
     });
 
     async function loadPosts() {
-      const res = await fetch("/get_posts");
-      const posts = await res.json();
-
-      const feed = document.getElementById("feed");
-      feed.innerHTML = "";
-
-      for (const p of posts) {
-        const postEl = createPostElement(p);
-        feed.appendChild(postEl);
+      try {
+        const res = await fetch('/peer_data');
+        if (!res.ok) {
+          console.error('Failed to /peer_data:', res.status);
+          // fallback: keep existing posts
+          renderPosts(posts);
+          return;
+        }
+        const data = await res.json();
+        allPosts = normalizePosts(data || []);
+        applyFilter(); // Apply current filter after loading posts
+      } catch (err) {
+        console.error('Failed to load posts', err);
       }
-
-      // ✅ re-apply whatever filter is currently selected
-      applyFilter();
     }
-
 
     // Apply the selected filter
     function applyFilter() {
@@ -330,6 +330,7 @@
 
     // Submit a new post (uses A's /add_post endpoint)
     async function submitPost(){
+      const title = document.getElementById('post-title').value.trim();
       const content = document.getElementById('post-content').value.trim();
       const is_anonymous = document.getElementById('anonymous-toggle').checked;
       if (!content) { alert('Please enter some content before posting.'); return; }

@@ -12,6 +12,7 @@ import io
 import sentiment_analysis as sa
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from chatbot import EmotionalChatbot
 
 # --- Load environment variables ---
 load_dotenv()
@@ -327,6 +328,46 @@ def dashboard():
 #         flash("Please login to access journals", "warning")
 #         return redirect(url_for("login"))
 #     return render_template("journal.html", username=session["username"])
+
+try:
+    api_key = os.getenv("GROQ_API_KEY")
+    if api_key:
+        chatbot = EmotionalChatbot(api_key)
+        print("✅ Chatbot initialized successfully")
+    else:
+        chatbot = None
+        print("⚠️ GROQ_API_KEY not found - chatbot will not work")
+except Exception as e:
+    chatbot = None
+    print(f"❌ Failed to initialize chatbot: {e}")
+
+# --- Chatbot Routes ---
+@app.route("/chatbot")
+def chatbot_page():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    return render_template("chatbot.html", username=session["username"])
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    if not chatbot:
+        return jsonify({"response": "I'm sorry, the AI support is temporarily unavailable. Please try again later or contact our support team."}), 500
+    
+    data = request.get_json()
+    message = data.get("message", "").strip()
+    
+    if not message:
+        return jsonify({"response": "I'm here to listen. Please share what's on your mind."}), 400
+    
+    try:
+        response = chatbot.chat(message)
+        return jsonify({"response": response})
+    except Exception as e:
+        print(f"Chatbot error: {e}")
+        return jsonify({"response": "I'm here to support you. Could you tell me more about how you're feeling right now?"}), 500
 
 @app.route("/journal", methods=["GET", "POST"])
 def journal():
