@@ -137,6 +137,7 @@
     <!-- Post form (keeps A endpoints but enhanced UI) -->
     <div id="post-form" class="post-form" style="display:none;">
       <h3>Create a New Post</h3>
+      <input type="text" id="post-title" placeholder="Post title" required>
       <textarea id="post-content" placeholder="Share your thoughts..."></textarea>
       <div class="anonymity-toggle">
         <input type="checkbox" id="anonymous-toggle">
@@ -353,6 +354,7 @@
         console.error('Error adding post', err);
       }
     }
+
 
     // Like/dislike post - uses A's endpoints
     async function likePost(id, action='like'){
