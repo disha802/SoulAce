@@ -167,12 +167,48 @@ def dashboard():
     return render_template("dashboard.html", username=session["username"])
 
 # --- Journal Routes ---
-@app.route("/journal")
+# @app.route("/journal")
+# def journal():
+#     if "user_id" not in session:
+#         flash("Please login to access journals", "warning")
+#         return redirect(url_for("login"))
+#     return render_template("journal.html", username=session["username"])
+
+@app.route("/journal", methods=["GET", "POST"])
 def journal():
     if "user_id" not in session:
-        flash("Please login to access journals", "warning")
-        return redirect(url_for("login"))
-    return render_template("journal.html", username=session["username"])
+        return redirect("/login")
+
+    journaling_prompt = None
+
+    # ✅ Get latest mood of the user
+    last_mood = moodtracking_col.find_one(
+        {"user_id": session["user_id"]},
+        sort=[("datetime", -1)]
+    )
+
+    if last_mood:
+        mood = last_mood["mood"]
+
+        if mood in ["Sad", "Frustrated", "Angry", "Crying"]:
+            journaling_prompt = (
+                "I'm sorry you're feeling this way. "
+                "What do you think was the most saddening? "
+                "Or among all the sad things, what's one thing that made you smile?"
+            )
+        elif mood in ["Very Happy", "Happy", "Feeling Blessed"]:
+            journaling_prompt = (
+                "That's wonderful! What made you feel this way today? "
+                "Would you like to write it down so you can revisit it later?"
+            )
+        elif mood == "Mind Blown":
+            journaling_prompt = (
+                "Wow, sounds intense! What surprised or amazed you the most?"
+            )
+
+    # ✅ Render journal template with prompt
+    return render_template("journal.html", journaling_prompt=journaling_prompt, username = session["username"])
+
 
 @app.route("/add_journal", methods=["POST"])
 def add_journal():
@@ -229,6 +265,7 @@ def delete_journal(entry_id):
     if res.deleted_count == 1:
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "not found"}), 404
+    
 
 # --- Mood Tracking Routes ---
 @app.route("/save_mood", methods=["POST"])
@@ -238,24 +275,50 @@ def save_mood():
     
     data = request.get_json()
     mood = data.get("mood")
-    
-    # Validate mood
-    valid_moods = ['Very Happy', 'Feeling Blessed', 'Happy', 'Mind Blown', 'Frustrated', 'Sad', 'Angry', 'Crying']
+
+    # ✅ Define valid moods
+    valid_moods = [
+        "Very Happy", "Feeling Blessed", "Happy", "Mind Blown",
+        "Frustrated", "Sad", "Angry", "Crying"
+    ]
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood value"}), 400
-    
+
+    # ✅ Insert into DB
     mood_entry = {
         "mood_id": get_next_id(moodtracking_col, "mood_id"),
         "user_id": session["user_id"],
         "datetime": datetime.now(),
         "mood": mood
     }
-    
+
+    journaling_prompt = None
+    # 🎯 Suggest journaling prompts based on mood
+    if mood in ["Sad", "Frustrated", "Angry", "Crying"]:
+        journaling_prompt = (
+            "I'm sorry you're feeling this way. "
+            "What do you think was the most saddening? "
+            "Or among all the sad things, what's one thing that made you smile?"
+        )
+    elif mood in ["Very Happy", "Happy", "Feeling Blessed"]:
+        journaling_prompt = (
+            "That's wonderful! What made you feel this way today? "
+            "Would you like to write it down so you can revisit it later?"
+        )
+    elif mood == "Mind Blown":
+        journaling_prompt = (
+            "Wow, sounds intense! What surprised or amazed you the most?"
+        )
+
     try:
         moodtracking_col.insert_one(mood_entry)
-        return jsonify({"message": f"Mood set to {mood}!"})
+        return jsonify({
+            "message": f"Mood set to {mood}!",
+            "journaling_prompt": journaling_prompt
+        })
     except Exception as e:
         return jsonify({"error": "Failed to save mood"}), 500
+
 
 @app.route("/get_moods")
 def get_moods():

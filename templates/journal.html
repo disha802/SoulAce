@@ -72,8 +72,14 @@
     <!-- Journaling Tab -->
     <div id="journal-tab">
       <p style="font-size:1.1rem; margin-bottom:12px; color:#243B36;">
-        🖊️ Journaling is one of those simple habits that can have surprisingly big benefits for your mind, emotions, and even productivity. Take a few minutes to write your thoughts and reflect!
+        {% if journaling_prompt %}
+          {{ journaling_prompt }}
+        {% else %}
+          🖊️ Journaling is one of those simple habits that can have surprisingly big benefits for your mind, emotions, and even productivity. Take a few minutes to write your thoughts and reflect!
+        {% endif %}
       </p>
+
+
       <input type="text" id="title-input" placeholder="Entry title">
       <textarea id="content" placeholder="Write your thoughts..."></textarea>
       <button onclick="saveEntry()">Save Entry</button>
@@ -133,6 +139,15 @@
   </div>
 
   <script>
+
+    window.onload = function () {
+        const prompt = localStorage.getItem("journaling_prompt");
+        if (prompt) {
+          document.getElementById("journal-prompt-text").innerText = prompt;
+          localStorage.removeItem("journaling_prompt"); // clear so it doesn’t repeat
+        }
+      };
+
     let currentEntry = null;
 
     function toggleUserPopup() {
@@ -215,10 +230,6 @@
     <p>&copy; 2025 SoulAce. All rights reserved.</p>
   </footer>
 
-  <!-- Footer -->
-  <footer style="background:#7B9B8B; color:white; text-align:center; padding:15px; margin-top:30px;">
-    <p>&copy; 2025 SoulAce. All rights reserved.</p>
-  </footer>
 
 </body>
 </html>
