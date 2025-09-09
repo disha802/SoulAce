@@ -12,9 +12,9 @@
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
     header h1 { margin:0; font-size:1.8rem; color:#fff; }
     .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-    .header-right { display:flex; align-items:center; gap:10px; }
+    .header-right { display:flex; align-items:center; gap:10px; position:relative; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:140px; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
     .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
 
     .hero { text-align:center; padding:3rem 1.5rem; background:#F5F7F2; }
@@ -45,8 +45,6 @@
     body.dark .tile { background:#2a2a2a; color:#e0e0e0; }
     body.dark .modal-content { background:#2a2a2a; color:#f9e6d0; }
     body.dark footer { background:#1f1f1f; border-top:2px solid #444; }
-
-    #lang-select { margin:10px 20px; padding:5px; border-radius:6px; border:1px solid #ccc; }
   </style>
 </head>
 <body>
@@ -57,161 +55,182 @@
         <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
       </div>
       <div class="header-text">
-        <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलऐस">SoulAce</h1>
-        <h3 data-en="Wellness begins here." data-ur="یہاں سے ویلنس شروع ہوتی ہے۔" data-hi="यहाँ से वेलनेस शुरू होती है।">Wellness begins here.</h3>
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
       </div>
     </div>
     <div class="header-right">
       <div class="user-icon-container">
         <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
         <div id="user-popup" class="user-popup">
-          <button onclick="toggleMode()" class="popup-btn" data-en="Change Mode" data-ur="موڈ تبدیل کریں" data-hi="मोड बदलें">Change Mode</button>
+          <!-- Google Translate -->
+          <div id="google_translate_element" style="margin-bottom:10px;"></div>
+          <hr>
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn" data-en="Logout" data-ur="لاگ آؤٹ" data-hi="लॉगआउट">Logout</button>
+            <button type="submit" class="popup-btn">Logout</button>
           </form>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Language Switcher -->
-  <select id="lang-select">
-    <option value="en">English</option>
-    <option value="ur">Urdu</option>
-    <option value="hi">Hindi</option>
-  </select>
-
   <!-- Hero -->
   <section class="hero">
-    <h2 data-en="Wellness Resources🌸" data-ur="ویلنس وسائل🌸" data-hi="वेलनेस संसाधन🌸">Wellness Resources🌸</h2>
-    <p data-en="Curated tools for a calmer, healthier you!" data-ur="پرسکون، صحت مند آپ کے لیے منتخب شدہ ٹولز!" data-hi="शांत और स्वस्थ आप के लिए चयनित उपकरण!">Curated tools for a calmer, healthier you!</p>
+    <h2>Wellness Resources🌸</h2>
+    <p>Curated tools for a calmer, healthier you!</p>
   </section>
 
   <!-- Tiles -->
   <div class="tile-grid">
-    <div class="tile" onclick="openModal('modalPixelThoughts')" data-en="Pixel Thoughts" data-ur="پکسل خیالات" data-hi="पिक्सेल विचार">Pixel Thoughts</div>
-    <div class="tile" onclick="openModal('modalMeditation')" data-en="Meditations" data-ur="مراقبہ" data-hi="ध्यान">Meditations</div>
-    <div class="tile" onclick="openModal('modalPodcastsBooks')" data-en="Podcasts & Books" data-ur="پوڈکاسٹس اور کتابیں" data-hi="पॉडकास्ट और किताबें">Podcasts & Books</div>
-    <div class="tile" onclick="openModal('modalHealthyBodyMind')" data-en="Healthy Body & Mind" data-ur="صحت مند جسم اور ذہن" data-hi="स्वस्थ शरीर और मन">Healthy Body & Mind</div>
-    <div class="tile" onclick="openModal('modalDigitalWellness')" data-en="Digital Wellness" data-ur="ڈیجیٹل ویلنس" data-hi="डिजिटल वेलनेस">Digital Wellness</div>
-    <div class="tile" onclick="openModal('modalCBTTests')" data-en="CBT & Self Tests" data-ur="CBT اور خود کی جانچ" data-hi="CBT और स्व-परीक्षण">CBT & Self Tests</div>
+    <div class="tile" onclick="openModal('modalExternalResources')">External Resources</div>
+    <div class="tile" onclick="openModal('modalMeditation')">Meditations</div>
+    <div class="tile" onclick="openModal('modalPodcastsBooks')">Podcasts & Books</div>
+    <div class="tile" onclick="openModal('modalHealthyBodyMind')">Healthy Body & Mind</div>
+    <div class="tile" onclick="openModal('modalDigitalWellness')">Digital Wellness</div>
   </div>
 
-  <!-- Pixel Thoughts Modal -->
-  <div id="modalPixelThoughts" class="modal">
+  <!-- Example Modal (External Resources) -->
+  <div id="modalExternalResources" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal('modalPixelThoughts')">&times;</span>
-      <h2 data-en="Pixel Thoughts 🌌" data-ur="پکسل خیالات 🌌" data-hi="पिक्सेल विचार 🌌">Pixel Thoughts 🌌</h2>
-      <p data-en="A 60-second meditation to clear your mind and let go of stress." data-ur="اپنے ذہن کو صاف کرنے اور دباؤ سے نجات کے لیے 60 سیکنڈ کا مراقبہ۔" data-hi="अपने मन को साफ करने और तनाव मुक्त करने के लिए 60 सेकंड का ध्यान।">A 60-second meditation to clear your mind and let go of stress.</p>
+      <span class="close" onclick="closeModal('modalExternalResources')">&times;</span>
+      <h2>External Resources 🌐</h2>
+      <p>Explore simple, mindful tools from around the web — no login, no personal info required.</p>
+
       <div class="modal-resources">
         <div class="resource-card">
           <iframe src="https://www.pixelthoughts.co/" allowfullscreen></iframe>
-          <p data-en="Take a mindful pause with Pixel Thoughts ✨" data-ur="Pixel Thoughts کے ساتھ شعوری وقفہ لیں ✨" data-hi="पिक्सेल विचार के साथ सावधान विराम लें ✨">Take a mindful pause with Pixel Thoughts ✨</p>
+          <p>🌌 Pixel Thoughts — A 60-second meditation</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://soundrown.com/" allowfullscreen></iframe>
+          <p>🎶 Soundrown — Relaxing ambient sounds</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://donothingfor2minutes.org/" allowfullscreen></iframe>
+          <p>⏳ Do Nothing for 2 Minutes — Pause & breathe</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Meditation Modal -->
-  <div id="modalMeditation" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
-      <h2 data-en="Meditations 🧘‍♂️" data-ur="مراقبہ 🧘‍♂️" data-hi="ध्यान 🧘‍♂️">Meditations 🧘‍♂️</h2>
-      <p data-en="Meditation is the pause that lets the mind breathe." data-ur="مراقبہ وہ وقفہ ہے جو ذہن کو سانس لینے دیتا ہے۔" data-hi="ध्यान वह विराम है जो मन को सांस लेने देता है।">Meditation is the pause that lets the mind breathe.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/uFAIoCZcRjA" allowfullscreen></iframe>
-          <p data-en="Morning Mindfulness" data-ur="صبح کی ذہن سازی" data-hi="सुबह की माइंडफुलनेस">Morning Mindfulness</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/ZToicYcHIOU" allowfullscreen></iframe>
-          <p data-en="Daily Calm 10 Min" data-ur="روزانہ پرسکون 10 منٹ" data-hi="दैनिक शांत 10 मिनट">Daily Calm 10 Min</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- (Keep other modals same as your code, just cleaned: no data-en/ur/hi attributes) -->
   <!-- Podcasts & Books Modal -->
-  <div id="modalPodcastsBooks" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
-      <h2 data-en="Podcasts & Books🎧" data-ur="پوڈکاسٹس اور کتابیں🎧" data-hi="पॉडकास्ट और किताबें🎧">Podcasts & Books🎧</h2>
-      <p data-en="A pause from noise, a path to insight." data-ur="شور سے وقفہ، بصیرت کا راستہ۔" data-hi="शोर से विराम, अंतर्दृष्टि का मार्ग।">A pause from noise, a path to insight.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://open.spotify.com/embed/show/5hPJePeH0yRpkbpLuZOZhV" allowfullscreen></iframe>
-          <p data-en="The Happiness Podcast" data-ur="خوشی پوڈکاسٹ" data-hi="द हॅपिनेस पॉडकास्ट">The Happiness Podcast</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://open.spotify.com/embed/show/5PbW8DFSF6tpjw1FWDir3t" allowfullscreen></iframe>
-          <p data-en="Wellness Talks" data-ur="ویلنس ٹاکس" data-hi="वेलनेस टॉक्स">Wellness Talks</p>
-        </div>
-      </div>
-    </div>
-  </div>
+<div id="modalPodcastsBooks" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
+    <h2>Podcasts & Books 🎧</h2>
+    
+    <!-- Podcasts Section -->
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">
+      A pause from noise, a path to insight.
+    </p>
 
-  <!-- Healthy Body & Mind Modal -->
-  <div id="modalHealthyBodyMind" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
-      <h2 data-en="Healthy Body & Mind 🌿" data-ur="صحت مند جسم اور ذہن 🌿" data-hi="स्वस्थ शरीर और मन 🌿">Healthy Body & Mind 🌿</h2>
-      <p data-en="Nourish your body, strengthen your mind, and find balance." data-ur="اپنے جسم کو غذا دیں، اپنے ذہن کو مضبوط کریں، اور توازن تلاش کریں۔" data-hi="अपने शरीर को पोषण दें, अपने मन को मजबूत करें, और संतुलन पाएं।">Nourish your body, strengthen your mind, and find balance.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/z-fJTXyLxlc" allowfullscreen></iframe>
-          <p data-en="10-Minute Morning Yoga Flow 🌅" data-ur="10 منٹ صبح کا یوگا 🌅" data-hi="10 मिनट सुबह का योग 🌅">10-Minute Morning Yoga Flow 🌅</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/FyFUowFFYC4" allowfullscreen></iframe>
-          <p data-en="Full-Body Beginner Workout 💪" data-ur="پورے جسم کا ابتدائی ورزش 💪" data-hi="पूर्ण शरीर शुरुआती वर्कआउट 💪">Full-Body Beginner Workout 💪</p>
-        </div>
+    <h3 style="margin-bottom:10px; color:#243B36;">Podcasts 🎙️</h3>
+    
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/tool-R8VJ2Y" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Gabor Maté (Physician)</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/SwQhKFMxmDY" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Andrew Huberman (Neuroscientist)</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/-lDza7kSqvw" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Julie Smith (Clinical Psychologist)</p>
       </div>
     </div>
-  </div>
 
-  <!-- Digital Wellness Modal -->
-  <div id="modalDigitalWellness" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
-      <h2 data-en="Digital Wellness 🌿" data-ur="ڈیجیٹل ویلنس 🌿" data-hi="डिजिटल वेलनेस 🌿">Digital Wellness 🌿</h2>
-      <p data-en="Take a break from screens and find balance in your digital life." data-ur="اسکرین سے وقفہ لیں اور اپنی ڈیجیٹل زندگی میں توازن تلاش کریں۔" data-hi="स्क्रीन से ब्रेक लें और अपने डिजिटल जीवन में संतुलन पाएं।">Take a break from screens and find balance in your digital life.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/oB6qJ9I__0A" allowfullscreen></iframe>
-          <p data-en="Digital Detox: Unplug & Recharge" data-ur="ڈیجیٹل ڈیٹاکس: انپلگ اور ریچارج کریں" data-hi="डिजिटल डिटॉक्स: अनप्लग और रिचार्ज करें">Digital Detox: Unplug & Recharge</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Books Section -->
+    <h3 style="margin:20px 0 10px 0; color:#243B36;">Books 📖</h3>
+    
+    <p style="margin-top:15px; font-style:italic;">
+      Browse the curated bookshelf we’ve crafted for you:
+    </p>
 
-  <!-- CBT & Self Tests Modal -->
-  <div id="modalCBTTests" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalCBTTests')">&times;</span>
-      <h2 data-en="CBT & Self Tests 🧠" data-ur="CBT اور خود کی جانچ 🧠" data-hi="CBT और स्व-परीक्षण 🧠">CBT & Self Tests 🧠</h2>
-      <p data-en="These are self-screening tools and not clinical diagnosis." data-ur="یہ خود کی جانچ کے آلات ہیں اور کلینیکل تشخیص نہیں ہیں۔" data-hi="ये स्व-स्क्रीनिंग उपकरण हैं और नैदानिक निदान नहीं हैं।">These are self-screening tools and not clinical diagnosis.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <p data-en="PHQ-9 — Depression" data-ur="PHQ-9 — ڈپریشن" data-hi="PHQ-9 — अवसाद">PHQ-9 — Depression</p>
-          <a href="https://screening.mhanational.org/screening-tools/depression/" target="_blank" data-en="Take PHQ-9" data-ur="PHQ-9 لیں" data-hi="PHQ-9 लें">Take PHQ-9</a>
-        </div>
+    <div style="line-height:1.7; font-size:1rem; text-align:left;">
+      <!-- Mind–Body & Lifestyle -->
+      <p>🌿 <strong>Mind–Body & Lifestyle</strong></p>
+      <ol>
+        <li>
+          “Atomic Habits” – James Clear<br>
+          <small>A practical guide to building good habits and breaking bad ones through small, consistent changes.</small>
+        </li>
+        <li>
+          “In Defense of Food” – Michael Pollan<br>
+          <small>Pollan simplifies nutrition advice into: Eat food. Not too much. Mostly plants.</small>
+        </li>
+        <li>
+          “Ikigai” – Héctor García & Francesc Miralles<br>
+          <small>Discover the Japanese secret to living a long and happy life by finding your purpose.</small>
+        </li>
+        <li>
+          “Don't Believe Everything You Think” – Joseph Nguyen<br>
+          <small>A fresh perspective on freeing yourself from self-doubt and overthinking.</small>
+        </li>
+      </ol>
+
+      <!-- Mental & Emotional Well-Being -->
+      <p>🧘‍♀️ <strong>Mental & Emotional Well-Being</strong></p>
+      <ol>
+        <li>
+          “The Gifts of Imperfection” – Brené Brown<br>
+          <small>Encourages embracing vulnerability and living wholeheartedly.</small>
+        </li>
+        <li>
+          “The Untethered Soul” – Michael A. Singer<br>
+          <small>Explores inner freedom and letting go of limiting thoughts.</small>
+        </li>
+      </ol>
+
+      <!-- Holistic & Spiritual Wellness -->
+      <p>🌱 <strong>Holistic & Spiritual Wellness</strong></p>
+      <ol>
+        <li>
+          “The Four Agreements” – Don Miguel Ruiz<br>
+          <small>A spiritual guide to personal freedom through four simple principles.</small>
+        </li>
+        <li>
+          “The Seven Spiritual Laws of Success” – Deepak Chopra<br>
+          <small>Blends spirituality and success into a practical life philosophy.</small>
+        </li>
+        <li>
+          “The Power of Your Subconscious Mind” – Joseph Murphy<br>
+          <small>A classic book on unlocking the hidden potential of your mind.</small>
+        </li>
+      </ol>
+    </div>
+
+    <p style="text-align:center; font-style:italic; margin-bottom:15px;">
+      Every page is a doorway to a new world.
+    </p>
+  </div>
+</div>
+
+<!-- Digital Wellness Modal -->
+<div id="modalDigitalWellness" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
+    <h2>Digital Wellness 🌿</h2>
+    <p>Take a break from screens and find balance in your digital life.</p>
+    
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/oB6qJ9I__0A" allowfullscreen></iframe>
+        <p>Digital Detox: Unplug & Recharge</p>
       </div>
     </div>
   </div>
+</div>
+
 
   <footer>
-    <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" data-ur="سول ایس © 2025 — 💙 کے ساتھ بنایا گیا SynapSix کی طرف سے" data-hi="सोलऐस © 2025 — 💙 के साथ SynapSix द्वारा बनाया गया">SoulAce © 2025 — Built with 💙 by SynapSix</p>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
 
   <script>
-    const langSelect = document.getElementById('lang-select');
-    langSelect.addEventListener('change', () => {
-      const selectedLang = langSelect.value;
-      document.querySelectorAll('[data-en]').forEach(el => {
-        el.textContent = el.getAttribute('data-' + selectedLang);
-      });
-    });
-
     function toggleUserPopup() {
       const popup = document.getElementById('user-popup');
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
@@ -235,6 +254,15 @@
     function toggleMode() {
       document.body.classList.toggle('dark');
     }
+
+    // Google Translate Script
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+        'google_translate_element'
+      );
+    }
   </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
