@@ -4,196 +4,708 @@
   <meta charset="UTF-8">
   <title>SoulAce - Peer Support</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- === CSS === -->
+  <!-- === Combined CSS (from Version B, tuned to keep A semantics) === -->
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #F5F7F2; color: #333; margin: 0; padding: 20px; }
-    h2 { color: #243B36; }
-    .post, .reply { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .reply { background: #F9F9F9; margin-left: 20px; }
-    .flagged { background: #fff0f0; border-left: 3px solid #ff6b6b; }
-    .studentvol-badge { background: gold; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; }
-    #form { margin: 15px 0; }
-    textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 8px; }
-    button { margin-right: 5px; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { opacity: 0.9; }
+    :root{--accent-1:#7B9B8B;--accent-2:#243B36;--muted:#777}
+    body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.25s; padding-bottom:60px; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:var(--accent-1); }
+    .header-left { display:flex; align-items:center; gap:15px; }
+    .header-text h1 { margin:0; font-size:1.4rem; color:#fff; }
+    .header-text h3 { margin:0; font-size:0.85rem; color:#FFF7E4; }
+    .logo-container img { width:52px; height:52px; border-radius:8px; object-fit:cover; }
+    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
+    .user-popup { display:none; position:absolute; top:60px; right:20px; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.15); z-index:40 }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:var(--accent-2); font-weight:600; padding:8px; border:none; border-radius:8px; cursor:pointer; text-align:left }
+    .popup-btn:hover { background:#f2f2f2; }
+    main { padding:1.5rem; max-width:1100px; margin:0 auto; }
+    h2 { color:var(--accent-2); }
+
+    input, textarea, select { width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
+    textarea { min-height:100px; resize:vertical; }
+    button { background:linear-gradient(135deg, #657A74 , var(--accent-2)); color:#fff; font-size:15px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.12); transition:all 0.18s ease; }
+    button:hover { transform:translateY(-2px); }
+    button.secondary { background:#E0E0E0; color:#333; }
+    button.danger { background:#f8f8f8; color:#b33a3a; border:1px solid #b33a3a; }
+
+    .forum-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    .search-container { display:flex; gap:10px; margin:6px 0; align-items:center; }
+    .post-form { background:white; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:20px; }
+    .post-form h3 { margin-top:0; color:var(--accent-2); }
+    .anonymity-toggle { display:flex; align-items:center; gap:8px; margin:10px 0; }
+
+    .post { background:white; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:14px; }
+    .post-header { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .post-author { font-weight:700; color:var(--accent-2); display:flex; align-items:center; gap:8px }
+    .post-date { color:var(--muted); font-size:0.9rem; }
+    .post-content { margin:10px 0; line-height:1.45; white-space:pre-wrap; }
+    .post-actions { display:flex; gap:12px; margin-top:8px; align-items:center; flex-wrap:wrap }
+    .action-btn { display:flex; align-items:center; gap:6px; background:none; border:none; color:#657A74; cursor:pointer; padding:6px 8px; border-radius:6px; }
+    .action-btn:hover { background:#f5f5f5; }
+    .action-btn.liked { color:#D64B4B; }
+    .action-btn.disliked { color:#4B69D6; }
+
+    .replies { margin-left:18px; margin-top:12px; }
+    .reply-form { margin-top:12px; display:none; }
+    .reply { background:#F9F9F9; padding:12px; border-radius:8px; margin-bottom:10px; border-left:3px solid var(--accent-1); }
+    .reply-header { display:flex; justify-content:space-between; margin-bottom:6px; }
+    .reply-author { font-weight:600; color:var(--accent-2); font-size:0.95rem; }
+    .reply-date { color:var(--muted); font-size:0.82rem; }
+    .reply-actions { display:flex; gap:10px; margin-top:8px; }
+
+    .studentvol-badge { background: linear-gradient(135deg, #FFD700, #FFA500); color:#000; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; }
+    .ai-flag-badge { background: linear-gradient(135deg, #ff6b6b, #c53030); color:white; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; }
+    .manual-flag-badge { background: linear-gradient(135deg, #4b69d6, #2c3e99); color:white; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; }
+    .flagged { background-color:#fff0f0; border-left:3px solid #ff6b6b; }
+    .ai-flagged { background-color:#fff0f0; border-left:3px solid #ff6b6b; }
+    .manual-flagged { background-color:#f0f0ff; border-left:3px solid #4b69d6; }
+    .deleted { font-style:italic; color:gray; }
+
+    .moderation-actions { display:flex; gap:8px; margin-top:8px }
+
+    body.dark { background:#0f1112; color:#e6e6e6 }
+    body.dark header { background:#1f1f1f }
+    body.dark .post, body.dark .post-form { background:#1e1e1f; color:#e6e6e6 }
+    body.dark .reply { background:#232323 }
+    body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444 }
+
+    footer { position:fixed; bottom:0; left:0; right:0; background:var(--accent-1); color:white; text-align:center; padding:10px 12px; }
+
+    /* New styles for filter */
+    .filter-container { display:flex; gap:10px; margin:6px 0; align-items:center; }
+    .filter-select { width:auto; padding:8px 12px; }
+    .filter-active { background-color:var(--accent-2); color:white; }
+
+    @media (max-width: 768px) {
+      .forum-header { flex-direction:column; align-items:flex-start; gap:12px }
+      .replies { margin-left:10px }
+      .filter-container { flex-direction:column; align-items:flex-start; }
+    }
   </style>
 </head>
 <body>
-  <!-- === HTML === -->
-  <h2>Peer Support Forum</h2>
-  <button onclick="showForm()">+ New Post</button>
-  
-  <div id="form" style="display:none;">
-    <textarea id="content" placeholder="Share something..."></textarea>
-    <label><input type="checkbox" id="anonymous"> Post anonymously</label>
-    <br>
-    <button onclick="submitPost()">Submit</button>
-  </div>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <!-- Use flask static path or plain path depending on your server -->
+        <img src="/static/header-logo.png" alt="SoulAce Logo" onerror="this.style.display='none'">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
+      </div>
+    </div>
 
-  <div id="posts"></div>
-
-  <!-- === JavaScript === -->
-  <script>
-  let posts = [];
-
-  // Load all posts from backend
-  document.addEventListener("DOMContentLoaded", loadPosts);
-
-  async function loadPosts() {
-    try {
-      const res = await fetch("/peer_data");
-      posts = await res.json();
-      renderPosts();
-    } catch (err) {
-      console.error("Failed to load posts", err);
-    }
-  }
-
-  // Render posts and replies
-  function renderPosts() {
-    const container = document.getElementById("posts");
-    container.innerHTML = "";
-
-    if (posts.length === 0) {
-      container.innerHTML = "<p>No posts yet. Be the first to share!</p>";
-      return;
-    }
-
-    posts.forEach(p => {
-      const div = document.createElement("div");
-      div.className = "post" + (p.flagged ? " flagged" : "");
-      div.innerHTML = `
-        <strong>${p.is_anonymous ? "Anonymous" : p.username}</strong>
-        ${p.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
-        <p>${p.content}</p>
-        
-        <button onclick="likePost('${p._id}', 'like')">👍 ${p.likes.length}</button>
-        <button onclick="likePost('${p._id}', 'dislike')">👎 ${p.dislikes.length}</button>
-
-        <button onclick="showReplyForm('${p._id}')">💬 Reply</button>
-        <div id="replies-${p._id}"></div>
-        <div id="reply-form-${p._id}" style="display:none; margin-top:10px;">
-          <textarea id="reply-content-${p._id}" placeholder="Write your reply..."></textarea>
-          <button onclick="submitReply('${p._id}')">Submit Reply</button>
+    <div class="header-right">
+      <div class="user-icon-container" style="position:relative;">
+        <img src="/static/user-icon.jpeg" alt="User Icon" class="user-icon" id="userIcon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <button class="popup-btn" onclick="goHome()">🏠 Home</button>
+          <button class="popup-btn" onclick="goJournal()">📓 Journal</button>
+          <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
+          <form id="logout-form" action="/logout" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">🚪 Logout</button>
+          </form>
         </div>
-      `;
+      </div>
+    </div>
+  </header>
 
-      // sort replies: volunteers > likes > datetime
-      let replies = p.replies || [];
-      replies.sort((a, b) => {
-        if (a.isStudentVol && !b.isStudentVol) return -1;
-        if (!a.isStudentVol && b.isStudentVol) return 1;
-        const aNet = (a.likes || 0) - (a.dislikes || 0);
-        const bNet = (b.likes || 0) - (b.dislikes || 0);
-        if (aNet !== bNet) return bNet - aNet;
-        return new Date(b.datetime) - new Date(a.datetime);
+  <main>
+    <div class="forum-header">
+      <h2>Peer Support Forum</h2>
+      <div>
+        <button onclick="showPostForm()">+ New Post</button>
+      </div>
+    </div>
+
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search posts, titles or users...">
+      <button onclick="searchPosts()">Search</button>
+      <button onclick="clearSearch()" class="secondary">Clear</button>
+    </div>
+
+    <!-- Filter container (only shown to Student Volunteers) -->
+    <div id="filter-container" class="filter-container" style="display:none;">
+      <span>Filter by:</span>
+      <select id="post-filter" class="filter-select" onchange="applyFilter()">
+        <option value="all">All Posts</option>
+        <option value="flagged">Flagged Posts</option>
+        <option value="ai-flagged">AI Moderated</option>
+      </select>
+    </div>
+
+    <!-- Post form (keeps A endpoints but enhanced UI) -->
+    <div id="post-form" class="post-form" style="display:none;">
+      <h3>Create a New Post</h3>
+      <input type="text" id="post-title" placeholder="Post title (optional)">
+      <textarea id="post-content" placeholder="Share your thoughts..."></textarea>
+      <div class="anonymity-toggle">
+        <input type="checkbox" id="anonymous-toggle">
+        <label for="anonymous-toggle">Post anonymously</label>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="submitPost()">Submit Post</button>
+        <button onclick="hidePostForm()" class="secondary">Cancel</button>
+      </div>
+    </div>
+
+    <div id="posts-container">
+      <!-- Posts will be loaded here -->
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 SoulAce. All rights reserved.</p>
+  </footer>
+
+  <!-- === JavaScript (merged behavior) === -->
+  <script>
+    // Keep Version A's server-driven behavior while applying Version B UI
+    let posts = [];
+    let allPosts = []; // raw fetched posts (unfiltered)
+    let currentUser = null;
+    let currentFilter = 'all'; // Track current filter
+
+    // Utility: normalize server objects to a consistent shape used by renderer
+    function normalizePosts(raw) {
+      // Expect raw to be an array of posts where ids could be _id or id
+      return raw.map(p => {
+        const postId = p._id || p.id || p.post_id || p._id?.$oid || null;
+        const replies = (p.replies || []).map(r => ({
+          id: r._id || r.id || r.reply_id || null,
+          user_id: r.user_id || r.userId || r.uid || null,
+          author: r.username || r.author || (r.user && r.user.username) || 'Anonymous',
+          anonymous: r.is_anonymous || r.anonymous || r.isAnonymous || false,
+          content: r.content || r.text || '',
+          likes: Array.isArray(r.likes) ? r.likes.length : (r.likes || 0),
+          dislikes: Array.isArray(r.dislikes) ? r.dislikes.length : (r.dislikes || 0),
+          liked: r.liked || false,
+          disliked: r.disliked || false,
+          flagged: !!r.flagged,
+          ai_flagged: !!r.ai_flagged,
+          flag_categories: r.flag_categories || [],
+          is_deleted: !!r.is_deleted,
+          date: r.date || r.created_at || '',
+          time: r.time || r.created_time || '',
+          datetime: r.datetime ? new Date(r.datetime) : (r.date && r.time ? new Date(`${r.date}T${r.time}`) : new Date()),
+          isStudentVol: !!r.isStudentVol
+        }));
+
+        // Parse datetime if available, otherwise use current date
+        let postDatetime;
+        if (p.datetime) {
+          postDatetime = new Date(p.datetime);
+        } else if (p.date && p.time) {
+          postDatetime = new Date(`${p.date}T${p.time}`);
+        } else {
+          postDatetime = new Date();
+        }
+
+        return {
+          id: postId,
+          _id: postId,
+          user_id: p.user_id || p.userid || p.userId || null,
+          title: p.title || '',
+          content: p.content || p.text || '',
+          username: p.username || p.author || (p.user && p.user.username) || 'Anonymous',
+          is_anonymous: !!p.is_anonymous || !!p.anonymous,
+          is_deleted: !!p.is_deleted,
+          likes: Array.isArray(p.likes) ? p.likes.length : (p.likes || 0),
+          dislikes: Array.isArray(p.dislikes) ? p.dislikes.length : (p.dislikes || 0),
+          liked: p.liked || false,
+          disliked: p.disliked || false,
+          flagged: !!p.flagged,
+          ai_flagged: !!p.ai_flagged,
+          flag_categories: p.flag_categories || [],
+          replies: replies,
+          date: p.date || p.created_date || postDatetime.toISOString().split('T')[0],
+          time: p.time || p.created_time || postDatetime.toTimeString().split(' ')[0],
+          datetime: postDatetime,
+          isStudentVol: !!p.isStudentVol
+        };
       });
+    }
 
-      replies.forEach(r => {
-        div.querySelector(`#replies-${p._id}`).innerHTML += `
-          <div class="reply ${r.flagged ? "flagged" : ""}">
-            <strong>${r.username}</strong> ${r.isStudentVol ? '<span class="studentvol-badge">Volunteer</span>' : ""}
-            <p>${r.content}</p>
+    // Format date and time for display - show both exact time and relative time
+    function formatDateTime(dateTime) {
+      if (!dateTime) return '';
+      
+      const dateObj = new Date(dateTime);
+      if (isNaN(dateObj.getTime())) return '';
+      
+      const now = new Date();
+      const diffMs = now - dateObj;
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      let relativeTime = '';
+      if (diffMins < 1) relativeTime = 'Just now';
+      else if (diffMins < 60) relativeTime = `${diffMins} min ago`;
+      else if (diffHours < 24) relativeTime = `${diffHours} hr ago`;
+      else if (diffDays < 7) relativeTime = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+      else relativeTime = dateObj.toLocaleDateString();
+      
+      const exactTime = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      return `<span title="${exactTime}">${relativeTime}</span>`;
+    }
+
+    // Fetch session info (current user) and posts on load
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch('/session_info');
+        if (res.ok) {
+          currentUser = await res.json();
+          // normalize currentUser fields used below
+          if (currentUser) {
+            currentUser.role = currentUser.role || currentUser.user_type || currentUser.type || null;
+            currentUser.username = currentUser.username || currentUser.name || currentUser.user || 'You';
             
-            <button onclick="likeReply('${p._id}','${r._id}','like')">👍 ${r.likes.length}</button>
-            <button onclick="likeReply('${p._id}','${r._id}','dislike')">👎 ${r.dislikes.length}</button>
+            // Show filter if user is a Student Volunteer
+            if (isStudentVol(currentUser)) {
+              document.getElementById('filter-container').style.display = 'flex';
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch session info', err);
+      }
 
-          </div>
-        `;
+      await loadPosts();
+    });
+
+    async function loadPosts() {
+      try {
+        const res = await fetch('/peer_data');
+        if (!res.ok) {
+          console.error('Failed to /peer_data:', res.status);
+          // fallback: keep existing posts
+          renderPosts(posts);
+          return;
+        }
+        const data = await res.json();
+        allPosts = normalizePosts(data || []);
+        applyFilter(); // Apply current filter after loading posts
+      } catch (err) {
+        console.error('Failed to load posts', err);
+      }
+    }
+
+    // Apply the selected filter
+    function applyFilter() {
+      const filterValue = document.getElementById('post-filter').value;
+      currentFilter = filterValue;
+      
+      // Update UI to show active filter
+      const filterSelect = document.getElementById('post-filter');
+      Array.from(filterSelect.options).forEach(option => {
+        if (option.value === filterValue) {
+          option.classList.add('filter-active');
+        } else {
+          option.classList.remove('filter-active');
+        }
       });
-
-
-      container.appendChild(div);
-    });
-  }
-
-  // Show new post form
-  function showForm() {
-    document.getElementById("form").style.display = "block";
-  }
-
-  // Submit a new post
-  async function submitPost() {
-    const content = document.getElementById("content").value.trim();
-    const is_anonymous = document.getElementById("anonymous").checked;
-
-    if (!content) {
-      alert("Please enter some content before posting.");
-      return;
+      
+      if (filterValue === 'flagged') {
+        // Show all flagged posts (both AI and manual) that are not deleted
+        posts = allPosts.filter(post => post.flagged && !post.is_deleted);
+      } else if (filterValue === 'ai-flagged') {
+        // Show only AI-flagged posts that are not deleted
+        posts = allPosts.filter(post => post.ai_flagged && !post.is_deleted);
+      } else {
+        // Show all posts (including deleted ones in the "all" view)
+        posts = [...allPosts];
+      }
+      renderPosts(posts);
     }
 
-    const res = await fetch("/add_post", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, is_anonymous })
-    });
-
-    if (res.ok) {
-      document.getElementById("content").value = "";
-      document.getElementById("anonymous").checked = false;
-      loadPosts();
-    } else {
-      console.error("Failed to add post");
-    }
-  }
-
-  // Show reply form for a post
-  function showReplyForm(postId) {
-    document.getElementById(`reply-form-${postId}`).style.display = "block";
-  }
-
-  // Submit a reply
-  async function submitReply(postId) {
-    const content = document.getElementById(`reply-content-${postId}`).value.trim();
-    if (!content) {
-      alert("Reply cannot be empty.");
-      return;
+    // Helper to check if user is a Student Volunteer
+    function isStudentVol(user) {
+      return user && (user.role === 'StudentVol' || user.role === 'studentvol' || user.role === 'Volunteer');
     }
 
-    const res = await fetch(`/add_reply/${postId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reply: content })
-    });
+    // Show/hide post form
+    function showPostForm() { document.getElementById('post-form').style.display = 'block'; window.scrollTo({top:0,behavior:'smooth'}); }
+    function hidePostForm(){ document.getElementById('post-form').style.display = 'none'; document.getElementById('post-title').value=''; document.getElementById('post-content').value=''; document.getElementById('anonymous-toggle').checked=false; }
 
-    if (res.ok) {
-      loadPosts();
-    } else {
-      console.error("Failed to add reply");
+    // Submit a new post (uses A's /add_post endpoint)
+    async function submitPost(){
+      const title = document.getElementById('post-title').value.trim();
+      const content = document.getElementById('post-content').value.trim();
+      const is_anonymous = document.getElementById('anonymous-toggle').checked;
+      if (!content) { alert('Please enter some content before posting.'); return; }
+
+      try {
+        const res = await fetch('/add_post', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ title, content, is_anonymous })
+        });
+        if (res.ok) {
+          hidePostForm();
+          await loadPosts();
+        } else {
+          const text = await res.text();
+          console.error('Failed to add post:', text);
+          alert('Failed to add post: ' + text);
+        }
+      } catch (err) {
+        console.error('Error adding post', err);
+      }
     }
-  }
 
-  // Like or dislike a post
-  async function likePost(id, action) {
-    const res = await fetch(`/like_post/${id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action })
-    });
-
-    if (res.ok) {
-      loadPosts();
-    } else {
-      console.error("Failed to record action");
+    // Like/dislike post - uses A's endpoints
+    async function likePost(id, action='like'){
+      try{
+        const res = await fetch(`/like_post/${id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action }) });
+        if(res.ok) await loadPosts(); else console.error('Failed like_post', await res.text());
+      }catch(e){console.error(e)}
     }
-  }
 
-  async function likeReply(postId, replyId, action) {
-    const res = await fetch(`/like_reply/${postId}/${replyId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action })
-    });
-
-    if (res.ok) {
-      loadPosts();
-    } else {
-      console.error("Failed to record reply action");
+    async function likeReply(postId, replyId, action='like'){
+      try{
+        const res = await fetch(`/like_reply/${postId}/${replyId}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action }) });
+        if(res.ok) await loadPosts(); else console.error('Failed like_reply', await res.text());
+      }catch(e){console.error(e)}
     }
-  }
 
+    // Show/hide reply form for a post
+    function toggleReplyForm(postId){
+      const el = document.getElementById(`reply-form-${postId}`);
+      if(!el) return;
+      el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
 
+    // Submit reply - uses A's /add_reply/{postId} endpoint
+    async function submitReply(postId){
+      const textarea = document.getElementById(`reply-content-${postId}`);
+      const anonBox = document.getElementById(`reply-anonymous-${postId}`);
+      if(!textarea) return; const content = textarea.value.trim();
+      if(!content){ alert('Reply cannot be empty.'); return; }
+
+      try{
+        const res = await fetch(`/add_reply/${postId}`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reply: content, is_anonymous: !!(anonBox && anonBox.checked) })
+        });
+        if(res.ok){ await loadPosts(); } else { console.error('Failed add_reply', await res.text()); }
+      }catch(e){console.error(e)}
+    }
+
+    // Delete post/reply - uses A endpoints
+    async function deletePost(postId){
+      if(!confirm('Are you sure you want to delete this post?')) return;
+      try{
+        const res = await fetch(`/delete_post/${postId}`, { method:'DELETE' });
+        if(res.ok) {
+          await loadPosts();
+          // If we're in a filtered view, reapply the filter to remove deleted posts
+          if (currentFilter !== 'all') {
+            applyFilter();
+          }
+        } else { 
+          const txt = await res.text(); 
+          alert('Failed to delete post: '+txt); 
+        }
+      }catch(e){console.error(e)}
+    }
+
+    async function deleteReply(postId, replyId){
+      if(!confirm('Are you sure you want to delete this reply?')) return;
+      try{
+        const res = await fetch(`/delete_reply/${postId}/${replyId}`, { method:'DELETE' });
+        if(res.ok) {
+          await loadPosts();
+          // If we're in a filtered view, reapply the filter
+          if (currentFilter !== 'all') {
+            applyFilter();
+          }
+        } else { 
+          const txt = await res.text(); 
+          alert('Failed to delete reply: '+txt); 
+        }
+      }catch(e){console.error(e)}
+    }
+
+    // Flag content (StudentVol) - uses A's /flag_content/{type}/{id}
+    async function flagContent(contentType, contentId, postId=null){
+      if(!currentUser) { alert('You must be logged in to flag content.'); return; }
+      if(!isStudentVol(currentUser)){ alert('Only Student Volunteers can flag content.'); return; }
+      if(!confirm('Flag this content as inappropriate?')) return;
+      try{
+        // contentType expected: 'post' or 'reply'
+        const targetId = contentType === 'reply' && postId ? contentId : contentId;
+        const endpoint = (contentType === 'reply' && postId) ? `/flag_content/${contentType}/${contentId}` : `/flag_content/${contentType}/${contentId}`;
+        const res = await fetch(endpoint, { method:'POST' });
+        if(res.ok){ alert('Content flagged successfully'); await loadPosts(); } else { alert('Failed to flag content: ' + await res.text()); }
+      }catch(e){console.error(e)}
+    }
+
+    // Unflag content (StudentVol and Admin) - uses new /unflag_content endpoint
+    async function unflagContent(contentType, contentId, postId=null){
+      if(!currentUser) { alert('You must be logged in to unflag content.'); return; }
+      if(!isStudentVol(currentUser) && currentUser.role !== 'Admin'){ 
+        alert('Only Student Volunteers and Admins can unflag content.'); 
+        return; 
+      }
+      if(!confirm('Unflag this content?')) return;
+      try{
+        const endpoint = `/unflag_content/${contentType}/${contentId}`;
+        const res = await fetch(endpoint, { method:'POST' });
+        if(res.ok){ alert('Content unflagged successfully'); await loadPosts(); } else { alert('Failed to unflag content: ' + await res.text()); }
+      }catch(e){console.error(e)}
+    }
+
+    // Search & filter
+    function searchPosts(){
+      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      if(!q){ 
+        // If there's an active filter, apply it first
+        applyFilter();
+        return; 
+      }
+      
+      // Start with the filtered set if applicable
+      let basePosts = [...allPosts];
+      if (currentFilter === 'flagged') {
+        basePosts = basePosts.filter(post => post.flagged && !post.is_deleted);
+      } else if (currentFilter === 'ai-flagged') {
+        basePosts = basePosts.filter(post => post.ai_flagged && !post.is_deleted);
+      }
+      
+      posts = basePosts.filter(post => {
+        const inTitle = (post.title||'').toLowerCase().includes(q);
+        const inContent = (post.content||'').toLowerCase().includes(q);
+        const inAuthor = (!post.is_anonymous && (post.username||'').toLowerCase().includes(q));
+        const inReplies = (post.replies || []).some(r => (r.content||'').toLowerCase().includes(q) || (!r.anonymous && (r.author||'').toLowerCase().includes(q)));
+        return inTitle || inContent || inAuthor || inReplies;
+      });
+      renderPosts(posts);
+    }
+    
+    function clearSearch(){ 
+      document.getElementById('search-input').value=''; 
+      applyFilter(); // Reapply current filter
+    }
+
+    // Sorting replies: StudentVol first, then net likes, then newest
+    function sortReplies(replies){
+      return replies.sort((a,b)=>{
+        if(!!a.isStudentVol && !b.isStudentVol) return -1;
+        if(!a.isStudentVol && !!b.isStudentVol) return 1;
+        const aNet = (a.likes||0) - (a.dislikes||0);
+        const bNet = (b.likes||0) - (b.dislikes||0);
+        if(aNet !== bNet) return bNet - aNet;
+        const aDate = a.datetime ? new Date(a.datetime) : new Date();
+        const bDate = b.datetime ? new Date(b.datetime) : new Date();
+        return bDate - aDate;
+      });
+    }
+
+    // Helper for permission checks
+    function canDeletePost(post){
+      if(!currentUser) return false;
+      const isOwner = currentUser.user_id == post.user_id || currentUser.user_id == post.userId || currentUser.user_id == post.user_id;
+      const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'admin';
+      const isVolunteer = isStudentVol(currentUser);
+      return isOwner || isAdmin || isVolunteer;
+    }
+
+    function canDeleteReply(reply){
+      if(!currentUser) return false;
+      const isOwner = currentUser.user_id == reply.user_id || currentUser.user_id == reply.userId;
+      const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'admin';
+      const isVolunteer = isStudentVol(currentUser);
+      return isOwner || isAdmin || isVolunteer;
+    }
+
+    // Core renderer (renders posts array)
+    function renderPosts(postsArray){
+      const container = document.getElementById('posts-container');
+      container.innerHTML = '';
+      
+      // Show message if no posts match the filter
+      if(!postsArray || postsArray.length===0){
+        if (currentFilter === 'flagged') {
+          container.innerHTML = '<p>No flagged posts found.</p>';
+        } else if (currentFilter === 'ai-flagged') {
+          container.innerHTML = '<p>No AI-moderated posts found.</p>';
+        } else {
+          container.innerHTML = '<p>No posts yet. Be the first to share!</p>';
+        }
+        return; 
+      }
+
+      postsArray.forEach(p => {
+        const postEl = document.createElement('div');
+        postEl.className = 'post' + (p.flagged ? (p.ai_flagged ? ' ai-flagged' : ' manual-flagged') : '');
+
+        // Post header
+        const postHeader = document.createElement('div'); postHeader.className = 'post-header';
+        const authorSpan = document.createElement('span'); authorSpan.className = 'post-author';
+        const displayName = p.is_anonymous ? 'Anonymous' : (p.username || 'Unknown');
+        
+        // Add flag badges if content is flagged
+        let flagBadges = '';
+        if (p.flagged) {
+          if (p.ai_flagged) {
+            flagBadges = '<span class="ai-flag-badge">AI Moderator</span>';
+          } else {
+            flagBadges = '<span class="manual-flag-badge">Manually Flagged</span>';
+          }
+        }
+        
+        authorSpan.innerHTML = `${escapeHtml(displayName)} ${p.isStudentVol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${flagBadges}`;
+        
+        const dateSpan = document.createElement('span'); 
+        dateSpan.className = 'post-date'; 
+        dateSpan.innerHTML = formatDateTime(p.datetime);
+        postHeader.appendChild(authorSpan); postHeader.appendChild(dateSpan);
+
+        // Title
+        const titleEl = document.createElement('h3'); titleEl.textContent = p.title || '';
+        // Content
+        const contentDiv = document.createElement('div'); contentDiv.className = 'post-content';
+        contentDiv.innerHTML = p.is_deleted ? `<p class="deleted">${escapeHtml(p.content)}</p>` : escapeHtml(p.content);
+
+        // Show flag categories if AI flagged
+        if (p.ai_flagged && p.flag_categories && p.flag_categories.length > 0) {
+          const categoriesDiv = document.createElement('div');
+          categoriesDiv.style.marginTop = '8px';
+          categoriesDiv.style.fontSize = '0.85rem';
+          categoriesDiv.style.color = '#d32f2f';
+          categoriesDiv.innerHTML = `<strong>AI detected:</strong> ${p.flag_categories.join(', ')}`;
+          contentDiv.appendChild(categoriesDiv);
+        }
+
+        // Actions
+        const actionsDiv = document.createElement('div'); actionsDiv.className = 'post-actions';
+
+        const likeBtn = document.createElement('button'); likeBtn.className = 'action-btn ' + (p.liked ? 'liked' : ''); likeBtn.innerHTML = `👍 ${p.likes||0}`;
+        likeBtn.onclick = () => likePost(p.id || p._id);
+        const dislikeBtn = document.createElement('button'); dislikeBtn.className = 'action-btn ' + (p.disliked ? 'disliked' : ''); dislikeBtn.innerHTML = `👎 ${p.dislikes||0}`;
+        dislikeBtn.onclick = () => { likePost(p.id || p._id, 'dislike'); };
+
+        const replyToggle = document.createElement('button'); replyToggle.className = 'action-btn'; replyToggle.innerHTML = '💬 Reply'; replyToggle.onclick = () => toggleReplyForm(p.id || p._id);
+        actionsDiv.appendChild(likeBtn); actionsDiv.appendChild(dislikeBtn); actionsDiv.appendChild(replyToggle);
+
+        // Flag & Delete for StudentVol/Admin/Owner
+        if((isStudentVol(currentUser) || currentUser?.role === 'Admin') && !p.is_deleted){
+          if (p.flagged) {
+            const unflagBtn = document.createElement('button'); 
+            unflagBtn.className = 'action-btn'; 
+            unflagBtn.innerHTML = '✅ Unflag';
+            unflagBtn.onclick = () => unflagContent('post', p.id || p._id);
+            actionsDiv.appendChild(unflagBtn);
+          } else {
+            const flagBtn = document.createElement('button'); 
+            flagBtn.className = 'action-btn'; 
+            flagBtn.innerHTML = '🚩 Flag';
+            flagBtn.onclick = () => flagContent('post', p.id || p._id);
+            actionsDiv.appendChild(flagBtn);
+          }
+
+          const delBtn = document.createElement('button'); delBtn.className = 'action-btn danger'; delBtn.innerHTML = '🗑️ Delete'; delBtn.onclick = () => deletePost(p.id || p._id);
+          actionsDiv.appendChild(delBtn);
+        } else if(canDeletePost(p) && !p.is_deleted){
+          const delBtn = document.createElement('button'); delBtn.className = 'action-btn danger'; delBtn.innerHTML = '🗑️ Delete'; delBtn.onclick = () => deletePost(p.id || p._id);
+          actionsDiv.appendChild(delBtn);
+        }
+
+        // Assemble post element
+        postEl.appendChild(postHeader);
+        if(p.title) postEl.appendChild(titleEl);
+        postEl.appendChild(contentDiv);
+        postEl.appendChild(actionsDiv);
+
+        // Reply form (hidden by default)
+        const replyForm = document.createElement('div'); replyForm.id = `reply-form-${p.id||p._id}`; replyForm.className = 'reply-form'; replyForm.style.display = 'none';
+        replyForm.innerHTML = `\n          <textarea id="reply-content-${p.id||p._id}" placeholder="Write your reply..."></textarea>\n          <div class=\"anonymity-toggle\">\n            <input type=\"checkbox\" id=\"reply-anonymous-${p.id||p._id}\">\n            <label for=\"reply-anonymous-${p.id||p._id}\">Reply anonymously</label>\n          </div>\n          <div style=\"display:flex;gap:8px;\">\n            <button onclick=\"submitReply('${p.id||p._id}')\">Submit Reply</button>\n            <button onclick=\"toggleReplyForm('${p.id||p._id}')\" class=\"secondary\">Cancel</button>\n          </div>\n        `;
+        postEl.appendChild(replyForm);
+
+        // Replies container
+        const repliesWrap = document.createElement('div'); repliesWrap.className = 'replies';
+        const sorted = sortReplies((p.replies||[]).map(r=>({ ...r })));
+        sorted.forEach(r => {
+          const replyEl = document.createElement('div'); replyEl.className = 'reply' + (r.flagged ? (r.ai_flagged ? ' ai-flagged' : ' manual-flagged') : '');
+          const header = document.createElement('div'); header.className = 'reply-header';
+          
+          // Add flag badges if content is flagged
+          let replyFlagBadges = '';
+          if (r.flagged) {
+            if (r.ai_flagged) {
+              replyFlagBadges = '<span class="ai-flag-badge">AI Moderator</span>';
+            } else {
+              replyFlagBadges = '<span class="manual-flag-badge">Manually Flagged</span>';
+            }
+          }
+          
+          const author = document.createElement('span'); author.className = 'reply-author'; author.innerHTML = `${r.anonymous ? 'Anonymous' : escapeHtml(r.author||'Unknown')} ${r.isStudentVol?'<span class="studentvol-badge">Student Volunteer</span>':''} ${replyFlagBadges}`;
+          const date = document.createElement('span'); date.className = 'reply-date'; date.innerHTML = formatDateTime(r.datetime);
+          header.appendChild(author); header.appendChild(date);
+
+          const contentDiv = document.createElement('div'); contentDiv.className = 'reply-content'; contentDiv.innerHTML = r.is_deleted ? `<p class="deleted">${escapeHtml(r.content)}</p>` : escapeHtml(r.content);
+
+          // Show flag categories if AI flagged
+          if (r.ai_flagged && r.flag_categories && r.flag_categories.length > 0) {
+            const categoriesDiv = document.createElement('div');
+            categoriesDiv.style.marginTop = '8px';
+            categoriesDiv.style.fontSize = '0.85rem';
+            categoriesDiv.style.color = '#d32f2f';
+            categoriesDiv.innerHTML = `<strong>AI detected:</strong> ${r.flag_categories.join(', ')}`;
+            contentDiv.appendChild(categoriesDiv);
+          }
+
+          const actions = document.createElement('div'); actions.className = 'reply-actions';
+          const likeR = document.createElement('button'); likeR.className = 'action-btn '+(r.liked?'liked':''); likeR.innerHTML = `👍 ${r.likes||0}`; likeR.onclick = () => likeReply(p.id||p._id, r.id, 'like');
+          const disR = document.createElement('button'); disR.className = 'action-btn '+(r.disliked?'disliked':''); disR.innerHTML = `👎 ${r.dislikes||0}`; disR.onclick = () => likeReply(p.id||p._id, r.id, 'dislike');
+          actions.appendChild(likeR); actions.appendChild(disR);
+
+          // Only show delete button if reply is not already deleted
+          if(!r.is_deleted) {
+            if((isStudentVol(currentUser) || currentUser?.role === 'Admin')){ 
+              if (r.flagged) {
+                const unflagR = document.createElement('button'); 
+                unflagR.className = 'action-btn'; 
+                unflagR.innerHTML = '✅ Unflag'; 
+                unflagR.onclick = () => unflagContent('reply', r.id, p.id||p._id); 
+                actions.appendChild(unflagR); 
+              } else {
+                const flagR = document.createElement('button'); 
+                flagR.className = 'action-btn'; 
+                flagR.innerHTML = '🚩 Flag'; 
+                flagR.onclick = () => flagContent('reply', r.id, p.id||p._id); 
+                actions.appendChild(flagR); 
+              }
+              const delR = document.createElement('button'); delR.className='action-btn danger'; delR.innerHTML='🗑️ Delete'; delR.onclick=()=> deleteReply(p.id||p._id, r.id); actions.appendChild(delR); 
+            }
+            else if(canDeleteReply(r)){ 
+              const delR = document.createElement('button'); delR.className='action-btn danger'; delR.innerHTML='🗑️ Delete'; delR.onclick=()=> deleteReply(p.id||p._id, r.id); actions.appendChild(delR); 
+            }
+          }
+
+          replyEl.appendChild(header); replyEl.appendChild(contentDiv); replyEl.appendChild(actions);
+          repliesWrap.appendChild(replyEl);
+        });
+
+        postEl.appendChild(repliesWrap);
+        container.appendChild(postEl);
+      });
+    }
+
+    // Small helper to escape HTML
+    function escapeHtml(str){ if(!str && str !== 0) return ''; return String(str).replace(/[&<>\"']/g, function(s){ return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[s]; }); }
+
+    // Navigation helpers (from header popup)
+    function toggleUserPopup(){ const el = document.getElementById('user-popup'); el.style.display = (el.style.display==='block')? 'none':'block'; }
+    function goHome(){ window.location.href = '/dashboard'; }
+    function goJournal(){ window.location.href = '/journal'; }
+
+    // Dark/light mode toggle
+    function toggleMode(){ document.body.classList.toggle('dark'); }
+
+    // Click-away to close popup
+    document.addEventListener('click', function(e){ const popup = document.getElementById('user-popup'); const icon = document.getElementById('userIcon'); if(!popup) return; if(icon && icon.contains(e.target)) return; if(popup.contains(e.target)) return; popup.style.display='none'; });
 
   </script>
 </body>
