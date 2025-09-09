@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoulAce - AI Support</title>
+  <style>
+    body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
+    .header-left { display:flex; align-items:center; gap:15px; }
+    .header-text { display:flex; flex-direction:column; }
+    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+    header h1 { margin:0; font-size:1.8rem; color:#fff; }
+    .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
+    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
+    .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; background:none; border:none; }
+    .popup-btn:hover { background:#f2f2f2; }
+
+    main { padding:2rem; max-width:800px; margin:0 auto; }
+    h2 { color:#243B36; text-align:center; margin-bottom:2rem; }
+
+    .chat-container { background:#fff; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); height:500px; display:flex; flex-direction:column; }
+    .chat-header { background:#7B9B8B; color:white; padding:15px 20px; border-radius:20px 20px 0 0; text-align:center; font-weight:600; }
+    .chat-messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
+    .chat-input-container { padding:15px 20px; border-top:1px solid #e0e0e0; display:flex; gap:10px; align-items:center; }
+
+    .message { max-width:70%; padding:12px 16px; border-radius:18px; word-wrap:break-word; }
+    .user-message { background:#243B36; color:white; align-self:flex-end; border-bottom-right-radius:4px; }
+    .bot-message { background:#f0f8f5; color:#333; align-self:flex-start; border-bottom-left-radius:4px; }
+    .message.typing { background:#e0e0e0; color:#666; align-self:flex-start; }
+
+    .typing-indicator { display:flex; gap:4px; }
+    .typing-dot { width:8px; height:8px; border-radius:50%; background:#666; animation:typing 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay:0.2s; }
+    .typing-dot:nth-child(3) { animation-delay:0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform:translateY(0); }
+      30% { transform:translateY(-10px); }
+    }
+
+    #chat-input { flex:1; padding:12px 16px; border:2px solid #e0e0e0; border-radius:25px; font-size:16px; outline:none; }
+    #chat-input:focus { border-color:#7B9B8B; }
+
+    #send-btn { background:#7B9B8B; color:white; border:none; padding:12px 20px; border-radius:25px; cursor:pointer; font-weight:600; transition:all 0.3s; }
+    #send-btn:hover:not(:disabled) { background:#657A74; }
+    #send-btn:disabled { background:#ccc; cursor:not-allowed; }
+
+    .welcome-message { text-align:center; color:#666; font-style:italic; margin:20px 0; }
+
+    .quick-responses { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+    .quick-btn { background:#fff; border:1px solid #7B9B8B; color:#7B9B8B; padding:6px 12px; border-radius:20px; cursor:pointer; font-size:12px; transition:all 0.3s; }
+    .quick-btn:hover { background:#7B9B8B; color:white; }
+
+    footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
+
+    body.dark { background:#121212; color:#e0e0e0; }
+    body.dark header { background:#1f1f1f; color:#f9e6d0; }
+    body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
+    body.dark .chat-container { background:#2a2a2a; }
+    body.dark .chat-header { background:#1f1f1f; }
+    body.dark .bot-message { background:#3a3a3a; color:#e0e0e0; }
+    body.dark #chat-input { background:#3a3a3a; color:#e0e0e0; border-color:#555; }
+    body.dark footer { background:#1f1f1f; color:#e0e0e0; border-top:2px solid #444; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलएस">SoulAce</h1>
+        <h3 data-en="Wellness begins here." data-ur="یہاں سے فلاح و بہبود شروع ہوتی ہے۔" data-hi="यहां से वेलनेस शुरू होती है।">Wellness begins here.</h3>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <div style="margin-bottom:10px;">
+            <label for="lang-select" style="font-weight:bold;">🌍 Language:</label>
+            <select id="lang-select">
+              <option value="en">English</option>
+              <option value="ur">Urdu</option>
+              <option value="hi">Hindi</option>
+            </select>
+          </div>
+          <a href="{{ url_for('dashboard') }}" class="popup-btn" data-en="🏠 Home" data-ur="🏠 ہوم" data-hi="🏠 होम">🏠 Home</a>
+          <button onclick="toggleMode()" class="popup-btn" data-en="🌙 Change Mode" data-ur="🌙 موڈ تبدیل کریں" data-hi="🌙 मोड बदलें">🌙 Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn" data-en="🚪 Logout" data-ur="🚪 لاگ آؤٹ" data-hi="🚪 लॉग आउट">🚪 Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h2 data-en="AI Support Chat 🤖" data-ur="AI مدد چیٹ 🤖" data-hi="AI सहायता चैट 🤖">AI Support Chat 🤖</h2>
+    
+    <div class="chat-container">
+      <div class="chat-header" data-en="Your Personal AI Companion" data-ur="آپ کا ذاتی AI ساتھی" data-hi="आपका व्यक्तिगत AI साथी">
+        Your Personal AI Companion
+      </div>
+      
+      <div class="chat-messages" id="chat-messages">
+        <div class="welcome-message" data-en="👋 Hi! I'm here to listen and support you. How are you feeling today?" data-ur="👋 ہیلو! میں یہاں آپ کی سننے اور مدد کے لیے ہوں۔ آج آپ کیسا محسوس کر رہے ہیں؟" data-hi="👋 नमस्ते! मैं यहाँ आपकी सुनने और मदद के लिए हूँ। आज आप कैसा महसूस कर रहे हैं?">
+          👋 Hi! I'm here to listen and support you. How are you feeling today?
+        </div>
+        
+        <div class="quick-responses">
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling anxious')" data-en="I'm feeling anxious" data-ur="میں بے چین محسوس کر رہا ہوں" data-hi="मैं चिंतित महसूस कर रहा हूँ">I'm feeling anxious</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling sad')" data-en="I'm feeling sad" data-ur="میں اداس محسوس کر رہا ہوں" data-hi="मैं उदास महसूस कर रहा हूँ">I'm feeling sad</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m stressed')" data-en="I'm stressed" data-ur="میں تناؤ میں ہوں" data-hi="मैं तनावग्रस्त हूँ">I'm stressed</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I need someone to talk to')" data-en="I need someone to talk to" data-ur="مجھے کسی سے بات کرنے کی ضرورت ہے" data-hi="मुझे किसी से बात करने की जरूरत है">I need someone to talk to</button>
+        </div>
+      </div>
+      
+      <div class="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Type your message..." data-en="Type your message..." data-ur="اپنا پیغام ٹائپ کریں..." data-hi="अपना संदेश टाइप करें...">
+        <button id="send-btn" onclick="sendMessage()" data-en="Send" data-ur="بھیجیں" data-hi="भेजें">Send</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" data-ur="سول ایس © 2025 — 💙 کے ساتھ بنایا گیا SynapSix کی طرف سے" data-hi="SoulAce © 2025 — 💙 के साथ SynapSix द्वारा निर्मित">SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+  <script>
+    let isTyping = false;
+
+    function toggleUserPopup() {
+      const popup = document.getElementById('user-popup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    // Language switcher
+    const langSelect = document.getElementById('lang-select');
+    langSelect.addEventListener('change', () => {
+      const lang = langSelect.value;
+      document.querySelectorAll('[data-en]').forEach(el => {
+        if (el.tagName === 'INPUT') {
+          el.placeholder = el.getAttribute('data-' + lang);
+        } else {
+          el.textContent = el.getAttribute('data-' + lang);
+        }
+      });
+    });
+
+    // Handle Enter key in input
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !isTyping) {
+        sendMessage();
+      }
+    });
+
+    function addMessage(content, isUser = false) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+      messageDiv.textContent = content;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const messagesContainer = document.getElementById('chat-messages');
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message typing';
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+      messagesContainer.appendChild(typingDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      const typingIndicator = document.getElementById('typing-indicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('send-btn');
+      const message = input.value.trim();
+      
+      if (!message || isTyping) return;
+
+      // Add user message
+      addMessage(message, true);
+      input.value = '';
+      
+      // Disable input and show typing
+      isTyping = true;
+      sendBtn.disabled = true;
+      input.disabled = true;
+      showTypingIndicator();
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        
+        // Small delay for better UX
+        setTimeout(() => {
+          hideTypingIndicator();
+          
+          if (data.response) {
+            addMessage(data.response);
+          } else {
+            addMessage("I'm here to listen. Could you tell me more about how you're feeling?");
+          }
+          
+          // Re-enable input
+          isTyping = false;
+          sendBtn.disabled = false;
+          input.disabled = false;
+          input.focus();
+        }, 1000);
+
+      } catch (error) {
+        console.error('Error:', error);
+        hideTypingIndicator();
+        addMessage("I'm having trouble connecting right now, but I'm still here for you. Please try again.");
+        
+        isTyping = false;
+        sendBtn.disabled = false;
+        input.disabled = false;
+      }
+    }
+
+    function sendQuickMessage(message) {
+      document.getElementById('chat-input').value = message;
+      sendMessage();
+    }
+
+    // Hide user popup when clicking outside
+    window.addEventListener('click', (e) => {
+      const popup = document.getElementById('user-popup');
+      const icon = document.querySelector('.user-icon');
+      if (!popup.contains(e.target) && e.target !== icon) {
+        popup.style.display = 'none';
+      }
+    });
+
+    // Focus on input when page loads
+    window.addEventListener('load', () => {
+      document.getElementById('chat-input').focus();
+    });
+  </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ class EmotionalChatbot:
         self.llm = LLM(
             model="groq/llama-3.1-8b-instant",
             api_key=api_key,
-            max_tokens=256
+            max_tokens=100
         )
         self.setup_agents()
 

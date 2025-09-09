@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 import io
 import sentiment_analysis as sa
+from chatbot import EmotionalChatbot
 
 # --- Load environment variables ---
 load_dotenv()
@@ -114,6 +115,19 @@ def seed_sample_data():
 create_default_admin()
 seed_sample_data()
 
+# One-time update for existing users to add disclaimer fields
+def update_existing_users_disclaimer():
+    """Add disclaimer fields to existing users who don't have them"""
+    result = users_col.update_many(
+        {"disclaimer_accepted": {"$exists": False}},
+        {"$set": {"disclaimer_accepted": False, "disclaimer_accepted_at": None}}
+    )
+    if result.modified_count > 0:
+        print(f"✅ Updated {result.modified_count} existing users with disclaimer fields")
+
+# Run the update
+update_existing_users_disclaimer()
+
 # --- Routes ---
 @app.route("/")
 def home():
@@ -130,13 +144,83 @@ def login():
             session["user_id"] = user["user_id"]
             session["username"] = username
             session["role"] = user["role"]
+            session["disclaimer_accepted"] = user.get("disclaimer_accepted", False)
             
             if user["role"] == "Admin":
                 return redirect(url_for("admin_dashboard"))
+            
+            # Check if user needs to see disclaimer
+            if not user.get("disclaimer_accepted", False):
+                return redirect(url_for("disclaimer"))
+            
             return redirect(url_for("dashboard"))
         else:
             flash("Incorrect username or password", "error")
     return render_template("login.html")
+
+@app.route("/disclaimer")
+def disclaimer():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    
+    # Check if user already accepted disclaimer
+    user = users_col.find_one({"user_id": session["user_id"]})
+    if user and user.get("disclaimer_accepted", False):
+        return redirect(url_for("dashboard"))
+    
+    return render_template("disclaimer.html", username=session["username"])
+
+@app.route("/accept_disclaimer", methods=["POST"])
+def accept_disclaimer():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    data = request.get_json()
+    if data.get("accepted"):
+        # Update user record
+        users_col.update_one(
+            {"user_id": session["user_id"]},
+            {
+                "$set": {
+                    "disclaimer_accepted": True,
+                    "disclaimer_accepted_at": datetime.now()
+                }
+            }
+        )
+        
+        # Update session
+        session["disclaimer_accepted"] = True
+        
+        return jsonify({"success": True})
+    
+    return jsonify({"error": "Disclaimer not accepted"}), 400
+
+# Middleware to check disclaimer acceptance
+def require_disclaimer_acceptance():
+    """Decorator to ensure user has accepted disclaimer before accessing protected routes"""
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            if "user_id" not in session:
+                return redirect(url_for("login"))
+            
+            # Skip disclaimer check for admin users
+            if session.get("role") == "Admin":
+                return f(*args, **kwargs)
+            
+            # Check if disclaimer was accepted
+            if not session.get("disclaimer_accepted", False):
+                # Double-check with database
+                user = users_col.find_one({"user_id": session["user_id"]})
+                if not user or not user.get("disclaimer_accepted", False):
+                    return redirect(url_for("disclaimer"))
+                else:
+                    # Update session if database shows acceptance
+                    session["disclaimer_accepted"] = True
+            
+            return f(*args, **kwargs)
+        wrapper.__name__ = f.__name__
+        return wrapper
+    return decorator
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -153,14 +237,24 @@ def register():
                 "username": username,
                 "password_hash": generate_password_hash(password),
                 "role": "User",
-                "date_joined": datetime.now()
+                "date_joined": datetime.now(),
+                "disclaimer_accepted": False,  # NEW: Track disclaimer acceptance
+                "disclaimer_accepted_at": None  # NEW: Track when it was accepted
             }
             users_col.insert_one(new_user)
-            flash("Registration successful! Please login.", "success")
-            return redirect(url_for("login"))
+            
+            # Set session data
+            session["user_id"] = new_user["user_id"]
+            session["username"] = username
+            session["role"] = "User"
+            session["disclaimer_accepted"] = False
+            
+            flash("Registration successful!", "success")
+            return redirect(url_for("disclaimer"))  # NEW: Redirect to disclaimer page
     return render_template("register.html")
 
 @app.route("/dashboard")
+@require_disclaimer_acceptance()
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
@@ -176,6 +270,7 @@ def dashboard():
 
 
 @app.route("/journal", methods=["GET", "POST"])
+@require_disclaimer_acceptance() 
 def journal():
     if "user_id" not in session:
         return redirect("/login")
@@ -244,6 +339,48 @@ def add_journal():
     except Exception as e:
         print(f"❌ Error inserting journal: {e}")
         return jsonify({"error": "Failed to save journal"}), 500
+
+# Initialize chatbot (add this after your MongoDB setup)
+try:
+    api_key = os.getenv("GROQ_API_KEY")
+    if api_key:
+        chatbot = EmotionalChatbot(api_key)
+        print("✅ Chatbot initialized successfully")
+    else:
+        chatbot = None
+        print("⚠️ GROQ_API_KEY not found - chatbot will not work")
+except Exception as e:
+    chatbot = None
+    print(f"❌ Failed to initialize chatbot: {e}")
+
+# --- Chatbot Routes ---
+@app.route("/chatbot")
+@require_disclaimer_acceptance() 
+def chatbot_page():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    return render_template("chatbot.html", username=session["username"])
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    if not chatbot:
+        return jsonify({"response": "I'm sorry, the AI support is temporarily unavailable. Please try again later or contact our support team."}), 500
+    
+    data = request.get_json()
+    message = data.get("message", "").strip()
+    
+    if not message:
+        return jsonify({"response": "I'm here to listen. Please share what's on your mind."}), 400
+    
+    try:
+        response = chatbot.chat(message)
+        return jsonify({"response": response})
+    except Exception as e:
+        print(f"Chatbot error: {e}")
+        return jsonify({"response": "I'm here to support you. Could you tell me more about how you're feeling right now?"}), 500
 
 @app.route("/get_journals/<username>", methods=["GET"])
 def get_journals(username):
