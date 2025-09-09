@@ -40,19 +40,19 @@ def get_next_id(collection, id_field):
         return int(last_doc[id_field]) + 1
     return 1
 
-def create_default_admin():
-    """Create default admin user if doesn't exist"""
-    admin_exists = users_col.find_one({"role": "Admin"})
-    if not admin_exists:
-        admin_user = {
+def create_default_Admin():
+    """Create default Admin user if doesn't exist"""
+    Admin_exists = users_col.find_one({"role": "Admin"})
+    if not Admin_exists:
+        Admin_user = {
             "user_id": get_next_id(users_col, "user_id"),
-            "username": "admin",
+            "username": "Admin",
             "password_hash": generate_password_hash("adminpass"),
             "role": "Admin",
             "date_joined": datetime.now()
         }
-        users_col.insert_one(admin_user)
-        print("✅ Default admin user created")
+        users_col.insert_one(Admin_user)
+        print("✅ Default Admin user created")
 
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
@@ -117,9 +117,33 @@ def check(content: str) -> bool:
     """
     return False
 
+# --- Helper Functions for Admin ---
+def get_all_users():
+    """Fetch all users except admins"""
+    users = list(users_col.find({"role": {"$ne": "Admin"}}))  # exclude admins
+    for user in users:
+        user["_id"] = str(user["_id"])
+    return users
+
+def get_flagged_posts():
+    """Fetch all flagged posts."""
+    posts = list(peersupportposts_col.find({"flagged": True}).sort("datetime", -1))
+    for post in posts:
+        post["_id"] = str(post["_id"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+            reply["username"] = reply_user.get("username", "Unknown") if reply_user else "Unknown"
+    return posts
+
+def update_user_role(user_id, new_role):
+    users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+
 
 # Initialize default data
-create_default_admin()
+create_default_Admin()
 seed_sample_data()
 
 # --- Routes ---
@@ -141,7 +165,7 @@ def login():
             session["role"] = user["role"]
             
             if user["role"] == "Admin":
-                return redirect(url_for("admin_dashboard"))
+                return redirect(url_for("Admin_dashboard"))
             return redirect(url_for("dashboard"))
         else:
             flash("Incorrect username or password", "error")
@@ -160,7 +184,7 @@ def register():
                 "user_id": get_next_id(users_col, "user_id"),
                 "username": username,
                 "password_hash": generate_password_hash(password),
-                "role": "User",
+                "role": "student",
                 "date_joined": datetime.now()
             }
             users_col.insert_one(new_user)
@@ -564,28 +588,62 @@ def delete_post(post_id):
     return jsonify({"message": "Post deleted"})
 
 
-
-
-
-
-
-
-# --- Admin ---
-@app.route("/admin")
-def admin_dashboard():
-    if "user_id" not in session or session["role"] != "Admin":
+#---Admin Routes
+@app.route("/Admin", methods=["GET", "POST"])
+def Admin_dashboard():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
         return redirect(url_for("login"))
-    
+
+    # Handle role updates
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
     stats = {
-        "total_users": users_col.count_documents({"role": "User"}),
+        "total_users": users_col.count_documents({"role": {"$ne": "admin"}}),
         "total_journals": journals_col.count_documents({}),
         "total_appointments": appointments_col.count_documents({}),
         "total_posts": peersupportposts_col.count_documents({})
     }
-    
-    return render_template("admin_dashboard.html", 
-                         username=session["username"],
-                         stats=stats)
+
+    users = get_all_users()  # fetch all non-admin users
+
+    return render_template("Admin_dashboard.html", username=session["username"], stats=stats, users=users)
+
+
+@app.route("/Admin/users", methods=["GET", "POST"])
+def manage_users():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
+    users = get_all_users()  # fetch only non-admin users
+    return render_template("Admin_dashboard.html", users=users)
+
+@app.route("/Admin/flagged_posts", methods=["GET", "POST"])
+def Admin_flagged_posts():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        action = request.form.get("action")  # delete/unflag
+        post_id = request.form.get("post_id")
+        if action == "delete" and post_id:
+            peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+        elif action == "unflag" and post_id:
+            peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
+
+    posts = get_flagged_posts()
+    return render_template("Admin_flagged_posts.html", posts=posts)
+
+
 
 # --- Debug ---
 @app.route("/debug/all_collections")
