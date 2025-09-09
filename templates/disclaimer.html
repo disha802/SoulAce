@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Important Notice - SoulAce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../static/header-logo.png" type="image/png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
+
+        :root {
+            --dark-green: rgba(0,55,62,1);
+            --cream: #f9e6d0;
+            --light-cream: #f7f6f4;
+            --font-family: 'Bricolage Grotesque', Helvetica, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--light-cream);
+            color: var(--dark-green);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 20px;
+            background: var(--dark-green);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        header .logo-placeholder {
+            width: 40px; 
+            height: 40px;
+            background: white; 
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .disclaimer-card {
+            background: var(--cream);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .disclaimer-card h2 {
+            margin-bottom: 24px;
+            color: var(--dark-green);
+            font-size: 1.8rem;
+        }
+
+        .disclaimer-content {
+            text-align: left;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .disclaimer-content h3 {
+            color: var(--dark-green);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .important-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--dark-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: rgba(0,55,62,0.9);
+            transform: translateY(-2px);
+        }
+
+        .checkbox-container {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .toggle {
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Dark Mode Classes */
+        body.dark {
+            background-color: #011114;
+            color: #f9e6d0;
+        }
+
+        body.dark header {
+            background: #2e3030;
+            color: #f9e6d0;
+        }
+
+        body.dark .disclaimer-card {
+            background: #1f1d1d;
+            color: #f9e6d0;
+        }
+
+        body.dark .disclaimer-content h3 {
+            color: #f9e6d0;
+        }
+
+        body.dark .important-notice {
+            background: #3d3d00;
+            border-color: #ffff00;
+            color: #ffff99;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo-placeholder"></div>
+    SoulAce
+</header>
+
+<div class="container">
+    <div class="disclaimer-card">
+        <h2>Welcome to SoulAce!</h2>
+        
+        <div class="disclaimer-content">
+            <div class="important-notice">
+                <strong>Important Medical Disclaimer</strong><br>
+                We are not licensed medical professionals, therapists, or certified clinical practitioners. The information and support provided through SoulAce is for general wellness purposes only and should not be considered as professional medical advice, diagnosis, or treatment.
+            </div>
+
+            <h3>Our Recommendation:</h3>
+            <p>While we're here to support your mental wellness journey, we strongly encourage you to consult with qualified healthcare professionals for any serious mental health concerns. Our platform can complement professional care but should never replace it.</p>
+
+            <div class="checkbox-container">
+                <label>
+                    <input type="checkbox" id="understand-checkbox" required>
+                    I understand that SoulAce provides wellness support and is not a substitute for professional medical care or therapy.
+                </label>
+            </div>
+
+            <div class="checkbox-container">
+                <label>
+                    <input type="checkbox" id="emergency-checkbox" required>
+                    I understand that in case of emergency or crisis, I should contact emergency services immediately.
+                </label>
+            </div>
+
+            <div class="checkbox-container">
+                <label>
+                    <input type="checkbox" id="ip-consent-checkbox" required>
+                    By registering for this platform, you acknowledge and agree that your IP address may be collected and securely stored. This information is used solely for security, abuse prevention, and helpline support purposes. Your IP address will never be shared with third parties except where required by law or to protect the safety and integrity of our community. By proceeding with registration, you consent to this use of your IP address.
+                </label>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="acceptDisclaimer()" id="continue-btn" disabled>
+                I Understand - Continue to SoulAce
+            </button>
+        </div>
+
+        <div class="toggle" onclick="toggleTheme()">Toggle Dark/Light</div>
+    </div>
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+}
+
+// Enable continue button only when all checkboxes are checked
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+const continueBtn = document.getElementById('continue-btn');
+
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        continueBtn.disabled = !allChecked;
+        
+        if (allChecked) {
+            continueBtn.style.opacity = '1';
+            continueBtn.style.cursor = 'pointer';
+        } else {
+            continueBtn.style.opacity = '0.5';
+            continueBtn.style.cursor = 'not-allowed';
+        }
+    });
+});
+
+function acceptDisclaimer() {
+    // Send acceptance to backend
+    fetch('/accept_disclaimer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            accepted: true,
+            timestamp: new Date().toISOString()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/dashboard';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Fallback - still redirect to dashboard
+        window.location.href = '/dashboard';
+    });
+}
+
+// Initialize button state
+continueBtn.style.opacity = '0.5';
+continueBtn.style.cursor = 'not-allowed';
+</script>
+</body>
+</html>
