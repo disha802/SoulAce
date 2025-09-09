@@ -59,6 +59,8 @@
   transform: scale(1.05);
 }
 
+  .feature-card h3 { margin:0.5rem 0; }
+  .feature-card p { color:#657A74; margin:0; }
   footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
 
   body.dark { background:#121212; color:#e0e0e0; }
@@ -82,8 +84,8 @@
       <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
     </div>
     <div class="header-text">
-      <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलएस">SoulAce</h1>
-      <h3 data-en="Wellness begins here." data-ur="یہاں سے فلاح و بہبود شروع ہوتی ہے۔" data-hi="यहां से वेलनेस शुरू होती है।">Wellness begins here.</h3>
+      <h1>SoulAce</h1>
+      <h3>Wellness begins here.</h3>
     </div>
   </div>
 
@@ -93,17 +95,12 @@
            alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
 
       <div id="user-popup" class="user-popup">
-        <div style="margin-bottom:10px;">
-          <label for="lang-select" style="font-weight:bold;">🌐 Language:</label>
-          <select id="lang-select">
-            <option value="en">English</option>
-            <option value="ur">Urdu</option>
-            <option value="hi">Hindi</option>
-          </select>
-        </div>
-        <button onclick="toggleMode()" class="popup-btn" data-en="Change Mode" data-ur="موڈ تبدیل کریں" data-hi="मोड बदलें">Change Mode</button>
+        <!-- Google Translate -->
+        <div id="google_translate_element" style="margin-bottom:10px;"></div>
+
+        <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
         <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-          <button type="submit" class="popup-btn" data-en="Logout" data-ur="لاگ آؤٹ" data-hi="लॉग आउट">Logout</button>
+          <button type="submit" class="popup-btn">Logout</button>
         </form>
       </div>
     </div>
@@ -111,68 +108,82 @@
 </header>
 
 <section class="hero">
-  <h2 data-en="Hey {{username}}, you’re not alone 💛" data-ur="ہیلو {{username}}، آپ اکیلے نہیں ہیں 💛" data-hi="हाय {{username}}, आप अकेले नहीं हैं 💛">
-    Hey {{username}}, you’re not alone 💛
-  </h2>
-  <p data-en="SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free."
-     data-ur="SoulAce آپ کے لیے ایک محفوظ جگہ ہے تاکہ آپ مدد، وسائل تلاش کریں اور ساتھیوں سے جڑیں — سب کچھ پرائیویٹ اور بغیر کسی داغ کے۔"
-     data-hi="SoulAce आपकी सुरक्षित जगह है, मदद, संसाधनों को खोजने और साथियों से जुड़ने के लिए — सब कुछ निजी और बिना किसी कलंक के।">
-    SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.
-  </p>
+  <h2>Hey {{username}}, you’re not alone 💛</h2>
+  <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma-free.</p>
 </section>
 
 <section class="mood-tracker">
-  <h2 data-en="How are you feeling?" data-ur="آپ کیسا محسوس کر رہے ہیں؟" data-hi="आप कैसा महसूस कर रहे हैं?">How are you feeling?</h2>
+  <h2>How are you feeling?</h2>
   <div class="moods">
     <div class="mood-option" onclick="setMood('Very Happy')">
       <div class="mood-btn">😁</div>
-      <div class="label" data-en="Very Happy" data-ur="بہت خوش" data-hi="बहुत खुश">Very Happy</div>
+      <div class="label">Very Happy</div>
     </div>
     <div class="mood-option" onclick="setMood('Feeling Blessed')">
       <div class="mood-btn">😇</div>
-      <div class="label" data-en="Feeling Blessed" data-ur="خوش قسمت محسوس کر رہا ہوں" data-hi="आभारी महसूस कर रहा हूँ">Feeling Blessed</div>
+      <div class="label">Feeling Blessed</div>
     </div>
     <div class="mood-option" onclick="setMood('Happy')">
       <div class="mood-btn">🙂</div>
-      <div class="label" data-en="Happy" data-ur="خوش" data-hi="खुश">Happy</div>
+      <div class="label">Happy</div>
     </div>
     <div class="mood-option" onclick="setMood('Mind Blown')">
       <div class="mood-btn">🤯</div>
-      <div class="label" data-en="Mind Blown" data-ur="دماغ اڑ گیا" data-hi="मन उड़ा">Mind Blown</div>
+      <div class="label">Mind Blown</div>
     </div>
     <div class="mood-option" onclick="setMood('Frustrated')">
       <div class="mood-btn">😤</div>
-      <div class="label" data-en="Frustrated" data-ur="مایوس" data-hi="निराश">Frustrated</div>
+      <div class="label">Frustrated</div>
     </div>
     <div class="mood-option" onclick="setMood('Sad')">
       <div class="mood-btn">😔</div>
-      <div class="label" data-en="Sad" data-ur="اداس" data-hi="उदास">Sad</div>
+      <div class="label">Sad</div>
     </div>
     <div class="mood-option" onclick="setMood('Angry')">
       <div class="mood-btn">😡</div>
-      <div class="label" data-en="Angry" data-ur="غصہ" data-hi="गुस्सा">Angry</div>
+      <div class="label">Angry</div>
     </div>
     <div class="mood-option" onclick="setMood('Crying')">
       <div class="mood-btn">😭</div>
-      <div class="label" data-en="Crying" data-ur="رونا" data-hi="रोना">Crying</div>
+      <div class="label">Crying</div>
     </div>
   </div>
   <form action="/download_moods" method="get">
-    <button type="submit" data-en="📥 Download history" data-ur="تاریخ ڈاؤن لوڈ کریں" data-hi="इतिहास डाउनलोड करें">📥 Download history</button>
+    <button type="submit">📥 Download history</button>
   </form>
 </section>
 
-  <section class="features">
-    <div class="feature-card">
-      <span><img src="{{ url_for('static', filename='chatbot.png') }}"></span>
-      <h3 data-en="AI Support" data-ur="AI مدد" data-hi="एआई समर्थन">AI Support</h3>
-      <p data-en="Chat with our AI guide for coping strategies and next steps."
-         data-ur="ہمارے AI گائیڈ کے ساتھ بات کریں تاکہ حکمت عملی اور اگلے اقدامات پر رہنمائی حاصل ہو۔"
-         data-hi="हमारे एआई गाइड से बात करें, सामना करने की रणनीतियों और अगले कदमों के लिए।">
-         Chat with our AI guide for coping strategies and next steps.
-      </p>
-    </div>
+<section class="features">
+  <div class="feature-card">
+    <span><img src="{{ url_for('static', filename='chatbot.png') }}"></span>
+    <h3>AI Support</h3>
+    <p>Chat with our AI guide for coping strategies and next steps.</p>
+  </div>
 
+  <a href="{{ url_for('appointment') }}" class="feature-card">
+    <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
+    <h3>Confidential Booking</h3>
+    <p>Book sessions with counsellors without fear of judgment.</p>
+  </a>
+
+  <a href="{{ url_for('resources') }}" class="feature-card">
+    <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>
+    <h3>Wellness Resources</h3>
+    <p>Access guides, audios, and videos in your own language.</p>
+  </a>
+
+  <a href="{{ url_for('dashboard') }}" class="feature-card">
+    <span><img src="{{ url_for('static', filename='peer support.png') }}"></span>
+    <h3>Peer Support</h3>
+    <p>Join moderated forums to share and support each other.</p>
+  </a>
+
+  <a href="{{ url_for('journal') }}" class="feature-card">
+    <span><img src="{{ url_for('static', filename='journal.png') }}"></span>
+    <h3>Journal</h3>
+    <p>Pen down your thoughts and feelings of the day.</p>
+  </a>
+</section>
     <div class="feature-card">
       <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
       <h3 data-en="Confidential Booking" data-ur="رازدارانہ بکنگ" data-hi="गोपनीय बुकिंग">Confidential Booking</h3>
@@ -207,6 +218,9 @@
     
   </section>
 
+<footer>
+  <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+</footer>
   <!-- <button class="crisis-btn" onclick="location.href='{{ url_for('crisis') }}'">🚨 Crisis</button> -->
   <button onclick="triggerCrisis()"" class="crisis-btn">🚨 Crisis</button>
 
@@ -220,6 +234,15 @@ function toggleUserPopup(){ const popup = document.getElementById('user-popup');
 async function setMood(mood){ const res = await fetch("/save_mood",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mood})}); const r=await res.json(); alert(r.message);}
 window.addEventListener('click', e=>{ const popup = document.getElementById('user-popup'); const icon = document.querySelector('.user-icon'); if(!popup.contains(e.target) && e.target!==icon) popup.style.display='none'; });
 
+// Google Translate
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement(
+    {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+    'google_translate_element'
+  );
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 // Language switcher
 const langSelect=document.getElementById('lang-select');
 langSelect.addEventListener('change', ()=>{

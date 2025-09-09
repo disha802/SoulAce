@@ -12,8 +12,8 @@
     .header-text h3 { margin:0; font-size:1rem; color:#FFF7E4; }
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:140px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding:10px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding:10px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
     .popup-btn:hover { background:#f2f2f2; }
     main { padding:2rem; }
     h2 { color:#243B36; }
@@ -35,6 +35,19 @@
     body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
     .prompt-card { background:#f0f8f5; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:15px; }
     .prompt-card h4 { margin-top:0; }
+
+    /* Google Translate Styling */
+    .goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon { display:none !important; }
+    body { top:0px !important; }
+    #google_translate_element select {
+      background:#fff;
+      border-radius:8px;
+      padding:5px 10px;
+      border:1px solid #ccc;
+      font-size:14px;
+      cursor:pointer;
+      width:100%;
+    }
   </style>
 </head>
 <body>
@@ -57,6 +70,9 @@
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
             <button type="submit" class="popup-btn">🚪 Logout</button>
           </form>
+          <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
+          <!-- Google Translate Dropdown inside profile -->
+          <div id="google_translate_element"></div>
         </div>
       </div>
     </div>
@@ -78,7 +94,6 @@
           🖊️ Journaling is one of those simple habits that can have surprisingly big benefits for your mind, emotions, and even productivity. Take a few minutes to write your thoughts and reflect!
         {% endif %}
       </p>
-
 
       <input type="text" id="title-input" placeholder="Entry title">
       <textarea id="content" placeholder="Write your thoughts..."></textarea>
@@ -139,12 +154,11 @@
   </div>
 
   <script>
-
     window.onload = function () {
         const prompt = localStorage.getItem("journaling_prompt");
         if (prompt) {
           document.getElementById("journal-prompt-text").innerText = prompt;
-          localStorage.removeItem("journaling_prompt"); // clear so it doesn’t repeat
+          localStorage.removeItem("journaling_prompt");
         }
       };
 
@@ -224,12 +238,23 @@
     }
 
     loadEntries();
-</script>
+  </script>
+
+  <!-- Google Translate Script -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,ur',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
   <!-- Footer -->
   <footer style="background:#7B9B8B; color:white; text-align:center; padding:15px; margin-top:30px;">
     <p>&copy; 2025 SoulAce. All rights reserved.</p>
   </footer>
 </body>
 </html>
-
-
