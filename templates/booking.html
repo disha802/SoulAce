@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SoulAce — Therapist-first Booking (UID required)</title>
+<title>SoulAce — Therapist & Proctor booking</title>
 <style>
   /* --- overall --- */
   body{margin:0;font-family:'Segoe UI',sans-serif;background:#F5F7F2;color:#333}
-  .container{max-width:1100px;margin:2rem auto;padding:0 1rem}
-  .columns{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start}
-  @media (max-width:980px){.columns{grid-template-columns:1fr}.therapist-panel{order:2}}
+  .container{max-width:1300px;margin:2rem auto;padding:0 1rem}
+  /* three columns: main + therapist + proctor */
+  .columns{display:grid;grid-template-columns:1fr 360px 360px;gap:1.5rem;align-items:start}
+  @media (max-width:1200px){.columns{grid-template-columns:1fr 360px;}}
+  @media (max-width:980px){.columns{grid-template-columns:1fr}.therapist-panel{order:2}.proctor-panel{order:3}}
 
   /* booking card */
   .card{background:#fff;padding:1.8rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
@@ -25,13 +27,19 @@
   .small{font-size:0.85rem;color:#657A74}
   .error{color:#b00020;font-size:0.9rem;margin-top:6px;display:none}
 
-  /* therapist panel */
-  .therapist-panel .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
-  .therapist-list{display:grid;gap:0.75rem;max-height:520px;overflow:auto}
-  .therapist-card{display:flex;gap:0.75rem;align-items:center;padding:10px;border-radius:10px;border:1px solid #e6e6e6;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s}
-  .therapist-card:hover{transform:translateY(-4px);box-shadow:0 6px 14px rgba(0,0,0,0.06)}
-  .therapist-card.selected{border-color:#7B9B8B;background:rgba(123,155,139,0.06)}
-  .therapist-avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:linear-gradient(135deg,#7B9B8B,#243B36)}
+  /* tiny layout tweaks for bookings lists */
+  .bookings { margin-top:1.25rem; display:grid; gap:0.75rem; }
+  .booking-item { padding:10px; border-radius:8px; background:#fff; border:1px solid #eee; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+  .booking-left { display:flex; gap:10px; align-items:center; }
+  .pill { padding:4px 8px; border-radius:999px; font-size:0.85rem; background:#f1f1f1; color:#333; }
+
+  /* therapist/proctor panel */
+  .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
+  .list{display:grid;gap:0.75rem;max-height:480px;overflow:auto}
+  .person-card{display:flex;gap:0.75rem;align-items:center;padding:10px;border-radius:10px;border:1px solid #e6e6e6;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s}
+  .person-card:hover{transform:translateY(-4px);box-shadow:0 6px 14px rgba(0,0,0,0.06)}
+  .person-card.selected{border-color:#7B9B8B;background:rgba(123,155,139,0.06)}
+  .avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:linear-gradient(135deg,#7B9B8B,#243B36)}
   .meta-small{color:#657A74;font-size:0.9rem}
 
   /* slots */
@@ -45,18 +53,34 @@
   .slot.selected-slot{outline:3px solid rgba(37,150,120,0.12);box-shadow:0 8px 20px rgba(37,150,120,0.06)}
 
   .empty{padding:12px;border-radius:8px;background:#fff;border:1px dashed #e3e3e3;text-align:center;color:#999}
+  .back-btn {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #243B36;
+  background: #f1f1f1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: background 0.2s, transform 0.2s;
+}
+.back-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
 </style>
 </head>
 <body>
-  <!-- header: keep your app header & user controls (not repeated here) -->
   <div class="container">
     <div class="columns">
-      <!-- LEFT: Booking card (illustration removed, UID field added) -->
+      <!-- MAIN: Booking card + bookings lists -->
       <div class="card">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
         <div class="hero-row">
           <div style="flex:1">
             <h2>Hello {{ username }}, Book your session</h2>
-            <p class="lead">Choose a therapist on the right, pick a date, and select an available slot. Provide your 10-digit UID to complete booking.</p>
+            <p class="lead">Select a Therapist or Proctor on the right, pick date & slot, then provide your 10-digit UID to confirm.</p>
           </div>
         </div>
 
@@ -80,235 +104,469 @@
             <button class="btn" id="bookBtn" type="submit">Book Selected Slot</button>
           </div>
         </form>
+
+        <!-- bookings lists -->
+        <div class="bookings" id="bookingsContainer">
+          <h3 style="margin-top:1.25rem;margin-bottom:8px;color:#243B36">Upcoming Bookings</h3>
+          <div id="upcomingList" class="list">
+            <div class="empty">Loading upcoming bookings…</div>
+          </div>
+
+          <h3 style="margin-top:1rem;margin-bottom:8px;color:#243B36">Past Bookings</h3>
+          <div id="pastList" class="list">
+            <div class="empty">Loading past bookings…</div>
+          </div>
+        </div>
       </div>
 
-      <!-- RIGHT: therapist-first panel -->
+      <!-- RIGHT-1: Therapist -->
       <aside class="therapist-panel">
         <div class="card">
-          <div class="header">
+          <div class="panel-header">
             <strong>Choose Therapist</strong>
             <button class="btn" id="refreshTherapists">Refresh</button>
           </div>
 
-          <div id="therapistList" class="therapist-list">
+          <div id="therapistList" class="list">
             <div class="empty">Loading therapists…</div>
           </div>
 
-          <div id="slotsPanel" class="slots-panel" style="display:none">
+          <div id="therapistSlotsPanel" class="slots-panel" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div>
-                <strong id="slotsTherapistName"></strong>
-                <div class="meta-small" id="slotsTherapistMeta"></div>
+                <strong id="tSlotsName"></strong>
+                <div class="meta-small" id="tSlotsMeta"></div>
               </div>
-              <div class="small">Date: <input id="slotsDate" type="date" class="form-input" style="width:auto;display:inline-block"></div>
+              <div class="small">Date: <input id="tSlotsDate" type="date" class="form-input" style="width:auto;display:inline-block"></div>
             </div>
+            <div id="tSlotsGrid" class="slots-grid"></div>
+          </div>
+        </div>
+      </aside>
 
-            <div id="slotsGrid" class="slots-grid"></div>
-
-            <div style="margin-top:10px" class="small">
-              Legend: <span style="background:#fff;border:1px solid #ddd;padding:3px 6px;border-radius:6px">Available</span>
-              <span style="background:#f8d7da;border:1px solid #f5c2c7;padding:3px 6px;border-radius:6px;margin-left:6px">Booked</span>
-              <span style="background:#d4edda;border:1px solid #c3e6cb;padding:3px 6px;border-radius:6px;margin-left:6px">Your booking</span>
-            </div>
+      <!-- RIGHT-2: Proctor -->
+      <aside class="proctor-panel">
+        <div class="card">
+          <div class="panel-header">
+            <strong>Choose Proctor</strong>
+            <button class="btn" id="refreshProctors">Refresh</button>
           </div>
 
+          <div id="proctorList" class="list">
+            <div class="empty">Loading proctors…</div>
+          </div>
+
+          <div id="proctorSlotsPanel" class="slots-panel" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <strong id="pSlotsName"></strong>
+                <div class="meta-small" id="pSlotsMeta"></div>
+              </div>
+              <div class="small">Date: <input id="pSlotsDate" type="date" class="form-input" style="width:auto;display:inline-block"></div>
+            </div>
+            <div id="pSlotsGrid" class="slots-grid"></div>
+          </div>
         </div>
       </aside>
     </div>
   </div>
 
 <script>
-/* Therapist-first booking flow with required 10-digit UID field.
-   Server must accept `student_uid` in /api/book payload for verification.
-*/
-
 const currentUser = {
   id: "{{ current_user_id|default('student-123') }}",
   name: "{{ username|default('Student') }}"
 };
 
+/* DOM refs */
 const therapistListEl = document.getElementById('therapistList');
-const slotsPanel = document.getElementById('slotsPanel');
-const slotsGrid = document.getElementById('slotsGrid');
-const slotsTherapistName = document.getElementById('slotsTherapistName');
-const slotsTherapistMeta = document.getElementById('slotsTherapistMeta');
-const slotsDateInput = document.getElementById('slotsDate');
+const tSlotsPanel = document.getElementById('therapistSlotsPanel');
+const tSlotsGrid = document.getElementById('tSlotsGrid');
+const tSlotsName = document.getElementById('tSlotsName');
+const tSlotsMeta = document.getElementById('tSlotsMeta');
+const tSlotsDate = document.getElementById('tSlotsDate');
 
-let therapists = [];
-let selectedTherapist = null;
-let selectedSlot = null;
+const proctorListEl = document.getElementById('proctorList');
+const pSlotsPanel = document.getElementById('proctorSlotsPanel');
+const pSlotsGrid = document.getElementById('pSlotsGrid');
+const pSlotsName = document.getElementById('pSlotsName');
+const pSlotsMeta = document.getElementById('pSlotsMeta');
+const pSlotsDate = document.getElementById('pSlotsDate');
 
+const upcomingListEl = document.getElementById('upcomingList');
+const pastListEl = document.getElementById('pastList');
+
+let therapists = [], proctors = [];
+let selectedTherapist = null, selectedTherapistSlot = null;
+let selectedProctor = null, selectedProctorSlot = null;
+
+/* ---------- Initialization ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
-  slotsDateInput.min = today;
-  slotsDateInput.value = today;
+  if (tSlotsDate) { tSlotsDate.min = today; tSlotsDate.value = today; }
+  if (pSlotsDate) { pSlotsDate.min = today; pSlotsDate.value = today; }
 
   fetchTherapists();
+  fetchProctors();
+  fetchBookings();
+
   document.getElementById('refreshTherapists').addEventListener('click', fetchTherapists);
+  document.getElementById('refreshProctors').addEventListener('click', fetchProctors);
 
-  slotsDateInput.addEventListener('change', ()=>{
-    if (selectedTherapist) loadSlotsFor(selectedTherapist._id, slotsDateInput.value);
-  });
+  if (tSlotsDate) tSlotsDate.addEventListener('change', ()=>{ if (selectedTherapist) loadTherapistSlots(selectedTherapist._id, tSlotsDate.value); });
+  if (pSlotsDate) pSlotsDate.addEventListener('change', ()=>{ if (selectedProctor) loadProctorSlots(selectedProctor._id, pSlotsDate.value); });
 
-  // Booking form submit
-  document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // UID validation
-    const uidInput = document.getElementById('studentUid');
-    const uidErr = document.getElementById('uidError');
-    const uidVal = (uidInput.value || '').trim();
-    const uidPattern = /^\d{10}$/;
-    if (!uidPattern.test(uidVal)) {
-      uidErr.style.display = 'block';
-      uidInput.focus();
-      return;
-    } else {
-      uidErr.style.display = 'none';
-    }
-
-    if (!selectedTherapist || !selectedSlot) {
-      alert('Please select a therapist and an available slot first.');
-      return;
-    }
-    if (!document.getElementById('agreement').checked) {
-      alert('Please accept terms.');
-      return;
-    }
-
-    const concerns = document.getElementById('concerns').value || '';
-
-    try {
-      const res = await fetch('/api/book', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          therapist_id: selectedTherapist._id,
-          slot_id: selectedSlot._id,
-          date: selectedSlot.date,
-          time: selectedSlot.time,
-          user_id: currentUser.id,
-          student_uid: uidVal,
-          concerns
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Booking failed');
-      alert('Booking confirmed!');
-      // mark local slot as mine and refresh slots UI
-      markSlotAsBookedLocally(selectedSlot._id, true);
-      selectedSlot = null;
-      // optionally clear UID? we keep it filled so subsequent bookings are fast
-    } catch(err){
-      alert('Booking error: ' + err.message);
-      if (selectedTherapist) loadSlotsFor(selectedTherapist._id, slotsDateInput.value);
-    }
-  });
+  document.getElementById('bookingForm').addEventListener('submit', onBookingSubmit);
 });
 
-async function fetchTherapists(){
+/* ---------- Booking submit ---------- */
+async function onBookingSubmit(e) {
+  e.preventDefault();
+
+  // UID validation
+  const uidInput = document.getElementById('studentUid');
+  const uidErr = document.getElementById('uidError');
+  const uidVal = (uidInput.value || '').trim();
+  const uidPattern = /^\d{10}$/;
+  if (!uidPattern.test(uidVal)) {
+    uidErr.style.display = 'block';
+    uidInput.focus();
+    return;
+  } else {
+    uidErr.style.display = 'none';
+  }
+
+  if (!document.getElementById('agreement').checked) {
+    alert('Please accept terms.');
+    return;
+  }
+
+  // Build payload based on selection
+  let payload = { user_id: currentUser.id, student_uid: uidVal, concerns: document.getElementById('concerns').value || '' };
+
+  if (selectedTherapist && selectedTherapistSlot) {
+    payload.therapist_id = selectedTherapist._id;
+    payload.slot_id = selectedTherapistSlot._id;
+    payload.date = selectedTherapistSlot.date;
+    payload.time = selectedTherapistSlot.time;
+  } else if (selectedProctor && selectedProctorSlot) {
+    payload.proctor_id = selectedProctor._id;
+    payload.slot_id = selectedProctorSlot._id;
+    payload.date = selectedProctorSlot.date;
+    payload.time = selectedProctorSlot.time;
+  } else {
+    alert('Please select a therapist or a proctor and pick an available slot.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/book', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Booking failed');
+
+    alert('Booking confirmed!');
+    // update UI: mark slot as booked locally and refresh bookings
+    if (payload.therapist_id) markSlotAsBookedLocally('therapist', payload.slot_id, true);
+    if (payload.proctor_id) markSlotAsBookedLocally('proctor', payload.slot_id, true);
+    // clear selections
+    selectedTherapistSlot = null;
+    selectedProctorSlot = null;
+    clearAllSelectedSlots();
+    fetchBookings();
+  } catch (err) {
+    alert('Booking error: ' + err.message);
+    // refresh slots for reliability
+    if (selectedTherapist) loadTherapistSlots(selectedTherapist._id, tSlotsDate.value);
+    if (selectedProctor) loadProctorSlots(selectedProctor._id, pSlotsDate.value);
+  }
+}
+
+/* ---------- Therapists: fetch & render ---------- */
+async function fetchTherapists() {
   therapistListEl.innerHTML = '<div class="empty">Loading therapists…</div>';
   try {
     const res = await fetch('/api/therapists');
-    if (!res.ok) throw new Error('Failed');
+    if (!res.ok) throw new Error('Failed to fetch therapists');
     therapists = await res.json();
-    renderTherapists();
-  } catch(err){
+    renderPeople(therapists, therapistListEl, selectTherapistCard);
+  } catch (err) {
     therapistListEl.innerHTML = '<div class="empty">Could not load therapists.</div>';
     console.error(err);
   }
 }
 
-function renderTherapists(){
-  if (!therapists || therapists.length === 0) { therapistListEl.innerHTML = '<div class="empty">No therapists.</div>'; return; }
-  therapistListEl.innerHTML = '';
-  therapists.forEach(t=>{
-    const card = document.createElement('div');
-    card.className = 'therapist-card';
-    card.dataset.id = t._id;
-    card.innerHTML = `<div class="therapist-avatar">${(t.name||'T').split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${escapeHtml(t.name)}</strong><div class="meta-small">${escapeHtml(t.expertise||'—')}</div></div>
-          <div class="small">${t.years_experience||0} yrs</div>
-        </div>
-        <div class="meta-small">${escapeHtml(t.location||'—')}</div>
-      </div>`;
-    card.addEventListener('click', ()=>selectTherapistCard(t, card));
-    therapistListEl.appendChild(card);
-  });
-}
-
-function selectTherapistCard(t, el){
-  document.querySelectorAll('.therapist-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedTherapist = t;
-  selectedSlot = null;
-  slotsPanel.style.display = 'block';
-  slotsTherapistName.textContent = t.name;
-  slotsTherapistMeta.textContent = `${t.expertise || '—'} · ${t.years_experience || 0} yrs · ${t.location || '—'}`;
-  loadSlotsFor(t._id, slotsDateInput.value);
-}
-
-async function loadSlotsFor(therapistId, date){
-  slotsGrid.innerHTML = '<div class="empty">Loading slots…</div>';
+/* ---------- Proctors: fetch & render ---------- */
+async function fetchProctors() {
+  proctorListEl.innerHTML = '<div class="empty">Loading proctors…</div>';
   try {
-    const res = await fetch(`/api/therapists/${encodeURIComponent(therapistId)}/slots?date=${encodeURIComponent(date)}`);
-    if (!res.ok) throw new Error('Failed');
-    const body = await res.json();
-    renderSlotsGrid(body.slots || []);
-  } catch(err){
-    slotsGrid.innerHTML = '<div class="empty">Could not load slots.</div>';
+    const res = await fetch('/api/proctors');
+    if (!res.ok) throw new Error('Failed to fetch proctors');
+    proctors = await res.json();
+    renderPeople(proctors, proctorListEl, selectProctorCard);
+  } catch (err) {
+    proctorListEl.innerHTML = '<div class="empty">Could not load proctors.</div>';
     console.error(err);
   }
 }
 
-function renderSlotsGrid(slots){
-  slotsGrid.innerHTML = '';
-  if (!slots || slots.length === 0) { slotsGrid.innerHTML = '<div class="empty">No slots.</div>'; return; }
+/* ---------- Generic people renderer ---------- */
+function renderPeople(items, container, onClick) {
+  container.innerHTML = '';
+  if (!items || items.length === 0) {
+    container.innerHTML = '<div class="empty">No entries.</div>';
+    return;
+  }
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+    card.dataset.id = item._id;
+    card.innerHTML = `
+      <div class="avatar">${(item.name||'P').split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>${escapeHtml(item.name)}</strong><div class="meta-small">${escapeHtml(item.expertise||item.department||'—')}</div></div>
+          <div class="small">${item.years_experience||item.experience||0} yrs</div>
+        </div>
+        <div class="meta-small">${escapeHtml(item.location||item.department||'—')}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => onClick(item, card));
+    container.appendChild(card);
+  });
+}
 
-  slots.forEach(s=>{
+/* ---------- Select handlers ---------- */
+function selectTherapistCard(item, el) {
+  // clear selections visual for person-cards
+  document.querySelectorAll('.person-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  selectedTherapist = item;
+  selectedTherapistSlot = null;
+
+  // clear proctor selection visuals to avoid confusion
+  selectedProctor = null;
+  selectedProctorSlot = null;
+  document.querySelectorAll('#proctorList .person-card').forEach(c => c.classList.remove('selected'));
+  // show and load therapist slots
+  if (tSlotsPanel) tSlotsPanel.style.display = 'block';
+  if (tSlotsName) tSlotsName.textContent = item.name;
+  if (tSlotsMeta) tSlotsMeta.textContent = `${item.expertise||'—'} · ${item.years_experience||0} yrs · ${item.location||'—'}`;
+  loadTherapistSlots(item._id, tSlotsDate.value);
+}
+
+function selectProctorCard(item, el) {
+  document.querySelectorAll('.person-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  selectedProctor = item;
+  selectedProctorSlot = null;
+
+  selectedTherapist = null;
+  selectedTherapistSlot = null;
+  document.querySelectorAll('#therapistList .person-card').forEach(c => c.classList.remove('selected'));
+
+  if (pSlotsPanel) pSlotsPanel.style.display = 'block';
+  if (pSlotsName) pSlotsName.textContent = item.name;
+  if (pSlotsMeta) pSlotsMeta.textContent = `${item.expertise||item.department||'—'} · ${item.years_experience||0} yrs · ${item.department||item.location||'—'}`;
+  loadProctorSlots(item._id, pSlotsDate.value);
+}
+
+/* ---------- Load slots from server ---------- */
+async function loadTherapistSlots(id, date) {
+  tSlotsGrid.innerHTML = '<div class="empty">Loading slots…</div>';
+  try {
+    const res = await fetch(`/api/therapists/${encodeURIComponent(id)}/slots?date=${encodeURIComponent(date)}`);
+    if (!res.ok) throw new Error('Failed to load slots');
+    const body = await res.json();
+    renderSlotsGrid(body.slots || [], 'therapist');
+  } catch (err) {
+    tSlotsGrid.innerHTML = '<div class="empty">Could not load slots.</div>';
+    console.error(err);
+  }
+}
+
+async function loadProctorSlots(id, date) {
+  pSlotsGrid.innerHTML = '<div class="empty">Loading slots…</div>';
+  try {
+    const res = await fetch(`/api/proctors/${encodeURIComponent(id)}/slots?date=${encodeURIComponent(date)}`);
+    if (!res.ok) throw new Error('Failed to load proctor slots');
+    const body = await res.json();
+    renderSlotsGrid(body.slots || [], 'proctor');
+  } catch (err) {
+    pSlotsGrid.innerHTML = '<div class="empty">Could not load slots.</div>';
+    console.error(err);
+  }
+}
+
+/***** Slot selection helpers (integrated) *****/
+
+/**
+ * Clear selected-slot visuals from both grids (unless exceptElement provided).
+ * Also resets selection state if appropriate.
+ */
+function clearAllSelectedSlots(exceptElement = null) {
+  const allSelected = document.querySelectorAll('.slot.selected-slot');
+  allSelected.forEach(el => {
+    if (exceptElement && el === exceptElement) return;
+    el.classList.remove('selected-slot');
+    el.style.boxShadow = '';
+  });
+
+  if (!exceptElement) {
+    selectedTherapistSlot = null;
+    selectedProctorSlot = null;
+  } else {
+    // if except is in therapist grid, clear proctor selection state
+    if (exceptElement.closest && exceptElement.closest('#tSlotsGrid')) {
+      selectedProctorSlot = null;
+    } else {
+      selectedTherapistSlot = null;
+    }
+  }
+}
+
+/**
+ * Select a slot element visually and store selection object.
+ * kind: 'therapist' or 'proctor'
+ */
+function selectSlotElement(kind, el, slotObj) {
+  clearAllSelectedSlots(el);
+  el.classList.add('selected-slot');
+  el.style.boxShadow = '0 6px 14px rgba(37,150,120,0.08)';
+  if (kind === 'therapist') {
+    selectedTherapistSlot = slotObj;
+    selectedProctorSlot = null;
+  } else {
+    selectedProctorSlot = slotObj;
+    selectedTherapistSlot = null;
+  }
+}
+
+/**
+ * Render slots for either therapist or proctor.
+ */
+function renderSlotsGrid(slots, kind) {
+  const grid = (kind === 'therapist') ? tSlotsGrid : pSlotsGrid;
+  grid.innerHTML = '';
+  if (!slots || slots.length === 0) {
+    grid.innerHTML = '<div class="empty">No slots.</div>';
+    return;
+  }
+
+  slots.forEach(s => {
     const div = document.createElement('div');
     div.className = 'slot';
     div.dataset.slotId = s._id;
     div.dataset.time = s.time;
+    div.dataset.date = s.date;
     div.textContent = s.time;
+
+    // reset leftover classes/styles
+    div.classList.remove('selected-slot','mine','booked','available','disabled');
+    div.style.boxShadow = '';
 
     if (s.status === 'booked') {
       if (s.booked_by && s.booked_by === currentUser.id) {
-        div.classList.add('mine');
+        div.classList.add('mine','disabled');
       } else {
         div.classList.add('booked','disabled');
       }
     } else {
       div.classList.add('available');
-      div.addEventListener('click', ()=> {
-        // select this slot (highlight) — booking occurs when user submits form
-        // clear other selected visuals
-        Array.from(slotsGrid.children).forEach(c=>{
-          c.classList.remove('selected-slot');
-          c.style.boxShadow = '';
-        });
-        div.classList.add('selected-slot');
-        div.style.boxShadow = '0 6px 14px rgba(37,150,120,0.08)';
-        // store selected slot with full info
-        selectedSlot = { _id: s._id, time: s.time, date: s.date };
+      div.addEventListener('click', function onSlotClick(e) {
+        if (div.classList.contains('disabled')) return;
+        const slotObj = { _id: s._id, time: s.time, date: s.date };
+        selectSlotElement(kind, div, slotObj);
       });
     }
-    slotsGrid.appendChild(div);
+
+    grid.appendChild(div);
   });
 }
 
-function markSlotAsBookedLocally(slotId, isMine){
-  const el = slotsGrid.querySelector(`[data-slot-id="${slotId}"]`);
-  if (!el) return loadSlotsFor(selectedTherapist._id, slotsDateInput.value);
-  el.classList.remove('available','booked','mine','disabled','selected-slot');
-  el.style.boxShadow = '';
-  if (isMine) { el.classList.add('mine'); el.classList.add('disabled'); el.textContent = el.dataset.time; }
-  else { el.classList.add('booked'); el.classList.add('disabled'); }
+/**
+ * Mark a slot as booked locally (update visual).
+ * kind: 'therapist' | 'proctor'
+ */
+function markSlotAsBookedLocally(kind, slotId, isMine) {
+  const grid = (kind === 'therapist') ? tSlotsGrid : pSlotsGrid;
+  const el = grid.querySelector(`[data-slot-id="${slotId}"]`);
+  if (!el) {
+    // slot not visible -> refresh corresponding grid
+    if (kind === 'therapist' && selectedTherapist) loadTherapistSlots(selectedTherapist._id, tSlotsDate.value);
+    if (kind === 'proctor' && selectedProctor) loadProctorSlots(selectedProctor._id, pSlotsDate.value);
+    return;
+  }
+  // clear selection visual if it was selected
+  if (el.classList.contains('selected-slot')) {
+    el.classList.remove('selected-slot');
+    el.style.boxShadow = '';
+    if (kind === 'therapist') selectedTherapistSlot = null;
+    else selectedProctorSlot = null;
+  }
+
+  el.classList.remove('available','booked','mine','disabled');
+  if (isMine) el.classList.add('mine','disabled'); else el.classList.add('booked','disabled');
 }
 
-function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+/* ---------- Bookings: fetch & render ---------- */
+async function fetchBookings() {
+  upcomingListEl.innerHTML = '<div class="empty">Loading upcoming bookings…</div>';
+  pastListEl.innerHTML = '<div class="empty">Loading past bookings…</div>';
+  try {
+    const res = await fetch(`/api/bookings?user_id=${encodeURIComponent(currentUser.id)}`);
+    if (!res.ok) throw new Error('Failed to fetch bookings');
+    const data = await res.json();
+    renderBookings(data || []);
+  } catch (err) {
+    upcomingListEl.innerHTML = '<div class="empty">Could not load bookings.</div>';
+    pastListEl.innerHTML = '<div class="empty">Could not load bookings.</div>';
+    console.error(err);
+  }
+}
+
+function renderBookings(bookings) {
+  const now = new Date();
+  const upcoming = [], past = [];
+  bookings.forEach(b => {
+    const dt = new Date(`${b.date}T${b.time}:00`);
+    if (dt >= now) upcoming.push({ ...b, dt }); else past.push({ ...b, dt });
+  });
+
+  function renderList(list, container) {
+    container.innerHTML = '';
+    if (list.length === 0) { container.innerHTML = '<div class="empty">No bookings.</div>'; return; }
+    list.sort((a,b) => a.dt - b.dt);
+    list.forEach(b => {
+      const node = document.createElement('div');
+      node.className = 'booking-item';
+      const left = document.createElement('div'); left.className = 'booking-left';
+      left.innerHTML = `
+        <div class="avatar" style="width:44px;height:44px;border-radius:8px;background:#eef8f4;color:#1b5e3a;display:flex;align-items:center;justify-content:center;font-weight:700">
+          ${escapeHtml((b.name||'').split(' ').map(s=>s[0]).slice(0,2).join(''))}
+        </div>
+        <div style="margin-left:8px">
+          <div><strong>${escapeHtml(b.name || (b.therapist_name||b.proctor_name||''))}</strong></div>
+          <div class="meta-small">${escapeHtml((b.role||'').toUpperCase())} · ${escapeHtml(b.extra || '')}</div>
+        </div>`;
+      const right = document.createElement('div');
+      right.innerHTML = `<div style="text-align:right"><div class="pill">${b.date} ${b.time}</div><div style="font-size:0.85rem;color:#657A74;margin-top:6px">${escapeHtml(b.status || '')}</div></div>`;
+      node.appendChild(left); node.appendChild(right);
+      container.appendChild(node);
+    });
+  }
+
+  renderList(upcoming, upcomingListEl);
+  renderList(past, pastListEl);
+}
+
+/* ---------- Utility ---------- */
+function escapeHtml(s='') { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 </script>
+
 </body>
 </html>
