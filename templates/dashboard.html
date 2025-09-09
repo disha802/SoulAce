@@ -90,13 +90,13 @@
 </header>
 
 <section class="hero">
-  <h2 data-en="Hey {{username}}, you’re not alone 💛" data-ur="ہیلو {{username}}، آپ اکیلے نہیں ہیں 💛" data-hi="हाय {{username}}, आप अकेले नहीं हैं 💛">
-    Hey {{username}}, you’re not alone 💛
+  <h2 data-en="Hey {{username}}, you're not alone 💛" data-ur="ہیلو {{username}}، آپ اکیلے نہیں ہیں 💛" data-hi="हाय {{username}}, आप अकेले नहीं हैं 💛">
+    Hey {{username}}, you're not alone 💛
   </h2>
-  <p data-en="SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free."
-     data-ur="SoulAce آپ کے لیے ایک محفوظ جگہ ہے تاکہ آپ مدد، وسائل تلاش کریں اور ساتھیوں سے جڑیں — سب کچھ پرائیویٹ اور بغیر کسی داغ کے۔"
-     data-hi="SoulAce आपकी सुरक्षित जगह है, मदद, संसाधनों को खोजने और साथियों से जुड़ने के लिए — सब कुछ निजी और बिना किसी कलंक के।">
-    SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma‑free.
+  <p data-en="SoulAce is your safe space to find support, resources, and connect with peers – all while keeping things private and stigma‑free."
+     data-ur="SoulAce آپ کے لیے ایک محفوظ جگہ ہے تاکہ آپ مدد، وسائل تلاش کریں اور ساتھیوں سے جڑیں – سب کچھ پرائیویٹ اور بغیر کسی داغ کے۔"
+     data-hi="SoulAce आपकी सुरक्षित जगह है, मदद, संसाधनों को खोजने और साथियों से जुड़ने के लिए – सब कुछ निजी और बिना किसी कलंक के।">
+    SoulAce is your safe space to find support, resources, and connect with peers – all while keeping things private and stigma‑free.
   </p>
 </section>
 
@@ -104,7 +104,7 @@
   <h2 data-en="How are you feeling?" data-ur="آپ کیسا محسوس کر رہے ہیں؟" data-hi="आप कैसा महसूस कर रहे हैं?">How are you feeling?</h2>
   <div class="moods">
     <div class="mood-option" onclick="setMood('Very Happy')">
-      <div class="mood-btn">😁</div>
+      <div class="mood-btn">😄</div>
       <div class="label" data-en="Very Happy" data-ur="بہت خوش" data-hi="बहुत खुश">Very Happy</div>
     </div>
     <div class="mood-option" onclick="setMood('Feeling Blessed')">
@@ -129,7 +129,7 @@
     </div>
     <div class="mood-option" onclick="setMood('Angry')">
       <div class="mood-btn">😡</div>
-      <div class="label" data-en="Angry" data-ur="غصہ" data-hi="गुस्सा">Angry</div>
+      <div class="label" data-en="Angry" data-ur="غصے" data-hi="गुस्सा">Angry</div>
     </div>
     <div class="mood-option" onclick="setMood('Crying')">
       <div class="mood-btn">😭</div>
@@ -142,7 +142,8 @@
 </section>
 
   <section class="features">
-    <div class="feature-card">
+    
+    <a href="{{ url_for('chatbot_page') }}" class="feature-card">
       <span><img src="{{ url_for('static', filename='chatbot.png') }}"></span>
       <h3 data-en="AI Support" data-ur="AI مدد" data-hi="एआई समर्थन">AI Support</h3>
       <p data-en="Chat with our AI guide for coping strategies and next steps."
@@ -150,9 +151,10 @@
          data-hi="हमारे एआई गाइड से बात करें, सामना करने की रणनीतियों और अगले कदमों के लिए।">
          Chat with our AI guide for coping strategies and next steps.
       </p>
-    </div>
+    </a>
 
     <div class="feature-card">
+      <a href="{{ url_for('chat') }}" class="feature-card">
       <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
       <h3 data-en="Confidential Booking" data-ur="رازدارانہ بکنگ" data-hi="गोपनीय बुकिंग">Confidential Booking</h3>
       <p data-en="Book sessions with counsellors without fear of judgment."
@@ -160,6 +162,7 @@
          data-hi="काउंसलर के साथ सत्र बुक करें बिना किसी डर के।">
          Book sessions with counsellors without fear of judgment.
       </p>
+    </a>
     </div>
 
     <a href="{{ url_for('resources') }}" class="feature-card">
@@ -167,7 +170,7 @@
       <h3 data-en="Wellness Resources" data-ur="وسائل فلاح و بہبود" data-hi="वेलनेस संसाधन">Wellness Resources</h3>
       <p data-en="Access guides, audios, and videos in your own language."
          data-ur="اپنی زبان میں گائیڈز، آڈیوز، اور ویڈیوز تک رسائی حاصل کریں۔"
-         data-hi="अपनी भाषा में गाइड, ऑडियो और वीडियो तक पहुँचें।">
+         data-hi="अपनी भाषा में गाइड, ऑडियो और वीडियो तक पहुंचें।">
          Access guides, audios, and videos in your own language.
       </p>
     </a>
@@ -194,9 +197,9 @@
   </section>
 
 <footer>
-  <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" 
-     data-ur="سول ایس © 2025 — SynapSix کے ساتھ بنایا گیا 💙" 
-     data-hi="SoulAce © 2025 — SynapSix द्वारा 💙 के साथ निर्मित">SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  <p data-en="SoulAce © 2025 – Built with 💙 by SynapSix" 
+     data-ur="سول ایس © 2025 – SynapSix کے ساتھ بنایا گیا 💙" 
+     data-hi="SoulAce © 2025 – SynapSix द्वारा 💙 के साथ निर्मित">SoulAce © 2025 – Built with 💙 by SynapSix</p>
 </footer>
 
 <script>
