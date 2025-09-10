@@ -36,7 +36,6 @@ bookings_col = db['bookings']  # bookings
 proctors_col = db['proctors']
 slots_col = db['slots']
 bookings_col = db['bookings']
-crisis_col = db["crisis_logs"]
 crisis_col = db["crisis"]
 
 print("✅ Connected to MongoDB:", client.list_database_names())
@@ -581,6 +580,296 @@ def appointments():
                          counselors=all_counselors,
                          username=session["username"])
 
+@app.route('/appointment')
+def appointment():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('booking.html', username=session['username'])
+
+
+@app.route('/api/therapists', methods=['GET'])
+def get_therapists():
+    docs = list(therapists_col.find({}))
+    result = []
+    for d in docs:
+        result.append({
+            "_id": str(d["_id"]),
+            "name": d.get("name"),
+            "expertise": d.get("expertise"),
+            "years_experience": d.get("years_experience"),
+            "location": d.get("location")
+        })
+    return jsonify(result), 200
+
+@app.route('/api/therapists/<therapist_id>/slots', methods=['GET'])
+def get_slots(therapist_id):
+    date = request.args.get('date')
+    if not date:
+        abort(400, "Missing date param")
+    try:
+        # find slots for therapist + date
+        t_oid = ObjectId(therapist_id)
+    except:
+        abort(400, "Invalid therapist id")
+    docs = list(slots_col.find({"therapist_id": t_oid, "date": date}))
+    slots = []
+    for s in docs:
+        slots.append({
+            "_id": str(s["_id"]),
+            "therapist_id": str(s["therapist_id"]),
+            "date": s["date"],
+            "time": s["time"],
+            "status": s.get("status", "available"),
+            "booked_by": s.get("booked_by")  # can be user id
+        })
+    return jsonify({"slots": slots}), 200
+
+@app.route('/api/book', methods=['POST'])
+def book_slot():
+    payload = request.get_json() or {}
+    therapist_id = payload.get('therapist_id')   # may be null -> server auto-match
+    slot_id = payload.get('slot_id')             # optional: if client selected exact slot
+    date = payload.get('date')
+    time = payload.get('time')
+    user_id = payload.get('user_id')
+    session_type = payload.get('session_type', 'individual')
+    concerns = payload.get('concerns', '')
+
+    if not date or not time or not user_id:
+        return jsonify({"error":"Missing fields"}), 400
+
+    # If slot_id provided, attempt atomic update: only mark booked if status == 'available'
+    if slot_id:
+        try:
+            s_oid = ObjectId(slot_id)
+        except:
+            return jsonify({"error":"Invalid slot id"}), 400
+
+        res = slots_col.update_one(
+            {"_id": s_oid, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot already booked or unavailable"}), 409
+
+        # create booking record
+        booking = {
+          "slot_id": s_oid,
+          "therapist_id": ObjectId(therapist_id),
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message": "Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s_oid),
+            "date": date,
+            "time": time
+        }), 200
+
+    # If no slot_id, attempt server-side find+book: find first available slot for therapist on that date/time
+    if therapist_id:
+        try:
+            t_oid = ObjectId(therapist_id)
+        except:
+            return jsonify({"error":"Invalid therapist id"}),400
+        # find a slot for that exact time and date and try to book
+        res = slots_col.update_one(
+            {"therapist_id": t_oid, "date": date, "time": time, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot not available"}), 409
+        # find the slot doc now
+        s = slots_col.find_one({"therapist_id": t_oid, "date": date, "time": time})
+        booking = {
+          "slot_id": s["_id"],
+          "therapist_id": t_oid,
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message":"Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s["_id"]),
+            "date": date,
+            "time": time
+        }), 200
+
+    # Auto-match: if therapist_id omitted, find any therapist with available slot for date/time
+    # (basic example: first matching slot)
+    slot_doc = slots_col.find_one_and_update(
+      {"date": date, "time": time, "status": "available"},
+      {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+    )
+    if not slot_doc:
+      return jsonify({"error":"No available slots"}), 409
+    booking = {
+      "slot_id": slot_doc["_id"],
+      "therapist_id": slot_doc["therapist_id"],
+      "user_id": user_id,
+      "date": date,
+      "time": time,
+      "session_type": session_type,
+      "concerns": concerns,
+      "created_at": datetime.utcnow()
+    }
+    bid = bookings_col.insert_one(booking).inserted_id
+    return jsonify({"message":"Booked", "booking_id": str(bid), "therapist_id": str(slot_doc["therapist_id"]), "slot_id": str(slot_doc["_id"]), "date": date, "time": time}), 200
+
+
+# Utility: safe ObjectId -> str
+def oid_to_str(oid):
+    return str(oid) if oid is not None else None
+
+# -----------------------
+# GET /api/proctors
+# -----------------------
+# Returns a list of proctors
+# Response: [{ _id, name, expertise, department, years_experience, location, ...}, ...]
+@app.route('/api/proctors', methods=['GET'])
+def get_proctors():
+    try:
+        docs = list(proctors_col.find({}))
+        out = []
+        for d in docs:
+            out.append({
+                "_id": oid_to_str(d.get("_id")),
+                "name": d.get("name"),
+                "expertise": d.get("expertise"),
+                "department": d.get("department"),
+                "years_experience": d.get("years_experience"),
+                "location": d.get("location"),
+                "contact": d.get("contact")
+            })
+        return jsonify(out), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch proctors")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# GET /api/proctors/<proctor_id>/slots?date=YYYY-MM-DD
+# -----------------------
+# Returns slots for the specified proctor on a date.
+# Response: { slots: [ { _id, proctor_id, date, time, status, booked_by }, ... ] }
+@app.route('/api/proctors/<proctor_id>/slots', methods=['GET'])
+def get_proctor_slots(proctor_id):
+    date = request.args.get('date')
+    if not date:
+        return jsonify({"error": "Missing required query param: date (YYYY-MM-DD)"}), 400
+
+    # basic date-format validation (YYYY-MM-DD)
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    try:
+        p_oid = ObjectId(proctor_id)
+    except Exception:
+        return jsonify({"error": "Invalid proctor id"}), 400
+
+    try:
+        docs = list(slots_col.find({"proctor_id": p_oid, "date": date}))
+        slots = []
+        for s in docs:
+            slots.append({
+                "_id": oid_to_str(s.get("_id")),
+                "proctor_id": oid_to_str(s.get("proctor_id")),
+                "date": s.get("date"),
+                "time": s.get("time"),
+                "status": s.get("status", "available"),
+                "booked_by": s.get("booked_by")
+            })
+        return jsonify({"slots": slots}), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch proctor slots")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# GET /api/bookings?user_id=<user_id>
+# -----------------------
+# Returns bookings for a user. If no user_id provided, returns empty (or admin can query all).
+# Each booking includes: _id, role ('therapist'|'proctor'), name (therapist/proctor name), date, time, status, created_at
+@app.route('/api/bookings', methods=['GET'])
+def get_bookings():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Missing user_id query parameter"}), 400
+
+    try:
+        docs = list(bookings_col.find({"user_id": user_id}))
+        out = []
+        for b in docs:
+            # determine role & name
+            role = 'therapist' if b.get('therapist_id') else ('proctor' if b.get('proctor_id') else 'unknown')
+            name = None
+            extra = None
+            if role == 'therapist' and b.get('therapist_id'):
+                try:
+                    t = db.therapists.find_one({"_id": ObjectId(b['therapist_id'])})
+                    name = t.get('name') if t else None
+                    extra = t.get('expertise') if t else None
+                except Exception:
+                    name = None
+            elif role == 'proctor' and b.get('proctor_id'):
+                try:
+                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])})
+                    name = p.get('name') if p else None
+                    extra = p.get('department') if p else None
+                except Exception:
+                    name = None
+
+            out.append({
+                "_id": oid_to_str(b.get("_id")),
+                "role": role,
+                "name": name or b.get("name") or "",
+                "extra": extra or "",
+                "date": b.get("date"),
+                "time": b.get("time"),
+                "status": b.get("status", "confirmed"),
+                "slot_id": oid_to_str(b.get("slot_id")),
+                "created_at": b.get("created_at").isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at")
+            })
+        # optionally sort by date/time ascending
+        out.sort(key=lambda x: (x.get("date") or "", x.get("time") or ""))
+        return jsonify(out), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch bookings")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# OPTIONAL: helper endpoint to seed a proctor (dev only)
+# -----------------------
+@app.route('/api/admin/seed_proctor', methods=['POST'])
+def seed_proctor():
+    payload = request.get_json() or {}
+    name = payload.get('name') or 'Dr. Test Proctor'
+    doc = {
+        "name": name,
+        "expertise": payload.get('expertise', 'Exam proctoring'),
+        "department": payload.get('department', 'Exams'),
+        "years_experience": payload.get('years_experience', 3),
+        "location": payload.get('location', 'Campus'),
+        "contact": payload.get('contact', {})
+    }
+    res = proctors_col.insert_one(doc)
+    return jsonify({"inserted_id": oid_to_str(res.inserted_id)}), 201
 @app.route("/book_appointment", methods=["POST"])
 def book_appointment():
     if "user_id" not in session:
@@ -1129,6 +1418,75 @@ def resolve_crisis(log_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/admin/mood_trends", methods=["GET"])
+def mood_trends():
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Admin only"}), 403
+
+    # Map moods to numeric values for average calculation
+    mood_map = {
+        "Very Happy": 6,
+        "Feeling Blessed": 5,
+        "Happy": 4,
+        "Mind Blown": 3,
+        "Frustrated": 2,
+        "Sad": 1,
+        "Angry": 0,
+        "Crying": -1
+    }
+
+    # Aggregate counts per mood per day
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$datetime"}},
+                    "mood": "$mood"
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.date": 1}}
+    ]
+
+    results = list(moodtracking_col.aggregate(pipeline))
+
+    # Reshape into { date: {mood: count, ...}, ... }
+    mood_data = {}
+    for r in results:
+        date = r["_id"]["date"]
+        mood = r["_id"]["mood"]
+        count = r["count"]
+        if date not in mood_data:
+            mood_data[date] = {}
+        mood_data[date][mood] = count
+
+
+    dates = sorted(mood_data.keys())
+    moods = sorted(mood_map.keys(), key=lambda m: -mood_map[m])  # keep consistent order
+
+    distribution = [
+        [mood_data[date].get(m, 0) for m in moods]
+        for date in dates
+    ]
+
+    averages = [
+        round(
+            sum((mood_map.get(m, 0) * mood_data[date].get(m, 0)) for m in moods) 
+            / max(sum(mood_data[date].values()), 1), 2
+        )
+        for date in dates
+    ]
+
+    data = {
+        "dates": dates,
+        "moods": moods,
+        "distribution": distribution,
+        "averages": averages
+    }
+    return jsonify(data), 200
+
 
 
 # --- Debug ---
@@ -1168,296 +1526,7 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/appointment')
-def appointment():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('booking.html', username=session['username'])
 
-
-@app.route('/api/therapists', methods=['GET'])
-def get_therapists():
-    docs = list(therapists_col.find({}))
-    result = []
-    for d in docs:
-        result.append({
-            "_id": str(d["_id"]),
-            "name": d.get("name"),
-            "expertise": d.get("expertise"),
-            "years_experience": d.get("years_experience"),
-            "location": d.get("location")
-        })
-    return jsonify(result), 200
-
-@app.route('/api/therapists/<therapist_id>/slots', methods=['GET'])
-def get_slots(therapist_id):
-    date = request.args.get('date')
-    if not date:
-        abort(400, "Missing date param")
-    try:
-        # find slots for therapist + date
-        t_oid = ObjectId(therapist_id)
-    except:
-        abort(400, "Invalid therapist id")
-    docs = list(slots_col.find({"therapist_id": t_oid, "date": date}))
-    slots = []
-    for s in docs:
-        slots.append({
-            "_id": str(s["_id"]),
-            "therapist_id": str(s["therapist_id"]),
-            "date": s["date"],
-            "time": s["time"],
-            "status": s.get("status", "available"),
-            "booked_by": s.get("booked_by")  # can be user id
-        })
-    return jsonify({"slots": slots}), 200
-
-@app.route('/api/book', methods=['POST'])
-def book_slot():
-    payload = request.get_json() or {}
-    therapist_id = payload.get('therapist_id')   # may be null -> server auto-match
-    slot_id = payload.get('slot_id')             # optional: if client selected exact slot
-    date = payload.get('date')
-    time = payload.get('time')
-    user_id = payload.get('user_id')
-    session_type = payload.get('session_type', 'individual')
-    concerns = payload.get('concerns', '')
-
-    if not date or not time or not user_id:
-        return jsonify({"error":"Missing fields"}), 400
-
-    # If slot_id provided, attempt atomic update: only mark booked if status == 'available'
-    if slot_id:
-        try:
-            s_oid = ObjectId(slot_id)
-        except:
-            return jsonify({"error":"Invalid slot id"}), 400
-
-        res = slots_col.update_one(
-            {"_id": s_oid, "status": "available"},
-            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
-        )
-        if res.modified_count == 0:
-            return jsonify({"error":"Slot already booked or unavailable"}), 409
-
-        # create booking record
-        booking = {
-          "slot_id": s_oid,
-          "therapist_id": ObjectId(therapist_id),
-          "user_id": user_id,
-          "date": date,
-          "time": time,
-          "session_type": session_type,
-          "concerns": concerns,
-          "created_at": datetime.utcnow()
-        }
-        booking_id = bookings_col.insert_one(booking).inserted_id
-        return jsonify({
-            "message": "Booked",
-            "booking_id": str(booking_id),
-            "therapist_id": therapist_id,
-            "slot_id": str(s_oid),
-            "date": date,
-            "time": time
-        }), 200
-
-    # If no slot_id, attempt server-side find+book: find first available slot for therapist on that date/time
-    if therapist_id:
-        try:
-            t_oid = ObjectId(therapist_id)
-        except:
-            return jsonify({"error":"Invalid therapist id"}),400
-        # find a slot for that exact time and date and try to book
-        res = slots_col.update_one(
-            {"therapist_id": t_oid, "date": date, "time": time, "status": "available"},
-            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
-        )
-        if res.modified_count == 0:
-            return jsonify({"error":"Slot not available"}), 409
-        # find the slot doc now
-        s = slots_col.find_one({"therapist_id": t_oid, "date": date, "time": time})
-        booking = {
-          "slot_id": s["_id"],
-          "therapist_id": t_oid,
-          "user_id": user_id,
-          "date": date,
-          "time": time,
-          "session_type": session_type,
-          "concerns": concerns,
-          "created_at": datetime.utcnow()
-        }
-        booking_id = bookings_col.insert_one(booking).inserted_id
-        return jsonify({
-            "message":"Booked",
-            "booking_id": str(booking_id),
-            "therapist_id": therapist_id,
-            "slot_id": str(s["_id"]),
-            "date": date,
-            "time": time
-        }), 200
-
-    # Auto-match: if therapist_id omitted, find any therapist with available slot for date/time
-    # (basic example: first matching slot)
-    slot_doc = slots_col.find_one_and_update(
-      {"date": date, "time": time, "status": "available"},
-      {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
-    )
-    if not slot_doc:
-      return jsonify({"error":"No available slots"}), 409
-    booking = {
-      "slot_id": slot_doc["_id"],
-      "therapist_id": slot_doc["therapist_id"],
-      "user_id": user_id,
-      "date": date,
-      "time": time,
-      "session_type": session_type,
-      "concerns": concerns,
-      "created_at": datetime.utcnow()
-    }
-    bid = bookings_col.insert_one(booking).inserted_id
-    return jsonify({"message":"Booked", "booking_id": str(bid), "therapist_id": str(slot_doc["therapist_id"]), "slot_id": str(slot_doc["_id"]), "date": date, "time": time}), 200
-
-
-# Utility: safe ObjectId -> str
-def oid_to_str(oid):
-    return str(oid) if oid is not None else None
-
-# -----------------------
-# GET /api/proctors
-# -----------------------
-# Returns a list of proctors
-# Response: [{ _id, name, expertise, department, years_experience, location, ...}, ...]
-@app.route('/api/proctors', methods=['GET'])
-def get_proctors():
-    try:
-        docs = list(proctors_col.find({}))
-        out = []
-        for d in docs:
-            out.append({
-                "_id": oid_to_str(d.get("_id")),
-                "name": d.get("name"),
-                "expertise": d.get("expertise"),
-                "department": d.get("department"),
-                "years_experience": d.get("years_experience"),
-                "location": d.get("location"),
-                "contact": d.get("contact")
-            })
-        return jsonify(out), 200
-    except Exception as e:
-        app.logger.exception("Failed to fetch proctors")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# -----------------------
-# GET /api/proctors/<proctor_id>/slots?date=YYYY-MM-DD
-# -----------------------
-# Returns slots for the specified proctor on a date.
-# Response: { slots: [ { _id, proctor_id, date, time, status, booked_by }, ... ] }
-@app.route('/api/proctors/<proctor_id>/slots', methods=['GET'])
-def get_proctor_slots(proctor_id):
-    date = request.args.get('date')
-    if not date:
-        return jsonify({"error": "Missing required query param: date (YYYY-MM-DD)"}), 400
-
-    # basic date-format validation (YYYY-MM-DD)
-    try:
-        datetime.strptime(date, "%Y-%m-%d")
-    except ValueError:
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
-
-    try:
-        p_oid = ObjectId(proctor_id)
-    except Exception:
-        return jsonify({"error": "Invalid proctor id"}), 400
-
-    try:
-        docs = list(slots_col.find({"proctor_id": p_oid, "date": date}))
-        slots = []
-        for s in docs:
-            slots.append({
-                "_id": oid_to_str(s.get("_id")),
-                "proctor_id": oid_to_str(s.get("proctor_id")),
-                "date": s.get("date"),
-                "time": s.get("time"),
-                "status": s.get("status", "available"),
-                "booked_by": s.get("booked_by")
-            })
-        return jsonify({"slots": slots}), 200
-    except Exception as e:
-        app.logger.exception("Failed to fetch proctor slots")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# -----------------------
-# GET /api/bookings?user_id=<user_id>
-# -----------------------
-# Returns bookings for a user. If no user_id provided, returns empty (or admin can query all).
-# Each booking includes: _id, role ('therapist'|'proctor'), name (therapist/proctor name), date, time, status, created_at
-@app.route('/api/bookings', methods=['GET'])
-def get_bookings():
-    user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({"error": "Missing user_id query parameter"}), 400
-
-    try:
-        docs = list(bookings_col.find({"user_id": user_id}))
-        out = []
-        for b in docs:
-            # determine role & name
-            role = 'therapist' if b.get('therapist_id') else ('proctor' if b.get('proctor_id') else 'unknown')
-            name = None
-            extra = None
-            if role == 'therapist' and b.get('therapist_id'):
-                try:
-                    t = db.therapists.find_one({"_id": ObjectId(b['therapist_id'])})
-                    name = t.get('name') if t else None
-                    extra = t.get('expertise') if t else None
-                except Exception:
-                    name = None
-            elif role == 'proctor' and b.get('proctor_id'):
-                try:
-                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])})
-                    name = p.get('name') if p else None
-                    extra = p.get('department') if p else None
-                except Exception:
-                    name = None
-
-            out.append({
-                "_id": oid_to_str(b.get("_id")),
-                "role": role,
-                "name": name or b.get("name") or "",
-                "extra": extra or "",
-                "date": b.get("date"),
-                "time": b.get("time"),
-                "status": b.get("status", "confirmed"),
-                "slot_id": oid_to_str(b.get("slot_id")),
-                "created_at": b.get("created_at").isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at")
-            })
-        # optionally sort by date/time ascending
-        out.sort(key=lambda x: (x.get("date") or "", x.get("time") or ""))
-        return jsonify(out), 200
-    except Exception as e:
-        app.logger.exception("Failed to fetch bookings")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# -----------------------
-# OPTIONAL: helper endpoint to seed a proctor (dev only)
-# -----------------------
-@app.route('/api/admin/seed_proctor', methods=['POST'])
-def seed_proctor():
-    payload = request.get_json() or {}
-    name = payload.get('name') or 'Dr. Test Proctor'
-    doc = {
-        "name": name,
-        "expertise": payload.get('expertise', 'Exam proctoring'),
-        "department": payload.get('department', 'Exams'),
-        "years_experience": payload.get('years_experience', 3),
-        "location": payload.get('location', 'Campus'),
-        "contact": payload.get('contact', {})
-    }
-    res = proctors_col.insert_one(doc)
-    return jsonify({"inserted_id": oid_to_str(res.inserted_id)}), 201
 
 # Login session verification
 @app.route("/session_info")
