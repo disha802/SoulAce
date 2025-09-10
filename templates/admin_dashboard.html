@@ -265,7 +265,7 @@
     </table>
   </section>
   
-        
+  
   <!-- User Management -->
   <section class="admin-section">
     <h2>User Management</h2>
@@ -280,30 +280,38 @@
       <tbody>
         {% for user in users %}
         <tr>
-            <td>{{ user.username }}</td>
-            <td>{{ user.role }}</td>
-            <td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.role }}</td>
+          <td>
             <form method="POST" action="{{ url_for('manage_users') }}">
-                <input type="hidden" name="user_id" value="{{ user._id }}">
-                <select name="role">
+              <input type="hidden" name="user_id" value="{{ user._id }}">
+              <select name="role">
                 <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
                 <option value="studentvol" {% if user.role == 'studentvol' %}selected{% endif %}>Volunteer</option>
-                </select>
-                <button type="submit">Update</button>
+              </select>
+              <button type="submit">Update</button>
             </form>
-            </td>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </section>
-
-
+  
+  
   <!-- Mood Stats -->
   <section class="admin-section">
     <h2>Mood Statistics</h2>
     <div id="mood-stats">
       <!-- You can render charts using Chart.js here -->
+      <div style="width:80%; margin:auto;">
+      <h2>All Users Mood Trends</h2>
+      <button onclick="showLine()">📈 Line Chart</button>
+      <button onclick="showStacked()">🌊 Stacked Area</button>
+    
+      <canvas id="lineChart" height="120"></canvas>
+      <canvas id="stackedChart" height="120" style="display:none;"></canvas>
+      </div>
     </div>
   </section>
 
@@ -371,6 +379,7 @@
       buttons.forEach(btn => {
         btn.addEventListener("click", () => {
           const logId = btn.dataset.id;
+          console.log("Sending logId:", logId); // DEBUG
 
           fetch("/resolve_crisis/" + logId, {
             method: "POST",
@@ -380,6 +389,7 @@
           })
           .then(res => res.json())
           .then(data => {
+            console.log("Server response:", data); // DEBUG
             if (data.message) {
               // Remove the row from the table
               btn.closest("tr").remove();
@@ -393,7 +403,6 @@
       });
     });
 
-
     window.onload = function() {
       fetch("/admin/crisis_logs")
         .then(response => response.json())
@@ -403,6 +412,107 @@
         })
         .catch(err => console.error("Error fetching crisis logs:", err));
     };
-  </script>
+
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"> </script>
+
+<script>
+let lineChart, stackedChart;
+
+async function loadData() {
+  try {
+    const res = await fetch("/admin/mood_trends"); // note: no "api" now
+    const data = await res.json();
+
+    console.log("DEBUG: Fetched mood trend data:", data); // Debug
+
+    const ctxLine = document.getElementById("lineChart").getContext("2d");
+    const ctxStack = document.getElementById("stackedChart").getContext("2d");
+
+    // Destroy old charts if they exist
+    if (lineChart) lineChart.destroy();
+    if (stackedChart) stackedChart.destroy();
+
+    // Line chart for average mood
+    lineChart = new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          label: "Average Mood",
+          data: data.averages,
+          borderColor: "#2b8a3e",
+          backgroundColor: "#2b8a3e33",
+          fill: false,
+          tension: 0.4,
+          pointRadius : 5,
+          pointHoverRadius : 7,
+
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: { display: true, text: "Average Mood Over Time" }
+        },
+        scales: { y: { suggestedMin: -1, suggestedMax: 6 } }
+      }
+    });
+
+    // Stacked area chart for mood distribution
+    stackedChart = new Chart(ctxStack, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: data.moods.map((mood, i) => ({
+          label: mood,
+          data: data.distribution.map(row => row[i] ?? 0),
+          fill: true,
+          tension: 0.4,
+
+          borderColor: getRandomColor(i),
+          backgroundColor: getRandomColor(i, 0.3)
+        }))
+      },
+      options: {
+        responsive: true,
+        plugins: { title: { display: true, text: "Mood Distribution Over Time" } },
+        scales: { y: { stacked: true } }
+      }
+    });
+
+  } catch (err) {
+    console.error("ERROR loading mood trends:", err);
+  }
+}
+
+// Helper to generate semi-random colors
+function getRandomColor(index, alpha=1) {
+  const colors = [
+    `rgba(255, 99, 132, ${alpha})`,
+    `rgba(54, 162, 235, ${alpha})`,
+    `rgba(255, 206, 86, ${alpha})`,
+    `rgba(75, 192, 192, ${alpha})`,
+    `rgba(153, 102, 255, ${alpha})`,
+    `rgba(255, 159, 64, ${alpha})`,
+    `rgba(199, 199, 199, ${alpha})`,
+    `rgba(83, 102, 255, ${alpha})`
+  ];
+  return colors[index % colors.length];
+}
+
+function showLine() {
+  document.getElementById("lineChart").style.display = "block";
+  document.getElementById("stackedChart").style.display = "none";
+}
+
+function showStacked() {
+  document.getElementById("lineChart").style.display = "none";
+  document.getElementById("stackedChart").style.display = "block";
+}
+
+loadData();
+</script>
+
 </body>
 </html>
