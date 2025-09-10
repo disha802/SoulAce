@@ -171,7 +171,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-            <p style= "color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;" >
+            <!-- <p style= "color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;" > -->
                 {{ message }}
             </p>
             {% endfor %}
