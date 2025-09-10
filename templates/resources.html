@@ -12,18 +12,167 @@
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
     header h1 { margin:0; font-size:1.8rem; color:#fff; }
     .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-    .header-right { display:flex; align-items:center; gap:10px; }
+    .header-right { display:flex; align-items:center; gap:10px; position:relative; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:140px; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
     .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
 
-    .hero { text-align:center; padding:3rem 1.5rem; background:#F5F7F2; }
+    /* Main content layout */
+    .main-container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 20px;
+      gap: 20px;
+    }
+    
+    /* Slider section */
+    .slider-section {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .slider-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .slider {
+      display: flex;
+      width: 500%;
+      height: 100%;
+      transition: transform 0.5s ease;
+    }
+    
+    .slide {
+      width: 20%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      position: relative;
+    }
+    
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1;
+    }
+    
+    .slide-content {
+      position: relative;
+      z-index: 2;
+      max-width: 90%;
+      overflow-y: auto;
+      max-height: 100%;
+      padding: 10px;
+    }
+    
+    .slide h3 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: #fcd58d;
+    }
+    
+    .slide p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      text-align: left;
+    }
+    
+    .slider-controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+      gap: 10px;
+    }
+    
+    .slider-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ccc;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .slider-dot.active {
+      background: #7B9B8B;
+    }
+    
+    /* Modules section */
+    .modules-section {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .module-tile {
+      background:#fff;
+      padding: 25px 15px;
+      border-radius:16px;
+      text-align:center;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      transition: transform 0.2s ease, background 0.3s ease;
+      font-size:1.1rem;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .module-tile:hover {
+      background:#fcd58d;
+      transform:translateY(-6px);
+    }
+    
+    .customization-btn {
+      background: #7B9B8B;
+      color: white;
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      width: 100%;
+    }
+    
+    .customization-btn:hover {
+      background: #6a8a7a;
+      transform: translateY(-4px);
+    }
+
+    .hero { text-align:center; padding:2rem 1.5rem; background:#F5F7F2; }
     .hero h2 { font-size:2rem; margin-bottom:1rem; color:#243B36; }
     .hero p { font-size:1.1rem; color:#444; }
-
-    .tile-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:25px; padding:20px; }
-    .tile { background:#fff; padding:30px; border-radius:16px; text-align:center; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s ease, background 0.3s ease; font-size:1.1rem; }
-    .tile:hover { background:#fcd58d; transform:translateY(-6px); }
 
     .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.6); }
     .modal-content { background:#fff; margin:3% auto; padding:30px; border-radius:20px; width:90%; max-width:1000px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.3); }
@@ -42,11 +191,134 @@
     body.dark { background:#121212; color:#e0e0e0; }
     body.dark header { background:#1f1f1f; color:#f9e6d0; }
     body.dark .user-popup { background:#2a2a2a; border:1px solid #444; }
-    body.dark .tile { background:#2a2a2a; color:#e0e0e0; }
+    body.dark .module-tile { background:#2a2a2a; color:#e0e0e0; }
     body.dark .modal-content { background:#2a2a2a; color:#f9e6d0; }
     body.dark footer { background:#1f1f1f; border-top:2px solid #444; }
-
-    #lang-select { margin:10px 20px; padding:5px; border-radius:6px; border:1px solid #ccc; }
+    body.dark .customization-btn { background: #2a2a2a; color: #f9e6d0; border: 1px solid #444; }
+    body.dark .slide h3 { color: #fcd58d; }
+    
+    /* Questionnaire Styles */
+    .questionnaire-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .question {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f8f8;
+      border-radius: 12px;
+    }
+    
+    .question h3 {
+      margin-top: 0;
+      color: #243B36;
+    }
+    
+    .options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .option-btn {
+      padding: 12px 20px;
+      background: #e8e8e8;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    
+    .option-btn:hover {
+      background: #d8d8d8;
+    }
+    
+    .option-btn.selected {
+      background: #7B9B8B;
+      color: white;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    
+    .nav-btn {
+      padding: 12px 25px;
+      background: #7B9B8B;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    
+    .nav-btn:hover {
+      background: #6a8a7a;
+      transform: translateY(-2px);
+    }
+    
+    .nav-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .results-container {
+      text-align: center;
+    }
+    
+    .personalized-resources {
+      margin-top: 30px;
+      text-align: left;
+    }
+    
+    .resource-item {
+      padding: 15px;
+      margin: 10px 0;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+    
+    body.dark .question {
+      background: #2a2a2a;
+    }
+    
+    body.dark .question h3 {
+      color: #f9e6d0;
+    }
+    
+    body.dark .option-btn {
+      background: #3a3a3a;
+      color: #e0e0e0;
+    }
+    
+    body.dark .option-btn:hover {
+      background: #4a4a4a;
+    }
+    
+    body.dark .resource-item {
+      background: #3a3a3a;
+      color: #e0e0e0;
+    }
+    
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+      
+      .modules-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .slide-content {
+        max-width: 95%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -57,161 +329,364 @@
         <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
       </div>
       <div class="header-text">
-        <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलऐस">SoulAce</h1>
-        <h3 data-en="Wellness begins here." data-ur="یہاں سے ویلنس شروع ہوتی ہے۔" data-hi="यहाँ से वेलनेस शुरू होती है।">Wellness begins here.</h3>
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
       </div>
     </div>
     <div class="header-right">
       <div class="user-icon-container">
         <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
         <div id="user-popup" class="user-popup">
-          <button onclick="toggleMode()" class="popup-btn" data-en="Change Mode" data-ur="موڈ تبدیل کریں" data-hi="मोड बदलें">Change Mode</button>
+          <!-- Google Translate -->
+          <div id="google_translate_element" style="margin-bottom:10px;"></div>
+          <hr>
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn" data-en="Logout" data-ur="لاگ آؤٹ" data-hi="लॉगआउट">Logout</button>
+            <button type="submit" class="popup-btn">Logout</button>
           </form>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Language Switcher -->
-  <select id="lang-select">
-    <option value="en">English</option>
-    <option value="ur">Urdu</option>
-    <option value="hi">Hindi</option>
-  </select>
-
   <!-- Hero -->
   <section class="hero">
-    <h2 data-en="Wellness Resources🌸" data-ur="ویلنس وسائل🌸" data-hi="वेलनेस संसाधन🌸">Wellness Resources🌸</h2>
-    <p data-en="Curated tools for a calmer, healthier you!" data-ur="پرسکون، صحت مند آپ کے لیے منتخب شدہ ٹولز!" data-hi="शांत और स्वस्थ आप के लिए चयनित उपकरण!">Curated tools for a calmer, healthier you!</p>
+    <h2>Wellness Resources🌸</h2>
+    <p>Curated tools for a calmer, healthier you!</p>
   </section>
 
-  <!-- Tiles -->
-  <div class="tile-grid">
-    <div class="tile" onclick="openModal('modalPixelThoughts')" data-en="Pixel Thoughts" data-ur="پکسل خیالات" data-hi="पिक्सेल विचार">Pixel Thoughts</div>
-    <div class="tile" onclick="openModal('modalMeditation')" data-en="Meditations" data-ur="مراقبہ" data-hi="ध्यान">Meditations</div>
-    <div class="tile" onclick="openModal('modalPodcastsBooks')" data-en="Podcasts & Books" data-ur="پوڈکاسٹس اور کتابیں" data-hi="पॉडकास्ट और किताबें">Podcasts & Books</div>
-    <div class="tile" onclick="openModal('modalHealthyBodyMind')" data-en="Healthy Body & Mind" data-ur="صحت مند جسم اور ذہن" data-hi="स्वस्थ शरीर और मन">Healthy Body & Mind</div>
-    <div class="tile" onclick="openModal('modalDigitalWellness')" data-en="Digital Wellness" data-ur="ڈیجیٹل ویلنس" data-hi="डिजिटल वेलनेस">Digital Wellness</div>
-    <div class="tile" onclick="openModal('modalCBTTests')" data-en="CBT & Self Tests" data-ur="CBT اور خود کی جانچ" data-hi="CBT और स्व-परीक्षण">CBT & Self Tests</div>
-  </div>
-
-  <!-- Pixel Thoughts Modal -->
-  <div id="modalPixelThoughts" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalPixelThoughts')">&times;</span>
-      <h2 data-en="Pixel Thoughts 🌌" data-ur="پکسل خیالات 🌌" data-hi="पिक्सेल विचार 🌌">Pixel Thoughts 🌌</h2>
-      <p data-en="A 60-second meditation to clear your mind and let go of stress." data-ur="اپنے ذہن کو صاف کرنے اور دباؤ سے نجات کے لیے 60 سیکنڈ کا مراقبہ۔" data-hi="अपने मन को साफ करने और तनाव मुक्त करने के लिए 60 सेकंड का ध्यान।">A 60-second meditation to clear your mind and let go of stress.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.pixelthoughts.co/" allowfullscreen></iframe>
-          <p data-en="Take a mindful pause with Pixel Thoughts ✨" data-ur="Pixel Thoughts کے ساتھ شعوری وقفہ لیں ✨" data-hi="पिक्सेल विचार के साथ सावधान विराम लें ✨">Take a mindful pause with Pixel Thoughts ✨</p>
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Slider Section -->
+    <div class="slider-section">
+      <div class="slider-container">
+        <div class="slider">
+          <!-- Mental Health Slides -->
+          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1590065480004-477ef6d4d5de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="slide-content">
+              <h3>Why Mental Health is Important</h3>
+              <p>Mental health plays a crucial role in how we think, feel, and act in daily life. It affects our ability to cope with stress, maintain relationships, and make sound decisions. Good mental health supports resilience, productivity, and overall life satisfaction. On the other hand, poor mental health can negatively impact physical health, reduce quality of life, and create challenges in personal, social, and professional areas. Taking care of mental wellbeing is therefore essential for living a balanced and fulfilling life.</p>
+            </div>
+          </div>
+          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1593811167562-9cef47bfc5d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="slide-content">
+              <h3>Anxiety vs. Depression</h3>
+              <p>Anxiety and depression are distinct mental health conditions, though they can sometimes overlap. Anxiety is characterized by excessive worry, nervousness, or fear, often focused on future events. Common symptoms include restlessness, rapid heartbeat, irritability, and difficulty concentrating. Depression, however, is marked by persistent sadness, loss of interest in activities, and feelings of hopelessness or worthlessness. Symptoms include fatigue, changes in sleep or appetite, and withdrawal from social interactions. While anxiety is often future-focused, depression tends to focus on past or present experiences.</p>
+            </div>
+          </div>
+          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1548605022-14d3e97ab2c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="slide-content">
+              <h3>Effects of Mental Health Issues</h3>
+              <p>Mental health issues can affect multiple areas of a person's life. Emotionally, they may experience mood swings, irritability, or persistent sadness. Cognitively, concentration and decision-making may suffer. Physically, symptoms can include fatigue, headaches, digestive problems, or sleep disturbances. Socially, individuals may withdraw from friends and family or struggle to maintain relationships. Professionally or academically, mental health challenges can reduce productivity, cause absenteeism, and make completing tasks more difficult.</p>
+            </div>
+          </div>
+          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="slide-content">
+              <h3>When to Seek Help</h3>
+              <p>It is important to seek professional help when mental health issues begin to interfere with daily life. Signs include persistent sadness, anxiety, or irritability, changes in sleep or appetite, or feelings of hopelessness. If you experience thoughts of self-harm or an inability to cope with stress, it is crucial to consult a doctor or mental health professional. Physical symptoms without a clear medical cause, such as headaches or stomach issues triggered by stress, can also indicate the need for support.</p>
+            </div>
+          </div>
+          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="slide-content">
+              <h3>General Well-Being</h3>
+              <p>Maintaining general wellbeing involves taking care of both physical and mental health. Regular exercise, balanced nutrition, and adequate sleep are essential. Mindfulness practices like meditation, journaling, or deep breathing can help manage stress. Healthy social connections and maintaining a work-life balance are also important. Seeking therapy or counseling can provide guidance and coping strategies. Finally, practicing self-compassion, acknowledging emotions, and celebrating small achievements can promote overall wellness.</p>
+            </div>
+          </div>
         </div>
       </div>
+      <div class="slider-controls">
+        <div class="slider-dot active" onclick="showSlide(0)"></div>
+        <div class="slider-dot" onclick="showSlide(1)"></div>
+        <div class="slider-dot" onclick="showSlide(2)"></div>
+        <div class="slider-dot" onclick="showSlide(3)"></div>
+        <div class="slider-dot" onclick="showSlide(4)"></div>
+      </div>
+    </div>
+    
+    <!-- Modules Section -->
+    <div class="modules-section">
+      <div class="modules-grid">
+        <div class="module-tile" onclick="openModal('modalMeditation')">Meditations</div>
+        <div class="module-tile" onclick="openModal('modalPodcastsBooks')">Podcasts & Books</div>
+        <div class="module-tile" onclick="openModal('modalHealthyBodyMind')">Healthy Body & Mind</div>
+        <div class="module-tile" onclick="openModal('modalDigitalWellness')">Digital Wellness</div>
+      </div>
+      <button class="customization-btn" onclick="openModal('modalPersonalization')">Personalization</button>
     </div>
   </div>
 
   <!-- Meditation Modal -->
-  <div id="modalMeditation" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
-      <h2 data-en="Meditations 🧘‍♂️" data-ur="مراقبہ 🧘‍♂️" data-hi="ध्यान 🧘‍♂️">Meditations 🧘‍♂️</h2>
-      <p data-en="Meditation is the pause that lets the mind breathe." data-ur="مراقبہ وہ وقفہ ہے جو ذہن کو سانس لینے دیتا ہے۔" data-hi="ध्यान वह विराम है जो मन को सांस लेने देता है।">Meditation is the pause that lets the mind breathe.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/uFAIoCZcRjA" allowfullscreen></iframe>
-          <p data-en="Morning Mindfulness" data-ur="صبح کی ذہن سازی" data-hi="सुबह की माइंडफुलनेस">Morning Mindfulness</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/ZToicYcHIOU" allowfullscreen></iframe>
-          <p data-en="Daily Calm 10 Min" data-ur="روزانہ پرسکون 10 منٹ" data-hi="दैनिक शांत 10 मिनट">Daily Calm 10 Min</p>
-        </div>
+<div id="modalMeditation" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
+    <h2>Meditations 🧘‍♂️</h2>
+    <p>Meditation is the pause that lets the mind breathe.</p>
+
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/60Gnd8Wy0gE" allowfullscreen></iframe>
+        <p>Morning Mindful Start</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/4ZtihFRxK28" allowfullscreen></iframe>
+        <p>Midday Reset Meditation</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/YRJ6xoiRcpQ" allowfullscreen></iframe>
+        <p>Evening Calm Wind-down</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/cF-w7jzVWcM" allowfullscreen></iframe>
+        <p>Deep Relaxation Journey</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/yDGakic4UAk" allowfullscreen></iframe>
+        <p>Sleep Mindfulness Session</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/Rcofz-30dnU" allowfullscreen></iframe>
+        <p>Stress Relief Meditation</p>
       </div>
     </div>
   </div>
+</div>
+
 
   <!-- Podcasts & Books Modal -->
-  <div id="modalPodcastsBooks" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
-      <h2 data-en="Podcasts & Books🎧" data-ur="پوڈکاسٹس اور کتابیں🎧" data-hi="पॉडकास्ट और किताबें🎧">Podcasts & Books🎧</h2>
-      <p data-en="A pause from noise, a path to insight." data-ur="شور سے وقفہ، بصیرت کا راستہ۔" data-hi="शोर से विराम, अंतर्दृष्टि का मार्ग।">A pause from noise, a path to insight.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://open.spotify.com/embed/show/5hPJePeH0yRpkbpLuZOZhV" allowfullscreen></iframe>
-          <p data-en="The Happiness Podcast" data-ur="خوشی پوڈکاسٹ" data-hi="द हॅपिनेस पॉडकास्ट">The Happiness Podcast</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://open.spotify.com/embed/show/5PbW8DFSF6tpjw1FWDir3t" allowfullscreen></iframe>
-          <p data-en="Wellness Talks" data-ur="ویلنس ٹاکس" data-hi="वेलनेस टॉक्स">Wellness Talks</p>
-        </div>
-      </div>
-    </div>
-  </div>
+<div id="modalPodcastsBooks" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
+    <h2>Podcasts & Books 🎧</h2>
+    
+    <!-- Podcasts Section -->
+    <p style="text-align:center; font-style:italic; margin-bottom:20px;">
+      A pause from noise, a path to insight.
+    </p>
 
-  <!-- Healthy Body & Mind Modal -->
-  <div id="modalHealthyBodyMind" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
-      <h2 data-en="Healthy Body & Mind 🌿" data-ur="صحت مند جسم اور ذہن 🌿" data-hi="स्वस्थ शरीर और मन 🌿">Healthy Body & Mind 🌿</h2>
-      <p data-en="Nourish your body, strengthen your mind, and find balance." data-ur="اپنے جسم کو غذا دیں، اپنے ذہن کو مضبوط کریں، اور توازن تلاش کریں۔" data-hi="अपने शरीर को पोषण दें, अपने मन को मजबूत करें, और संतुलन पाएं।">Nourish your body, strengthen your mind, and find balance.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/z-fJTXyLxlc" allowfullscreen></iframe>
-          <p data-en="10-Minute Morning Yoga Flow 🌅" data-ur="10 منٹ صبح کا یوگا 🌅" data-hi="10 मिनट सुबह का योग 🌅">10-Minute Morning Yoga Flow 🌅</p>
-        </div>
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/FyFUowFFYC4" allowfullscreen></iframe>
-          <p data-en="Full-Body Beginner Workout 💪" data-ur="پورے جسم کا ابتدائی ورزش 💪" data-hi="पूर्ण शरीर शुरुआती वर्कआउट 💪">Full-Body Beginner Workout 💪</p>
-        </div>
+    <h3 style="margin-bottom:10px; color:#243B36;">Podcasts 🎙️</h3>
+    
+    <div class="modal-resources">
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/tool-R8VJ2Y" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Gabor Maté (Physician)</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/SwQhKFMxmDY" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Andrew Huberman (Neuroscientist)</p>
+      </div>
+      <div class="resource-card">
+        <iframe src="https://www.youtube.com/embed/-lDza7kSqvw" style="height:180px;" allowfullscreen></iframe>
+        <p>Dr. Julie Smith (Clinical Psychologist)</p>
       </div>
     </div>
-  </div>
 
-  <!-- Digital Wellness Modal -->
-  <div id="modalDigitalWellness" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
-      <h2 data-en="Digital Wellness 🌿" data-ur="ڈیجیٹل ویلنس 🌿" data-hi="डिजिटल वेलनेस 🌿">Digital Wellness 🌿</h2>
-      <p data-en="Take a break from screens and find balance in your digital life." data-ur="اسکرین سے وقفہ لیں اور اپنی ڈیجیٹل زندگی میں توازن تلاش کریں۔" data-hi="स्क्रीन से ब्रेक लें और अपने डिजिटल जीवन में संतुलन पाएं।">Take a break from screens and find balance in your digital life.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <iframe src="https://www.youtube.com/embed/oB6qJ9I__0A" allowfullscreen></iframe>
-          <p data-en="Digital Detox: Unplug & Recharge" data-ur="ڈیجیٹل ڈیٹاکس: انپلگ اور ریچارج کریں" data-hi="डिजिटल डिटॉक्स: अनप्लग और रिचार्ज करें">Digital Detox: Unplug & Recharge</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Books Section -->
+    <h3 style="margin:20px 0 10px 0; color:#243B36;">Books 📖</h3>
+    
+    <p style="margin-top:15px; font-style:italic;">
+      Browse the curated bookshelf we've crafted for you:
+    </p>
 
-  <!-- CBT & Self Tests Modal -->
-  <div id="modalCBTTests" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('modalCBTTests')">&times;</span>
-      <h2 data-en="CBT & Self Tests 🧠" data-ur="CBT اور خود کی جانچ 🧠" data-hi="CBT और स्व-परीक्षण 🧠">CBT & Self Tests 🧠</h2>
-      <p data-en="These are self-screening tools and not clinical diagnosis." data-ur="یہ خود کی جانچ کے آلات ہیں اور کلینیکل تشخیص نہیں ہیں۔" data-hi="ये स्व-स्क्रीनिंग उपकरण हैं और नैदानिक निदान नहीं हैं।">These are self-screening tools and not clinical diagnosis.</p>
-      <div class="modal-resources">
-        <div class="resource-card">
-          <p data-en="PHQ-9 — Depression" data-ur="PHQ-9 — ڈپریشن" data-hi="PHQ-9 — अवसाद">PHQ-9 — Depression</p>
-          <a href="https://screening.mhanational.org/screening-tools/depression/" target="_blank" data-en="Take PHQ-9" data-ur="PHQ-9 لیں" data-hi="PHQ-9 लें">Take PHQ-9</a>
-        </div>
+    <div style="line-height:1.7; font-size:1rem; text-align:left;">
+      <!-- Mind–Body & Lifestyle -->
+      <p>🌿 <strong>Mind–Body & Lifestyle</strong></p>
+      <ol>
+        <li>
+          "Atomic Habits" – James Clear<br>
+          <small>A practical guide to building good habits and breaking bad ones through small, consistent changes.</small>
+        </li>
+        <li>
+          "In Defense of Food" – Michael Pollan<br>
+          <small>Pollan simplifies nutrition advice into: Eat food. Not too much. Mostly plants.</small>
+        </li>
+        <li>
+          "Ikigai" – Héctor García & Francesc Miralles<br>
+          <small>Discover the Japanese secret to living a long and happy life by finding your purpose.</small>
+        </li>
+        <li>
+          "Don't Believe Everything You Think" – Joseph Nguyen<br>
+          <small>A fresh perspective on freeing yourself from self-doubt and overthinking.</small>
+        </li>
+      </ol>
+
+      <!-- Mental & Emotional Well-Being -->
+      <p>🧘‍♀️ <strong>Mental & Emotional Well-Being</strong></p>
+      <ol>
+        <li>
+          "The Gifts of Imperfection" – Brené Brown<br>
+          <small>Encourages embracing vulnerability and living wholeheartedly.</small>
+        </li>
+        <li>
+          "The Untethered Soul" – Michael A. Singer<br>
+          <small>Explores inner freedom and letting go of limiting thoughts.</small>
+        </li>
+      </ol>
+
+      <!-- Holistic & Spiritual Wellness -->
+      <p>🌱 <strong>Holistic & Spiritual Wellness</strong></p>
+      <ol>
+        <li>
+          "The Four Agreements" – Don Miguel Ruiz<br>
+          <small>A spiritual guide to personal freedom through four simple principles.</small>
+        </li>
+        <li>
+          "The Seven Spiritual Laws of Success" – Deepak Chopra<br>
+          <small>Blends spirituality and success into a practical life philosophy.</small>
+        </li>
+        <li>
+          "The Power of Your Subconscious Mind" – Joseph Murphy<br>
+          <small>A classic book on unlocking the hidden potential of your mind.</small>
+        </li>
+      </ol>
+    </div>
+
+    <p style="text-align:center; font-style:italic; margin-bottom:15px;">
+      Every page is a doorway to a new world.
+    </p>
+  </div>
+</div>
+
+<!-- Healthy Body & Mind Modal -->
+<div id="modalHealthyBodyMind" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
+    <h2>Healthy Body & Mind 🌿</h2>
+    <p>
+      Nourish your body, strengthen your mind, and find balance.
+    </p>
+
+    <h3 style="margin-top:20px;">📰 Articles on Healthy Living</h3>
+    <div class="modal-resources">
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/hidden-lifestyle-threats-to-heart-health-how-sleep-stress-pollution-gut-health-and-sugar-fuel-cardiovascular-risk/articleshow/123683120.cms?utm_source=chatgpt.com" target="_blank">
+          ❤️ Hidden Lifestyle Threats to Heart Health
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/3-simple-habits-to-keep-the-brain-young-according-to-a-top-neurosurgeon/photostory/123757718.cms?utm_source=chatgpt.com" target="_blank">
+          🧠 3 Simple Habits to Keep the Brain Young
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/eat-right-for-a-better-life-dieticians-simple-guide-to-healthy-eating/articleshow/123780631.cms?utm_source=chatgpt.com" target="_blank">
+          🥗 Eat Right for a Better Life – A Dietician's Guide
+        </a>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Digital Wellness Modal -->
+<div id="modalDigitalWellness" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
+    <h2>Digital Wellness 🌿</h2>
+    <p>Take a break from screens and find balance in your digital life.</p>
+
+    <p>
+      Tired of the digital world? A digital detox offers a much-needed pause from screens, scrolling, 
+      and constant pings. Read the articles about digital detox to get started.
+    </p>
+
+    <div class="modal-resources">
+      <div class="resource-card">
+        <a href="https://www.ndtv.com/india-news/karnataka-government-announces-digital-detox-initiative-to-encourage-mindful-use-of-social-media-4975460?utm_source=chatgpt.com" target="_blank">
+          📰 Karnataka Govt announces Digital Detox Initiative
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://cmhlp.org/imho/blog/indias-digital-mental-health-landscape-government-initiatives-and-challenges/?utm_source=chatgpt.com" target="_blank">
+          🌐 India's Digital Mental Health Landscape – Govt Initiatives & Challenges
+        </a>
+      </div>
+      <div class="resource-card">
+        <a href="https://timesofindia.indiatimes.com/city/nagpur/digital-obesity-silent-epidemic-among-students-vnit-director/articleshow/121834472.cms?utm_source=chatgpt.com" target="_blank">
+          ⚠️ Digital Obesity – A Silent Epidemic Among Students
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Personalization Modal -->
+<div id="modalPersonalization" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modalPersonalization')">&times;</span>
+    <h2>Personalize Your Experience 🌟</h2>
+    <p>Answer a few questions to get personalized wellness recommendations.</p>
+    
+    <div id="questionnaire" class="questionnaire-container">
+      <div id="question-1" class="question">
+        <h3>1. What brings you here today?</h3>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(1, 'Stress Relief')">Stress Relief</button>
+          <button class="option-btn" onclick="selectOption(1, 'Feeling Anxious')">Feeling Anxious</button>
+          <button class="option-btn" onclick="selectOption(1, 'Needing Companionship')">Needing Companionship</button>
+          <button class="option-btn" onclick="selectOption(1, 'Venting Out')">Venting Out</button>
+          <button class="option-btn" onclick="selectOption(1, 'Better Sleep')">Better Sleep</button>
+        </div>
+      </div>
+      
+      <div id="question-2" class="question" style="display: none;">
+        <h3>2. How do you usually feel at the end of the day?</h3>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(2, 'Energized')">Energized</button>
+          <button class="option-btn" onclick="selectOption(2, 'Balanced')">Balanced</button>
+          <button class="option-btn" onclick="selectOption(2, 'Stressed')">Stressed</button>
+          <button class="option-btn" onclick="selectOption(2, 'Exhausted')">Exhausted</button>
+          <button class="option-btn" onclick="selectOption(2, 'Lonely')">Lonely</button>
+        </div>
+      </div>
+      
+      <div id="question-3" class="question" style="display: none;">
+        <h3>3. What helps you feel better?</h3>
+        <div class="options">
+          <button class="option-btn" onclick="selectOption(3, 'Talking to Someone')">Talking to Someone</button>
+          <button class="option-btn" onclick="selectOption(3, 'Quiet Reflection')">Quiet Reflection</button>
+          <button class="option-btn" onclick="selectOption(3, 'Creative Activities')">Creative Activities</button>
+          <button class="option-btn" onclick="selectOption(3, 'Physical Activity')">Physical Activity</button>
+        </div>
+      </div>
+      
+      <div id="results" class="results-container" style="display: none;">
+        <h3>Your Personalized Recommendations</h3>
+        <p>Based on your answers, we've curated these resources just for you:</p>
+        <div id="personalized-resources" class="personalized-resources">
+          <!-- Resources will be dynamically inserted here -->
+        </div>
+        <button class="nav-btn" onclick="closeModal('modalPersonalization')">Explore Resources</button>
+      </div>
+      
+      <div class="nav-buttons">
+        <button id="prev-btn" class="nav-btn" onclick="prevQuestion()" style="display: none;">Previous</button>
+        <button id="next-btn" class="nav-btn" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <footer>
-    <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" data-ur="سول ایس © 2025 — 💙 کے ساتھ بنایا گیا SynapSix کی طرف سے" data-hi="सोलऐस © 2025 — 💙 के साथ SynapSix द्वारा बनाया गया">SoulAce © 2025 — Built with 💙 by SynapSix</p>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
 
   <script>
-    const langSelect = document.getElementById('lang-select');
-    langSelect.addEventListener('change', () => {
-      const selectedLang = langSelect.value;
-      document.querySelectorAll('[data-en]').forEach(el => {
-        el.textContent = el.getAttribute('data-' + selectedLang);
+    // Slider functionality
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    function showSlide(n) {
+      currentSlide = n;
+      const slider = document.querySelector('.slider');
+      slider.style.transform = `translateX(-${currentSlide * 20}%)`;
+      
+      // Update dots
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
       });
-    });
-
+    }
+    
+    // User popup functionality
     function toggleUserPopup() {
       const popup = document.getElementById('user-popup');
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
@@ -223,6 +698,10 @@
 
     function closeModal(id) {
       document.getElementById(id).style.display = 'none';
+      // Reset questionnaire if it's the personalization modal
+      if (id === 'modalPersonalization') {
+        resetQuestionnaire();
+      }
     }
 
     window.onclick = function(event) {
@@ -230,11 +709,260 @@
       modals.forEach(modal => {
         if(event.target === modal) modal.style.display = 'none';
       });
+      
+      // Close user popup if clicking outside
+      const popup = document.getElementById('user-popup');
+      if (event.target.classList.contains('user-icon')) return;
+      if (popup.style.display === 'block' && !event.target.closest('.user-popup')) {
+        popup.style.display = 'none';
+      }
     }
 
     function toggleMode() {
       document.body.classList.toggle('dark');
     }
+
+    // Google Translate Script
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+        'google_translate_element'
+      );
+    }
+    
+    // Questionnaire functionality
+    let currentQuestion = 1;
+    const answers = {};
+    
+    function selectOption(questionId, value) {
+      answers[questionId] = value;
+      
+      // Highlight selected option
+      const options = document.querySelectorAll(`#question-${questionId} .option-btn`);
+      options.forEach(option => {
+        option.classList.remove('selected');
+        if (option.textContent === value) {
+          option.classList.add('selected');
+        }
+      });
+      
+      // Enable next button
+      document.getElementById('next-btn').disabled = false;
+    }
+    
+    function nextQuestion() {
+      if (currentQuestion < 3) {
+        // Hide current question
+        document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+        
+        // Show next question
+        currentQuestion++;
+        document.getElementById(`question-${currentQuestion}`).style.display = 'block';
+        
+        // Show previous button
+        document.getElementById('prev-btn').style.display = 'block';
+        
+        // Disable next button until an option is selected
+        document.getElementById('next-btn').disabled = true;
+        
+        // Change next button to submit on last question
+        if (currentQuestion === 3) {
+          document.getElementById('next-btn').textContent = 'See Results';
+        }
+      } else {
+        // Show results
+        document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('prev-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        
+        // Generate personalized recommendations
+        generateRecommendations();
+      }
+    }
+    
+    function prevQuestion() {
+      // Hide current question
+      document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+      
+      // Show previous question
+      currentQuestion--;
+      document.getElementById(`question-${currentQuestion}`).style.display = 'block';
+      
+      // Hide previous button if we're on the first question
+      if (currentQuestion === 1) {
+        document.getElementById('prev-btn').style.display = 'none';
+      }
+      
+      // Enable next button
+      document.getElementById('next-btn').disabled = false;
+      
+      // Change next button text back if needed
+      if (currentQuestion < 3) {
+        document.getElementById('next-btn').textContent = 'Next';
+      }
+    }
+    
+    function resetQuestionnaire() {
+      currentQuestion = 1;
+      for (let key in answers) {
+        delete answers[key];
+      }
+      
+      // Reset UI
+      document.querySelectorAll('.question').forEach((question, index) => {
+        question.style.display = index === 0 ? 'block' : 'none';
+      });
+      
+      document.querySelectorAll('.option-btn').forEach(option => {
+        option.classList.remove('selected');
+      });
+      
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('prev-btn').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'block';
+      document.getElementById('next-btn').textContent = 'Next';
+      document.getElementById('next-btn').disabled = true;
+    }
+    
+    function generateRecommendations() {
+      const resourcesContainer = document.getElementById('personalized-resources');
+      resourcesContainer.innerHTML = '';
+      
+      // Generate recommendations based on answers
+      
+      // Stress-related recommendations
+      if (answers[1] === 'Stress Relief' || answers[2] === 'Stressed') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Guided Meditation for Stress Relief</strong>
+            <p>Try this guided meditation: <a href="https://www.youtube.com/watch?v=inpok4MKVLM" target="_blank">Watch Video</a></p>
+            <p>Practice the 4-7-8 breathing technique: Breathe in for 4 seconds, hold for 7, exhale for 8.</p>
+          </div>
+          <div class="resource-item">
+            <strong>Progressive Muscle Relaxation</strong>
+            <p>Tense and relax each muscle group from head to toe to release physical tension.</p>
+          </div>
+        `;
+      }
+      
+      // Anxiety-related recommendations
+      if (answers[1] === 'Feeling Anxious') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Grounding Techniques for Anxiety</strong>
+            <p>Try the 5-4-3-2-1 method: Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste.</p>
+            <p>Box breathing: Inhale for 4 counts, hold for 4, exhale for 4, hold for 4. Repeat.</p>
+          </div>
+          <div class="resource-item">
+            <strong>Anxiety Management Resources</strong>
+            <p><a href="https://www.anxietycanada.com/" target="_blank">Anxiety Canada</a> - Resources and tools for managing anxiety</p>
+          </div>
+        `;
+      }
+      
+      // Loneliness and companionship recommendations
+      if (answers[1] === 'Needing Companionship' || answers[2] === 'Lonely') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Connecting With Others</strong>
+            <p>Consider joining online communities: <a href="https://www.7cups.com/" target="_blank">7 Cups</a> offers free listener support</p>
+            <p>Local meetup groups for hobbies and interests can help build connections</p>
+          </div>
+          <div class="resource-item">
+            <strong>Companionship Resources</strong>
+            <p>Pet therapy or volunteering at animal shelters can provide meaningful connections</p>
+            <p>Book clubs or discussion groups create opportunities for regular social interaction</p>
+          </div>
+        `;
+      }
+      
+      // Venting/emotional expression recommendations
+      if (answers[1] === 'Venting Out') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Healthy Emotional Expression</strong>
+            <p>Journaling: Write freely for 10-15 minutes without filtering your thoughts</p>
+            <p>Art therapy: Express emotions through drawing, painting, or collage</p>
+          </div>
+          <div class="resource-item">
+            <strong>Venting Resources</strong>
+            <p>Talk to a trained listener: <a href="https://www.crisistextline.org/" target="_blank">Crisis Text Line</a> (Text HOME to 741741)</p>
+            <p>Voice recording: Talk into a voice memo app to express feelings verbally</p>
+          </div>
+        `;
+      }
+      
+      // Sleep-related recommendations
+      if (answers[1] === 'Better Sleep' || answers[2] === 'Exhausted') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Sleep Improvement Resources</strong>
+            <p>Bedtime ritual: <a href="https://www.sleepfoundation.org/sleep-hygiene/4-7-8-breathing" target="_blank">4-7-8 breathing technique</a></p>
+            <p>Sleep meditation: <a href="https://www.youtube.com/watch?v=4ZtihFRxK28" target="_blank">Guided sleep meditation</a></p>
+          </div>
+          <div class="resource-item">
+            <strong>Healthy Sleep Habits</strong>
+            <p>Maintain a consistent sleep schedule, even on weekends</p>
+            <p>Create a relaxing bedtime routine and keep your bedroom cool, dark, and quiet</p>
+          </div>
+        `;
+      }
+      
+      // Talking preference recommendations
+      if (answers[3] === 'Talking to Someone') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Talk Support Resources</strong>
+            <p>Consider therapy: <a href="https://www.psychologytoday.com/" target="_blank">Psychology Today therapist directory</a></p>
+            <p>Peer support: <a href="https://www.healthline.com/health/mental-health/peer-support-specialist" target="_blank">Peer support specialists</a> provide lived experience guidance</p>
+          </div>
+        `;
+      }
+      
+      // Quiet reflection recommendations
+      if (answers[3] === 'Quiet Reflection') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Reflection Practices</strong>
+            <p>Mindfulness meditation: <a href="https://www.headspace.com/meditation/mindfulness" target="_blank">Headspace guide to mindfulness</a></p>
+            <p>Nature walks: Spending time in nature can promote calm reflection</p>
+          </div>
+        `;
+      }
+      
+      // Creative activities recommendations
+      if (answers[3] === 'Creative Activities') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Creative Expression</strong>
+            <p>Art therapy exercises: <a href="https://www.therapistaid.com/worksheets/art" target="_blank">Therapist Aid art therapy resources</a></p>
+            <p>Journal prompts: <a href="https://www.journalbuddies.com/journaling-resources/mental-health-journal-prompts/" target="_blank">Mental health journal prompts</a></p>
+          </div>
+        `;
+      }
+      
+      // Physical activity recommendations
+      if (answers[3] === 'Physical Activity') {
+        resourcesContainer.innerHTML += `
+          <div class="resource-item">
+            <strong>Movement for Mental Health</strong>
+            <p>Yoga for mental health: <a href="https://www.youtube.com/watch?v=4pKly2JojMw" target="_blank">Yoga with Adriene - Yoga for Depression and Anxiety</a></p>
+            <p>Walking meditation: Combine physical movement with mindfulness practice</p>
+          </div>
+        `;
+      }
+      
+      // Add general wellness resources
+      resourcesContainer.innerHTML += `
+        <div class="resource-item">
+          <strong>Daily Wellness Tip</strong>
+          <p>Remember to take short breaks throughout the day to stretch, breathe deeply, and check in with yourself.</p>
+          <p>Consider setting reminders to drink water and practice gratitude for small moments of joy.</p>
+        </div>
+      `;
+    }
   </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
