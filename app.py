@@ -16,14 +16,13 @@ from chatbot import EmotionalChatbot
 import smtplib
 from flask import Flask, jsonify
 from email.message import EmailMessage
-import traceback
 import logging
 from flask_cors import CORS
 from concurrent.futures import ThreadPoolExecutor
-
-
-
-
+import uuid
+from datetime import datetime, timedelta
+from bson.son import SON
+import traceback
 
 # --- Load environment variables ---
 load_dotenv()
@@ -49,6 +48,11 @@ slots_col = db['slots']
 bookings_col = db['bookings']
 crisis_col = db["crisis_logs"]
 crisis_col = db["crisis"]
+assess_col = db["assessments"]   # stores PH
+sessions_col = db["sessions"]
+page_views_col = db["page_views"] 
+mood_entries_col = db["mood_entries"]
+
 
 print("✅ Connected to MongoDB:", client.list_database_names())
 
@@ -1357,99 +1361,6 @@ def get_proctors():
     except Exception as e:
         app.logger.exception("Failed to fetch proctors")
         return jsonify({"error": "Internal server error"}), 500
-
-
-# -----------------------
-# GET /api/proctors/<proctor_id>/slots?date=YYYY-MM-DD
-# -----------------------
-# Returns slots for the specified proctor on a date.
-# Response: { slots: [ { _id, proctor_id, date, time, status, booked_by }, ... ] }
-@app.route('/api/proctors/<proctor_id>/slots', methods=['GET'])
-def get_proctor_slots(proctor_id):
-    date = request.args.get('date')
-    if not date:
-        return jsonify({"error": "Missing required query param: date (YYYY-MM-DD)"}), 400
-
-    # basic date-format validation (YYYY-MM-DD)
-    try:
-        datetime.strptime(date, "%Y-%m-%d")
-    except ValueError:
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
-
-    try:
-        p_oid = ObjectId(proctor_id)
-    except Exception:
-        return jsonify({"error": "Invalid proctor id"}), 400
-
-    try:
-        docs = list(slots_col.find({"proctor_id": p_oid, "date": date}))
-        slots = []
-        for s in docs:
-            slots.append({
-                "_id": oid_to_str(s.get("_id")),
-                "proctor_id": oid_to_str(s.get("proctor_id")),
-                "date": s.get("date"),
-                "time": s.get("time"),
-                "status": s.get("status", "available"),
-                "booked_by": s.get("booked_by")
-            })
-        return jsonify({"slots": slots}), 200
-    except Exception as e:
-        app.logger.exception("Failed to fetch proctor slots")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# -----------------------
-# GET /api/bookings?user_id=<user_id>
-# -----------------------
-# Returns bookings for a user. If no user_id provided, returns empty (or admin can query all).
-# Each booking includes: _id, role ('therapist'|'proctor'), name (therapist/proctor name), date, time, status, created_at
-@app.route('/api/bookings', methods=['GET'])
-def get_bookings():
-    user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({"error": "Missing user_id query parameter"}), 400
-
-    try:
-        docs = list(bookings_col.find({"user_id": user_id}))
-        out = []
-        for b in docs:
-            # determine role & name
-            role = 'therapist' if b.get('therapist_id') else ('proctor' if b.get('proctor_id') else 'unknown')
-            name = None
-            extra = None
-            if role == 'therapist' and b.get('therapist_id'):
-                try:
-                    t = db.therapists.find_one({"_id": ObjectId(b['therapist_id'])})
-                    name = t.get('name') if t else None
-                    extra = t.get('expertise') if t else None
-                except Exception:
-                    name = None
-            elif role == 'proctor' and b.get('proctor_id'):
-                try:
-                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])})
-                    name = p.get('name') if p else None
-                    extra = p.get('department') if p else None
-                except Exception:
-                    name = None
-
-            out.append({
-                "_id": oid_to_str(b.get("_id")),
-                "role": role,
-                "name": name or b.get("name") or "",
-                "extra": extra or "",
-                "date": b.get("date"),
-                "time": b.get("time"),
-                "status": b.get("status", "confirmed"),
-                "slot_id": oid_to_str(b.get("slot_id")),
-                "created_at": b.get("created_at").isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at")
-            })
-        # optionally sort by date/time ascending
-        out.sort(key=lambda x: (x.get("date") or "", x.get("time") or ""))
-        return jsonify(out), 200
-    except Exception as e:
-        app.logger.exception("Failed to fetch bookings")
-        return jsonify({"error": "Internal server error"}), 500
     
 # #assessment routes 
 # @app.route("/assessment")
@@ -1546,7 +1457,7 @@ def assessment():
     # render the template; session values are available via session[...] inside template
     return render_template('assessment.html')
 
-# crisis email message call 
+# crisis email message call------------------------------------------ 
 SENDER = os.environ.get("CRISIS_EMAIL")
 APP_PWD = os.environ.get("CRISIS_APP_PASSWORD")
 RECEIVER = os.environ.get("CRISIS_RECEIVER")
