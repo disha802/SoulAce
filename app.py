@@ -332,6 +332,12 @@ def logout():
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    
+    print("Logging visit...")
+    db.page_views.insert_one({
+        "page": "student_dashboard",
+        "timestamp": datetime.now(),
+    })
     return render_template("dashboard.html", username=session["username"])
 
 # --- Journal Routes ---
@@ -1355,14 +1361,17 @@ def admin_dashboard():
 
     users = get_all_users()
     logs = get_crisis_logs()
-    
+    visits = list(db.page_views.find().sort("timestamp", -1))
+    visits=str(visits)
+
 
     return render_template(
         "admin_dashboard.html",
         username=session["username"],
         stats=stats,    
         users=users,
-        crisis_logs=logs
+        crisis_logs=logs,
+        visits=visits
     )
 
 
