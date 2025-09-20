@@ -250,8 +250,9 @@
     <h2>Welcome, Admin {{username}}</h2>
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
-
-   <section class = "admin-section" aria-labelledby="kpi-heading">
+  
+  <!-- Overview KPIs -->
+  <section class="admin-section" aria-labelledby="kpi-heading">
     <h2>Student Page Analytics</h2>
 <p>Total Visits: <span id="totalVisits">{{ total_visits }}</span></p>
 
@@ -261,12 +262,6 @@
     <li>{{ item._id }} → {{ item.count }}</li>
   {% endfor %}
 </ul>
-
-  </section>
-
-
-  <!-- Overview KPIs -->
-  <section class="admin-section" aria-labelledby="kpi-heading">
     <h2 id="kpi-heading">Overview</h2>
     <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:12px">
       <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f8faf8);box-shadow:0 6px 18px rgba(30,40,40,0.06)">
