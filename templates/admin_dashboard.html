@@ -77,6 +77,13 @@
         position: relative;
     }
 
+    .user-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
     .user-popup {
         display: none;
         position: absolute;
@@ -97,6 +104,9 @@
       text-decoration: none;
       color: inherit;
       cursor: pointer;
+      background: none;
+      border: none;
+      text-align: left;
     }
     .user-popup .popup-btn:hover {
       background: #f2f2f2;
@@ -126,12 +136,17 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-
     .admin-section {
       background: #fff;
       border-radius: 16px;
       padding: 1.5rem;
       margin-bottom: 2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
@@ -195,13 +210,13 @@
       color: #f9e6d0;
     }
     
-    body.dark .feature-card {
+    body.dark .admin-section, body.dark .card {
       background: #2a2a2a;
       color: #e0e0e0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
     
-    </style>
+  </style>
 </head>
 <body>
   <header>
@@ -228,12 +243,60 @@
       </div>
     </div>
   </header>
-  
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <section class="hero">
     <h2>Welcome, Admin {{username}}</h2>
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
-  
+
+  <!-- Overview KPIs -->
+  <section class="admin-section" aria-labelledby="kpi-heading">
+    <h2 id="kpi-heading">Overview</h2>
+    <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:12px">
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f8faf8);box-shadow:0 6px 18px rgba(30,40,40,0.06)">
+        <div style="font-size:13px;color:#657A74">Active users</div>
+        <div id="kpi-active" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbf8ff);box-shadow:0 6px 18px rgba(60,35,85,0.04)">
+        <div style="font-size:13px;color:#657A74">New this month</div>
+        <div id="kpi-newmonthly" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fff7f7);box-shadow:0 6px 18px rgba(160,40,40,0.03)">
+        <div style="font-size:13px;color:#657A74">Therapists</div>
+        <div id="kpi-therapists" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f7fff9);box-shadow:0 6px 18px rgba(30,90,60,0.03)">
+        <div style="font-size:13px;color:#657A74">Volunteers</div>
+        <div id="kpi-volunteers" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f9fffB);box-shadow:0 6px 18px rgba(150,130,30,0.03)">
+        <div style="font-size:13px;color:#657A74">Proctors</div>
+        <div id="kpi-proctors" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f5f7ff);box-shadow:0 6px 18px rgba(30,60,150,0.03)">
+        <div style="font-size:13px;color:#657A74">Bounce rate</div>
+        <div id="kpi-bounce" style="font-size:20px;font-weight:800;color:#b45309">—%</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 430px;gap:14px;margin-top:18px">
+      <div class="card" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Daily Page Hits (last 30 days)</strong>
+          <button id="refreshStats" class="toggle-btn">Refresh</button>
+        </div>
+        <canvas id="hitsChart" height="120"></canvas>
+      </div>
+
+      <div class="card" style="padding:12px">
+        <strong>Mood trend (avg score)</strong>
+        <canvas id="moodChart" height="150"></canvas>
+      </div>
+    </div>
+  </section>
+
   <!-- Crisis Mode / IP Logs -->
   <section class="admin-section">
     <h2>Crisis Mode Logs</h2>
@@ -243,6 +306,7 @@
           <th>Username</th>
           <th>Time</th>
           <th>IP Address</th>
+          <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -253,11 +317,29 @@
           <td>{{ log.timestamp }}</td>
           <td>{{ log.ip_address }}</td>
           <td>
-            <button class="resolve-btn" data-id="{{ log.id }}">Mark Resolved</button>
+            {% if log.resolved %}
+              <span style="color: green;">Resolved</span>
+            {% else %}
+              <span style="color: red;">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if not log.resolved %}
+            <button class="resolve-btn" onclick="resolveCrisis('{{ log.id }}')">Mark Resolved</button>
+            {% else %}
+            <span style="color: #666;">Resolved at {{ log.resolved_at or 'N/A' }}</span>
+            {% endif %}
           </td>
         </tr>
         {% else %}
         <tr>
+          <td colspan="5" style="text-align:center;">No crisis logs found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  
           <td colspan="4" style="text-align:center;">No crisis logs found</td>
         </tr>
         {% endfor %}
@@ -297,6 +379,7 @@
       </tbody>
     </table>
   </section>
+
   
   
   <!-- Mood Stats -->
@@ -317,13 +400,13 @@
 
   <!-- Booking Status -->
   <section class="admin-section">
-    <h2>Booking Status</h2>
+    <h2>Recent Bookings</h2>
     <table>
       <thead>
         <tr>
           <th>Booking ID</th>
           <th>User</th>
-          <th>Therapist</th>
+          <th>Therapist/Proctor</th>
           <th>Date</th>
           <th>Status</th>
         </tr>
@@ -337,41 +420,128 @@
           <td>{{ booking.date }}</td>
           <td>{{ booking.status }}</td>
         </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center;">No bookings found</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </section>
 
-
-
   <footer>
     <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
   </footer>
 
-  <script>
-    function toggleMode() {
-      document.body.classList.toggle('dark');
-      const btn = document.querySelector('.toggle-btn');
-      if (document.body.classList.contains('dark')) {
-        btn.textContent = '☀️ Light Mode';
-      } else {
-        btn.textContent = '🌙 Dark Mode';
+<script>
+let hitsChart = null, moodChart = null;
+
+function toggleUserPopup() {
+  const popup = document.getElementById('user-popup');
+  popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleMode() {
+  document.body.classList.toggle('dark');
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function(event) {
+  const popup = document.getElementById('user-popup');
+  const userIcon = document.querySelector('.user-icon');
+  if (!popup.contains(event.target) && !userIcon.contains(event.target)) {
+    popup.style.display = 'none';
+  }
+});
+
+async function resolveCrisis(logId) {
+  try {
+    const response = await fetch(`/resolve_crisis/${logId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       }
-    }
-
-    function toggleUserPopup() {
-        const popup = document.getElementById('user-popup');
-        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    }
-
-    // Optional: click outside to close
-    window.addEventListener('click', function(e) {
-        const popup = document.getElementById('user-popup');
-        const icon = document.querySelector('.user-icon');
-        if (!popup.contains(e.target) && e.target !== icon) {
-            popup.style.display = 'none';
-        }
     });
+    
+    if (response.ok) {
+      location.reload(); // Refresh the page to show updated status
+    } else {
+      alert('Failed to resolve crisis log');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error resolving crisis log');
+  }
+}
+
+async function loadAdminStats(){
+  try {
+    const res = await fetch('/admin/api/stats');
+    const js = await res.json();
+    if (!js.ok) return console.error(js);
+
+    const k = js.kpis;
+    document.getElementById('kpi-active').textContent = k.active_users;
+    document.getElementById('kpi-newmonthly').textContent = k.new_monthly_users;
+    document.getElementById('kpi-therapists').textContent = k.therapists;
+    document.getElementById('kpi-volunteers').textContent = k.volunteers;
+    document.getElementById('kpi-proctors').textContent = k.proctors;
+    document.getElementById('kpi-bounce').textContent = k.bounce_rate_percent + '%';
+  } catch (e) {
+    console.error('loadAdminStats failed', e);
+    // Set fallback values
+    document.getElementById('kpi-active').textContent = '0';
+    document.getElementById('kpi-newmonthly').textContent = '0';
+    document.getElementById('kpi-therapists').textContent = '0';
+    document.getElementById('kpi-volunteers').textContent = '0';
+    document.getElementById('kpi-proctors').textContent = '0';
+    document.getElementById('kpi-bounce').textContent = '0%';
+  }
+}
+
+async function loadDailyHits(){
+  try {
+    const res = await fetch('/admin/api/daily_hits');
+    const js = await res.json();
+    const ctx = document.getElementById('hitsChart').getContext('2d');
+    if (hitsChart) hitsChart.destroy();
+    hitsChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: js.labels, datasets: [{ label:'Page views', data: js.counts, fill:true, tension:0.2 }] },
+      options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  } catch(e){ 
+    console.error('loadDailyHits failed', e); 
+  }
+}
+
+async function loadMoodTrend(){
+  try {
+    const res = await fetch('/admin/api/mood_trend');
+    const js = await res.json();
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    if (moodChart) moodChart.destroy();
+    moodChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: js.labels, datasets: [{ label:'Avg Mood', data: js.avgs, fill:false, tension:0.2, borderColor:'#ff6384' }]},
+      options: { responsive:true, scales:{y:{beginAtZero:true, suggestedMax:10}} }
+    });
+  } catch(e) { 
+    console.error('loadMoodTrend failed', e); 
+  }
+}
+
+document.getElementById('refreshStats').addEventListener('click', () => {
+  loadAdminStats(); loadDailyHits(); loadMoodTrend();
+});
+
+// initial load
+document.addEventListener('DOMContentLoaded', function() {
+  loadAdminStats(); 
+  loadDailyHits(); 
+  loadMoodTrend();
+});
+</script>
 
     document.addEventListener("DOMContentLoaded", () => {
       const buttons = document.querySelectorAll(".resolve-btn");

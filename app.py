@@ -1,18 +1,27 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
-import json
-import os
-from datetime import datetime
-import csv
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, abort
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from werkzeug.security import generate_password_hash, check_password_hash
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from email.message import EmailMessage
+from chatbot import EmotionalChatbot
+from flask import Flask, jsonify
+import sentiment_analysis as sa
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash, check_password_hash
-from bson import ObjectId
 from datetime import datetime
-import io
-import sentiment_analysis as sa
+from flask_cors import CORS
+from bson import ObjectId
+from bson.son import SON
+import traceback
+import logging
+import smtplib
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from chatbot import EmotionalChatbot
+import uuid
+import json
+import csv
+import os
+import io
 
 # --- Load environment variables ---
 load_dotenv()
@@ -37,6 +46,11 @@ proctors_col = db['proctors']
 slots_col = db['slots']
 bookings_col = db['bookings']
 crisis_col = db["crisis"]
+assess_col = db["assessments"]   # stores PH
+sessions_col = db["sessions"]
+page_views_col = db["page_views"] 
+mood_entries_col = db["mood_entries"]
+
 
 print("✅ Connected to MongoDB:", client.list_database_names())
 
@@ -549,7 +563,7 @@ def download_csv():
                      as_attachment=True,
                      download_name=f'moods_{session["username"]}.csv')
 
-# --- Appointments ---
+
 @app.route("/download_chart")
 def download_chart():
     if "user_id" not in session:
@@ -1526,6 +1540,158 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+    
+# #assessment routes 
+# @app.route("/assessment")
+# def assessment():
+#     # If you require login, redirect to login if not logged in:
+#     if not session.get('username'):
+#         return redirect(url_for('login'))   # adapt to your auth route
+#     # render template (the template will pick username/user_id from session)
+#     return render_template("assessment.html")
+
+@app.route("/api/submit", methods=["POST"])
+def api_submit():
+    payload = request.get_json(silent=True) or {}
+    answers = payload.get("answers")
+
+    # basic validation
+    if not isinstance(answers, list) or len(answers) < 16:
+        return jsonify({"ok": False, "error": "Invalid answers array; expected 16 items"}), 400
+
+    # normalize answers to ints (null -> 0)
+    try:
+        answers_norm = [int(x) if x is not None else 0 for x in answers[:16]]
+    except Exception:
+        return jsonify({"ok": False, "error": "Answers must be numbers or null"}), 400
+
+    # compute GAD-7 (first 7) and PHQ-9 (next 9)
+    gad_scores = answers_norm[:7]
+    phq_scores = answers_norm[7:16]
+    gad_total = sum(gad_scores)
+    phq_total = sum(phq_scores)
+
+    # severity calculation (keep same thresholds you used client-side)
+    def gad_severity(total):
+        return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
+    def phq_severity(total):
+        return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
+
+    gad_sev = gad_severity(gad_total)
+    phq_sev = phq_severity(phq_total)
+
+    # associate user: prefer session user_id for security
+    user_id = session.get('user_id') or payload.get('user_id') or 'anon'
+
+    doc = {
+        "user_id": user_id,
+        "answers": answers_norm,
+        "gadTotal": int(gad_total),
+        "phqTotal": int(phq_total),
+        "gadSeverity": gad_sev,
+        "phqSeverity": phq_sev,
+        "timestamp": datetime.utcnow()
+    }
+
+    res = assess_col.insert_one(doc)
+    return jsonify({
+        "ok": True,
+        "id": str(res.inserted_id),
+        "gadTotal": doc["gadTotal"],
+        "phqTotal": doc["phqTotal"],
+        "gadSeverity": gad_sev,
+        "phqSeverity": phq_sev,
+        "timestamp": doc["timestamp"].isoformat() + "Z"
+    }), 200
+
+@app.route("/api/scores", methods=["GET"])
+def api_scores():
+    # prefer logged-in session user
+    uid = session.get('user_id') or request.args.get('user_id')
+    query = {}
+    if uid:
+        query["user_id"] = uid
+
+    cursor = assess_col.find(query).sort("timestamp", -1).limit(100)
+    out = []
+    for d in cursor:
+        out.append({
+            "id": str(d.get("_id")),
+            "user_id": d.get("user_id"),
+            "gadTotal": int(d.get("gadTotal", 0)),
+            "phqTotal": int(d.get("phqTotal", 0)),
+            "gadSeverity": d.get("gadSeverity"),
+            "phqSeverity": d.get("phqSeverity"),
+            "timestamp": d.get("timestamp").isoformat() + "Z" if d.get("timestamp") else None
+        })
+    return jsonify(out), 200
+
+from flask import render_template, session, redirect, url_for
+
+@app.route('/assessment')
+def assessment():
+    if not session.get('username'):
+        # redirect to login if you require auth
+        return redirect(url_for('login'))
+    # render the template; session values are available via session[...] inside template
+    return render_template('assessment.html')
+
+# crisis email message call------------------------------------------ 
+SENDER = os.environ.get("CRISIS_EMAIL")
+APP_PWD = os.environ.get("CRISIS_APP_PASSWORD")
+RECEIVER = os.environ.get("CRISIS_RECEIVER")
+
+executor = ThreadPoolExecutor(max_workers=4)
+logging.basicConfig(level=logging.DEBUG)
+CORS(app)   # allow cross-origin calls during dev
+
+@app.route("/send_email", methods=["POST"])
+def send_email():
+    SENDER = os.environ.get("CRISIS_EMAIL")
+    APP_PWD = os.environ.get("CRISIS_APP_PASSWORD")
+    RECEIVER = os.environ.get("CRISIS_RECEIVER")
+
+    if not (SENDER and APP_PWD and RECEIVER):
+        return jsonify({"ok": False, "error": "Missing env vars (CRISIS_EMAIL / CRISIS_APP_PASSWORD / CRISIS_RECEIVER)"}), 500
+
+    msg = EmailMessage()
+    msg["From"] = SENDER
+    msg["To"] = RECEIVER
+    msg["Subject"] = "🚨 Crisis Alert"
+    msg.set_content("Crisis button triggered in dashboard.")
+
+    # Attempt 1: SSL on 465
+    try:
+        logging.info("Trying SMTP_SSL smtp.gmail.com:465")
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+            smtp.login(SENDER, APP_PWD)
+            smtp.send_message(msg)
+        logging.info("Email sent via 465")
+        return jsonify({"ok": True, "method": "ssl465"}), 200
+    except Exception as e465:
+        logging.warning("465 attempt failed: %s", repr(e465))
+
+    # Attempt 2: STARTTLS on 587
+    try:
+        logging.info("Trying SMTP STARTTLS smtp.gmail.com:587")
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(SENDER, APP_PWD)
+            smtp.send_message(msg)
+        logging.info("Email sent via 587")
+        return jsonify({"ok": True, "method": "starttls587"}), 200
+    except Exception as e587:
+        logging.exception("587 attempt failed")
+
+    # Both attempts failed — return both errors
+    return jsonify({
+        "ok": False,
+        "error": "Both connection attempts failed",
+        "details_465": repr(e465),
+        "details_587": repr(e587)
+    }), 500
 
 
 # Login session verification

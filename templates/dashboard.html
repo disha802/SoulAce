@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SoulAce - Your Mental Health Companion</title>
 <style>
-  body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition: background 0.4s, color 0.4s; }
+  body { margin:0; font-family:'Segoe UI', sans-serif; color:#333; transition: background 0.4s, color 0.4s; background: url("{{url_for('static', filename='dashboard bg.jpg')}}") no-repeat center center fixed; background-size: cover;}
   header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
   .header-left { display:flex; align-items:center; gap:15px; }
   .header-right { display:flex; align-items:center; gap:10px; }
@@ -22,7 +22,9 @@
   .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
   .user-popup .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; }
   .user-popup .popup-btn:hover { background:#f2f2f2; }
-  .hero { text-align:center; padding:4rem 2rem; background:#F5F7F2; }
+
+  .hero { text-align:center; padding:2rem 1rem; background:#F5F7F280; max-width: 800px; margin: 0 auto; border-radius:12px; }
+
   .hero h2 { font-size:2.2rem; margin-bottom:1rem; color:#243B36; }
   .hero p { font-size:1.1rem; max-width:600px; margin:0 auto; }
   .mood-tracker { text-align:center; margin:2rem 0; }
@@ -108,7 +110,7 @@
 </header>
 
 <section class="hero">
-  <h2>Hey {{username}}, you’re not alone 💛</h2>
+  <h2>Welcome, {{username}}, you’re not alone 💛</h2>
   <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma-free.</p>
 </section>
 
@@ -153,6 +155,7 @@
   </form>
 </section>
 
+
 <section class="features">
 
   <a href="{{ url_for('chatbot_page') }}" class="feature-card">
@@ -165,6 +168,12 @@
     <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
     <h3>Confidential Booking</h3>
     <p>Book sessions with counsellors without fear of judgment.</p>
+  </a>
+
+    <a href="{{ url_for('assessment') }}" class="feature-card">
+    <span><img src="{{ url_for('static', filename='assessment.png') }}"></span>
+    <h3>Mental Health Assessment</h3>
+    <p>Take a quick GAD-7 + PHQ-9 screening to track your mental health.</p>
   </a>
 
   <a href="{{ url_for('resources') }}" class="feature-card">
@@ -189,7 +198,41 @@
 <footer>
   <p>SoulAce © 2025 — Built with 💙 by Synapsix</p>
 </footer>
-  <button class="crisis-btn" onclick="triggerCrisis()">🚨 Crisis</button>
+  <!-- <button class="crisis-btn" onclick="alert('Crisis logged')">🚨 Crisis</button> -->
+  <button class="crisis-btn" type="button">🚨 Crisis</button>
+
+<script>
+async function sendCrisis() {
+  console.log("[client] clicking crisis...");
+
+  // quick ping test first (uncomment to test separately)
+  // const ping = await fetch("/ping");
+  // console.log("ping status", ping.status, await ping.json());
+
+  try {
+    const res = await fetch("/send_email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    console.log("[client] /send_email HTTP status:", res.status);
+    let data;
+    try { data = await res.json(); } catch (e) { data = { ok: false, raw: "invalid-json" }; }
+    console.log("[client] /send_email response body:", data);
+
+    if (res.ok && data.ok) {
+      alert("📧 Crisis email sent!");
+    } else {
+      alert("Failed to send: " + (data.error || JSON.stringify(data)));
+    }
+  } catch (err) {
+    console.error("[client] fetch error:", err);
+    alert("Fetch error: " + err);
+  }
+}
+
+document.getElementById("crisis-Btn").addEventListener("click", sendCrisis);
+</script>
+
 
 <script>
   function toggleMode(){ document.body.classList.toggle('dark'); }
@@ -244,6 +287,19 @@ langSelect.addEventListener('change', ()=>{
       const result = await response.json();
       alert(result.message);
     }
+
+    document.getElementById("crisis-Btn").addEventListener("click", function() {
+     fetch("/send_email", { method: "POST" })
+     .then(res => res.json())
+     .then(data => {
+        if (data.ok) {
+            alert("📧 Crisis email sent!");
+        } else {
+            alert("Failed: " + data.error);
+        }
+    })
+    .catch(err => alert("Error: " + err));
+});
     
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>

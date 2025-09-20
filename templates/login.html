@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
 
         :root {
-            --dark-green: rgba(0,55,62,1);
+            --dark-green: #657A74;
             --cream: #f9e6d0;
             --light-cream: #f7f6f4;
             --font-family: 'Bricolage Grotesque', Helvetica, sans-serif;
@@ -18,6 +18,8 @@
 
         body {
             font-family: var(--font-family);
+            background: url("{{ url_for('static', filename= 'login bg.JPG')}}") no-repeat center center fixed;
+            background-size: cover;
             background-color: var(--light-cream);
             color: var(--dark-green);
             margin: 0;
@@ -25,6 +27,7 @@
             flex-direction: column;
             align-items: center;
             transition: all 0.3s ease;
+            position: relative;
         }
 
         header {
@@ -90,7 +93,7 @@
         }
 
         .card button:hover {
-            background: rgba(0,55,62,0.9);
+            background: #576a65;
         }
 
         .card a {
@@ -107,6 +110,8 @@
 
         /* Dark Mode Classes */
         body.dark {
+            background: url("{{url_for('static', filename='login bg dark.jpg')}}") no-repeat center center fixed;
+            background-size: cover;
             background-color: #011114;
             color: #f9e6d0;
         }
@@ -166,7 +171,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-            <p style= "color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;" >
+            <!-- <p style= "color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;" > -->
                 {{ message }}
             </p>
             {% endfor %}
