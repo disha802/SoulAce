@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce Therapist Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #7B9B8B;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .logo-container img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #fff;
+    }
+
+    .header-text h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: normal;
+      color: #FFF7E4;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #F5F7F280;
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 12px;
+    }
+
+    .hero h2 {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      color: #243B36;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .user-icon-container {
+        position: relative;
+    }
+
+    .user-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .user-popup {
+        display: none;
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        padding: 10px;
+        z-index: 100;
+        min-width: 140px;
+    }
+
+    .user-popup .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-align: left;
+    }
+    .user-popup .popup-btn:hover {
+      background: #f2f2f2;
+    }
+
+    h2 {
+      color: #243B36;
+      margin-bottom: 1rem;
+    }
+
+    section {
+      padding: 2rem;
+    }
+
+    .therapist-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #7B9B8B;
+      color: white;
+    }
+
+    button {
+      background: linear-gradient(135deg, #657A74 , #243B36);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      margin-right: 5px;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #657A74 , #243B36);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+
+    .btn-cancel {
+      background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    }
+
+    .btn-cancel:hover {
+      background: linear-gradient(45deg, #dc3545, #c82333) !important;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .kpi-card {
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fff, #f8faf8);
+      box-shadow: 0 6px 18px rgba(30,40,40,0.06);
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .kpi-label {
+      font-size: 13px;
+      color: #657A74;
+    }
+
+    .status-confirmed {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #ffc107;
+      font-weight: bold;
+    }
+
+    .status-cancelled {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .status-completed {
+      color: #17a2b8;
+      font-weight: bold;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ffeecf;
+      border-top: 2px solid #fcd58d;
+      margin-top: 2rem;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
+    }
+
+    body.dark header {
+      background-color: #1f1f1f;
+      color: #f9e6d0;
+    }
+
+    body.dark .hero {
+      background: #1f1f1f;
+      color: #e0e0e0;
+    }
+    
+    body.dark .therapist-section, body.dark .card {
+      background: #2a2a2a;
+      color: #e0e0e0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    body.dark .user-popup {
+      background: #2a2a2a;
+      color: #f9e6d0;
+      border: 1px solid #444;
+    }
+
+    body.dark .user-popup .popup-btn {
+      color: #f9e6d0;
+    }
+
+    body.dark .kpi-card {
+      background: linear-gradient(180deg, #2a2a2a, #1f1f1f);
+      color: #e0e0e0;
+    }
+
+    body.dark footer {
+      background: #1f1f1f;
+      color: #e0e0e0;
+      border-top: 2px solid #444;
+    }
+
+    body.dark th {
+      background-color: #1f1f1f;
+    }
+
+    body.dark table, body.dark th, body.dark td {
+      border-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce Therapist</h1>
+        <h3>Manage your sessions and clients</h3>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+        alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h2>Welcome, Dr. {{username}}</h2>
+    <p>Manage your therapy sessions, view appointments, and support your clients on their mental health journey.</p>
+  </section>
+
+  <!-- Overview KPIs -->
+  <section class="therapist-section" aria-labelledby="kpi-heading">
+    <h2 id="kpi-heading">Today's Overview</h2>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Today's Sessions</div>
+        <div class="kpi-value">{{todays_sessions|default(0)}}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Clients</div>
+        <div class="kpi-value">{{total_clients|default(0)}}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">This Week</div>
+        <div class="kpi-value">{{week_sessions|default(0)}}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pending Approvals</div>
+        <div class="kpi-value" style="color:#ffc107">{{pending_bookings|default(0)}}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Today's Appointments -->
+  <section class="therapist-section">
+    <h2>Today's Appointments</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Client</th>
+          <th>Session Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appointment in todays_appointments %}
+        <tr>
+          <td>{{ appointment.time }}</td>
+          <td>{{ appointment.client_name or 'Anonymous' }}</td>
+          <td>{{ appointment.session_type|title or 'Individual' }}</td>
+          <td>
+            <span class="status-{{ appointment.status|lower }}">
+              {{ appointment.status|title }}
+            </span>
+          </td>
+          <td>
+            {% if appointment.status == 'confirmed' %}
+            <button onclick="startSession('{{ appointment.id }}')">Start Session</button>
+            {% elif appointment.status == 'pending' %}
+            <button onclick="confirmAppointment('{{ appointment.id }}')">Confirm</button>
+            <button onclick="cancelAppointment('{{ appointment.id }}', 'cancelled')" class="btn-cancel">Cancel</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="empty-state">No appointments scheduled for today</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Upcoming Appointments -->
+  <section class="therapist-section">
+    <h2>Upcoming Appointments</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Client</th>
+          <th>Session Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appointment in upcoming_appointments %}
+        <tr>
+          <td>{{ appointment.date }}</td>
+          <td>{{ appointment.time }}</td>
+          <td>{{ appointment.client_name or 'Anonymous' }}</td>
+          <td>{{ appointment.session_type|title or 'Individual' }}</td>
+          <td>
+            <span class="status-{{ appointment.status|lower }}">
+              {{ appointment.status|title }}
+            </span>
+          </td>
+          <td>
+            {% if appointment.status == 'pending' %}
+            <button onclick="confirmAppointment('{{ appointment.id }}')">Confirm</button>
+            <button onclick="cancelAppointment('{{ appointment.id }}', 'cancelled')" class="btn-cancel">Cancel</button>
+            {% elif appointment.status == 'confirmed' %}
+            <button onclick="rescheduleAppointment('{{ appointment.id }}')">Reschedule</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="empty-state">No upcoming appointments</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Client Sessions History -->
+  <section class="therapist-section">
+    <h2>Recent Sessions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Client</th>
+          <th>Duration</th>
+          <th>Session Type</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for session_item in recent_sessions %}
+        <tr>
+          <td>{{ session_item.date }}</td>
+          <td>{{ session_item.client_name or 'Anonymous' }}</td>
+          <td>{{ session_item.duration or 'N/A' }}</td>
+          <td>{{ session_item.session_type|title or 'Individual' }}</td>
+          <td>{{ session_item.notes[:50] + '...' if session_item.notes and session_item.notes|length > 50 else session_item.notes or 'No notes' }}</td>
+          <td>
+            <button onclick="viewSession('{{ session_item.id }}')">View</button>
+            <button onclick="addNotes('{{ session_item.id }}')">Add Notes</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="empty-state">No recent sessions</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <p>SoulAce © 2025 – Built with 💙 by SynapSix</p>
+  </footer>
+
+<script>
+function toggleUserPopup() {
+  const popup = document.getElementById('user-popup');
+  popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleMode() {
+  document.body.classList.toggle('dark');
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function(event) {
+  const popup = document.getElementById('user-popup');
+  const userIcon = document.querySelector('.user-icon');
+  if (!popup.contains(event.target) && !userIcon.contains(event.target)) {
+    popup.style.display = 'none';
+  }
+});
+
+async function confirmAppointment(appointmentId) {
+  try {
+    const response = await fetch(`/therapist/confirm_appointment/${appointmentId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      alert('Appointment confirmed successfully!');
+      location.reload();
+    } else {
+      alert('Failed to confirm appointment: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error confirming appointment');
+  }
+}
+
+async function cancelAppointment(appointmentId, status) {
+  if (!confirm('Are you sure you want to cancel this appointment?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/therapist/update_appointment/${appointmentId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: status })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      alert('Appointment cancelled successfully!');
+      location.reload();
+    } else {
+      alert('Failed to cancel appointment: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error cancelling appointment');
+  }
+}
+
+function startSession(appointmentId) {
+  // Redirect to session interface or open modal
+  window.location.href = `/therapist/session/${appointmentId}`;
+}
+
+function rescheduleAppointment(appointmentId) {
+  // Open reschedule modal or redirect to reschedule page
+  alert('Reschedule functionality coming soon!');
+}
+
+function viewSession(sessionId) {
+  // Open session details modal or redirect
+  window.location.href = `/therapist/session_details/${sessionId}`;
+}
+
+function addNotes(sessionId) {
+  const notes = prompt('Add session notes:');
+  if (notes && notes.trim()) {
+    fetch(`/therapist/add_notes/${sessionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ notes: notes.trim() })
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        alert('Notes added successfully!');
+        location.reload();
+      } else {
+        alert('Failed to add notes: ' + result.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error adding notes');
+    });
+  }
+}
+
+// Flash message handling
+window.addEventListener('DOMContentLoaded', function() {
+  // Handle any flash messages if they exist
+  const flashMessages = document.querySelectorAll('.flash-message');
+  flashMessages.forEach(message => {
+    setTimeout(() => {
+      message.style.opacity = '0';
+      setTimeout(() => message.remove(), 300);
+    }, 5000);
+  });
+});
+</script>
+
+</body>
+</html>

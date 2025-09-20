@@ -22,11 +22,6 @@ import json
 import csv
 import os
 import io
-<<<<<<< HEAD
-import sentiment_analysis as sa
-from chatbot import EmotionalChatbot
-=======
->>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
 
 # --- Load environment variables ---
 load_dotenv()
@@ -161,6 +156,22 @@ def create_default_Admin():
         users_col.insert_one(stuvol_user)
         print("✅ Default studentvol user created (username: studentvol, password: studentvol)")
 
+def create_sample_therapist():
+    """Create a sample therapist user for testing"""
+    existing_therapist = users_col.find_one({"username": "therapist1"})
+    if not existing_therapist:
+        therapist_user = {
+            "user_id": get_next_id(users_col, "user_id"),
+            "username": "therapist1",
+            "password_hash": generate_password_hash("therapist123"),
+            "role": "therapist",
+            "date_joined": datetime.now(),
+            "specialization": "Anxiety & Depression",
+            "years_experience": 5
+        }
+        users_col.insert_one(therapist_user)
+        print("✅ Sample therapist user created (username: therapist1, password: therapist123)")
+
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
     # Sample Counselors
@@ -215,6 +226,9 @@ def seed_sample_data():
         ]
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
+
+
+
 
 def check(content: str) -> dict:
     """
@@ -277,6 +291,7 @@ def get_crisis_logs():
 
 # Initialize default data
 create_default_Admin()
+create_sample_therapist()
 seed_sample_data()
 
 # One-time update for existing users to add disclaimer fields
@@ -300,7 +315,6 @@ def home():
 # --- Authentication ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -312,8 +326,11 @@ def login():
             session["role"] = user["role"]
             session["disclaimer_accepted"] = user.get("disclaimer_accepted", False)
             
+            # Redirect based on role
             if user["role"] == "admin":
                 return redirect(url_for("admin_dashboard"))
+            elif user["role"] == "therapist":
+                return redirect(url_for("therapist_dashboard"))
             
             # Check if user needs to see disclaimer
             if not user.get("disclaimer_accepted", False):
@@ -401,15 +418,8 @@ def register():
                 "user_id": get_next_id(users_col, "user_id"),
                 "username": username,
                 "password_hash": generate_password_hash(password),
-<<<<<<< HEAD
-                "role": "User",
-                "date_joined": datetime.now(),
-                "disclaimer_accepted": False,  # NEW: Track disclaimer acceptance
-                "disclaimer_accepted_at": None  # NEW: Track when it was accepted
-=======
                 "role": "student",
                 "date_joined": datetime.now()
->>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
             }
             users_col.insert_one(new_user)
             
@@ -445,8 +455,6 @@ def dashboard():
 #         return redirect(url_for("login"))
 #     return render_template("journal.html", username=session["username"])
 
-<<<<<<< HEAD
-=======
 try:
     api_key = os.getenv("GROQ_API_KEY")
     if api_key:
@@ -486,7 +494,6 @@ def chat():
     except Exception as e:
         print(f"Chatbot error: {e}")
         return jsonify({"response": "I'm here to support you. Could you tell me more about how you're feeling right now?"}), 500
->>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
 
 @app.route("/journal", methods=["GET", "POST"])
 @require_disclaimer_acceptance() 
@@ -570,34 +577,7 @@ except Exception as e:
     chatbot = None
     print(f"❌ Failed to initialize chatbot: {e}")
 
-# --- Chatbot Routes ---
-@app.route("/chatbot")
-@require_disclaimer_acceptance() 
-def chatbot_page():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    return render_template("chatbot.html", username=session["username"])
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    if "user_id" not in session:
-        return jsonify({"error": "Not logged in"}), 401
-    
-    if not chatbot:
-        return jsonify({"response": "I'm sorry, the AI support is temporarily unavailable. Please try again later or contact our support team."}), 500
-    
-    data = request.get_json()
-    message = data.get("message", "").strip()
-    
-    if not message:
-        return jsonify({"response": "I'm here to listen. Please share what's on your mind."}), 400
-    
-    try:
-        response = chatbot.chat(message)
-        return jsonify({"response": response})
-    except Exception as e:
-        print(f"Chatbot error: {e}")
-        return jsonify({"response": "I'm here to support you. Could you tell me more about how you're feeling right now?"}), 500
 
 @app.route("/get_journals/<username>", methods=["GET"])
 def get_journals(username):
@@ -1853,6 +1833,82 @@ def session_info():
         "username": session.get("username"),
         "role": session.get("role", "User")
     })
+
+# Replace your therapist dashboard function with this corrected version:
+
+@app.route("/therapist")
+def therapist_dashboard():
+    if "user_id" not in session or session.get("role") != "therapist":
+        return redirect(url_for("login"))
+    
+    # Get therapist info
+    therapist = users_col.find_one({"user_id": session["user_id"]})
+    if not therapist:
+        flash("Therapist not found", "error")
+        return redirect(url_for("login"))
+    
+    # Get today's date
+    today = datetime.now().date()
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # Get therapist's appointments for today
+    todays_appointments = list(bookings_col.find({
+        "therapist_id": ObjectId(str(therapist.get("_id", ""))),
+        "date": today_str
+    }).sort("time", 1))
+    
+    # Get upcoming appointments (next 7 days)
+    end_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
+    upcoming_appointments = list(bookings_col.find({
+        "therapist_id": ObjectId(str(therapist.get("_id", ""))),
+        "date": {"$gt": today_str, "$lte": end_date}
+    }).sort([("date", 1), ("time", 1)]))
+    
+    # Get recent sessions
+    recent_sessions = list(sessions_col.find({
+        "therapist_id": ObjectId(str(therapist.get("_id", ""))),
+        "completed": True
+    }).sort("date", -1).limit(10))
+    
+    # Format appointments data
+    for appointment in todays_appointments + upcoming_appointments:
+        appointment["id"] = str(appointment["_id"])
+        # Get client name (anonymized)
+        user = users_col.find_one({"user_id": appointment["user_id"]})
+        if user:
+            appointment["client_name"] = f"Client-{user['user_id']}"
+        else:
+            appointment["client_name"] = "Unknown Client"
+        
+        # Ensure status exists
+        if "status" not in appointment:
+            appointment["status"] = "pending"
+    
+    # Format sessions data (FIXED: removed duplicate code)
+    for session_item in recent_sessions:
+        session_item["id"] = str(session_item["_id"])
+        user = users_col.find_one({"user_id": session_item["user_id"]})
+        if user:
+            session_item["client_name"] = f"Client-{user['user_id']}"
+        else:
+            session_item["client_name"] = "Unknown Client"
+    
+    # Calculate statistics
+    stats = {
+        "todays_sessions": len([a for a in todays_appointments if a.get("status") == "confirmed"]),
+        "total_clients": len(set([a["user_id"] for a in todays_appointments + upcoming_appointments])),
+        "week_sessions": len([a for a in upcoming_appointments if a.get("status") == "confirmed"]) + len([a for a in todays_appointments if a.get("status") == "confirmed"]),
+        "pending_bookings": len([a for a in todays_appointments + upcoming_appointments if a.get("status") == "pending"])
+    }
+    
+    return render_template(
+        "therapist_dashboard.html",
+        username=session["username"],
+        todays_appointments=todays_appointments,
+        upcoming_appointments=upcoming_appointments,
+        recent_sessions=recent_sessions,
+        **stats
+    )
 
 # --- Run App ---
 if __name__ == "__main__":
