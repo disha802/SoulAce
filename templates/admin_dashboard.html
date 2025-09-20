@@ -340,13 +340,6 @@
     </table>
   </section>
   
-          <td colspan="4" style="text-align:center;">No crisis logs found</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
-  
   
   <!-- User Management -->
   <section class="admin-section">
@@ -434,6 +427,7 @@
   </footer>
 
 <script>
+
 let hitsChart = null, moodChart = null;
 
 function toggleUserPopup() {
@@ -541,7 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
   loadDailyHits(); 
   loadMoodTrend();
 });
-</script>
 
     document.addEventListener("DOMContentLoaded", () => {
       const buttons = document.querySelectorAll(".resolve-btn");
@@ -582,8 +575,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => console.error("Error fetching crisis logs:", err));
     };
+</script>
 
-    </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"> </script>
 
 <script>
