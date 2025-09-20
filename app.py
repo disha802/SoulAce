@@ -332,6 +332,12 @@ def logout():
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    
+    print("Logging visit...")
+    db.page_views.insert_one({
+        "page": "dashboard",
+        "timestamp": datetime.now(),
+    })
     return render_template("dashboard.html", username=session["username"])
 
 # --- Journal Routes ---
@@ -1355,15 +1361,61 @@ def admin_dashboard():
 
     users = get_all_users()
     logs = get_crisis_logs()
-    
+    visits = list(db.page_views.find().sort("timestamp", -1))
+    visits=str(visits)
+
 
     return render_template(
         "admin_dashboard.html",
         username=session["username"],
         stats=stats,    
         users=users,
-        crisis_logs=logs
+        crisis_logs=logs,
+        visits=visits
     )
+@app.route("/admin", methods=["GET"])
+def admin_web_analytics():
+    if "user_id" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+
+    # ✅ Debugging pipeline step by step
+    test = list(db.page_views.aggregate([
+        { "$match": { "page": "dashboard" } }
+    ]))
+    print("DEBUG MATCH RESULTS:", test[:3])  # shows first 3 docs in terminal
+
+    # Then try grouping
+    visits_by_date = list(db.page_views.aggregate([
+        { "$group": {
+            "_id": { "$dateToString": { "format": "%Y-%m-%d", "date": "$timestamp" } },
+            "count": { "$sum": 1 }
+        }}
+    ]))
+    print("DEBUG GROUP RESULTS:", visits_by_date)
+
+    total_visits = db.page_views.count_documents({"page": "dashboard"})
+
+    return render_template(
+        "admin_dashboard.html",
+        total_visits=total_visits,
+        visits_by_date=visits_by_date
+    )
+@app.route("/admin/visits_data")
+def visits_data():
+    total_visits = db.page_views.count_documents({"page": "dashboard"})
+    visits_by_date = list(db.page_views.aggregate([
+        { "$match": { "page": "dashboard" } },
+        { "$group": {
+            "_id": { "$dateToString": { "format": "%Y-%m-%d", "date": "$timestamp" } },
+            "count": { "$sum": 1 }
+        }},
+        { "$sort": { "_id": 1 } }
+    ]))
+
+    return jsonify({
+        "total_visits": total_visits,
+        "visits_by_date": visits_by_date
+    })
 
 
 
