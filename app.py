@@ -1,15 +1,32 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
-import json
-import os
-from datetime import datetime
-import csv
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, abort
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from werkzeug.security import generate_password_hash, check_password_hash
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from email.message import EmailMessage
+from chatbot import EmotionalChatbot
+from flask import Flask, jsonify
+import sentiment_analysis as sa
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+from flask_cors import CORS
 from bson import ObjectId
+from bson.son import SON
+import traceback
+import logging
+import smtplib
+import torch
+import uuid
+import json
+import csv
+import os
 import io
+<<<<<<< HEAD
 import sentiment_analysis as sa
 from chatbot import EmotionalChatbot
+=======
+>>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
 
 # --- Load environment variables ---
 load_dotenv()
@@ -27,8 +44,82 @@ moodtracking_col = db["moodtracking"]
 journals_col = db["journals"]
 resources_col = db["resources"]
 peersupportposts_col = db["peersupportposts"]
+therapists_col = db['therapists']
+slots_col = db['slots']        # timeslot documents
+bookings_col = db['bookings']  # bookings
+proctors_col = db['proctors']
+slots_col = db['slots']
+bookings_col = db['bookings']
+crisis_col = db["crisis"]
+assess_col = db["assessments"]   # stores PH
+sessions_col = db["sessions"]
+page_views_col = db["page_views"] 
+mood_entries_col = db["mood_entries"]
+
 
 print("✅ Connected to MongoDB:", client.list_database_names())
+
+# --- AI Moderation Setup ---
+class AIModerator:
+    def __init__(self):
+        self.model_name = "unitary/toxic-bert"
+        self.tokenizer = None
+        self.model = None
+        self.load_model()
+        
+    def load_model(self):
+        """Load the AI model for content moderation"""
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            print("✅ AI Moderation model loaded successfully")
+        except Exception as e:
+            print(f"❌ Error loading AI model: {e}")
+            self.model = None
+            
+    def moderate(self, text):
+        """
+        Analyze text for toxic content using AI model
+        Returns: (is_toxic, confidence_score, categories)
+        """
+        if not self.model or not text or not isinstance(text, str):
+            return False, 0.0, []
+            
+        try:
+            # Tokenize input
+            inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+            
+            # Get model prediction
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+            
+            # Apply sigmoid to get probabilities
+            probs = torch.sigmoid(outputs.logits).squeeze().tolist()
+            
+            # Define toxicity categories (based on model's training)
+            categories = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+            
+            # Check if any category exceeds threshold
+            threshold = 0.7
+            max_prob = max(probs) if isinstance(probs, list) else probs
+            is_toxic = max_prob > threshold
+            
+            # Get the categories that exceeded threshold
+            toxic_categories = []
+            if isinstance(probs, list):
+                for i, prob in enumerate(probs):
+                    if prob > threshold and i < len(categories):
+                        toxic_categories.append(categories[i])
+            elif probs > threshold:
+                toxic_categories = ["toxic"]
+                
+            return is_toxic, max_prob, toxic_categories
+        except Exception as e:
+            print(f"Error in AI moderation: {e}")
+            return False, 0.0, []
+
+# Initialize AI Moderator
+ai_moderator = AIModerator()
 
 # --- Flask setup ---
 app = Flask(__name__)
@@ -42,19 +133,33 @@ def get_next_id(collection, id_field):
         return int(last_doc[id_field]) + 1
     return 1
 
-def create_default_admin():
-    """Create default admin user if doesn't exist"""
-    admin_exists = users_col.find_one({"role": "Admin"})
-    if not admin_exists:
-        admin_user = {
+def create_default_Admin():
+    """Create default Admin user if doesn't exist"""
+    Admin_exists = users_col.find_one({"role": "admin"})
+    if not Admin_exists:
+        Admin_user = {
             "user_id": get_next_id(users_col, "user_id"),
-            "username": "admin",
+            "username": "Admin",
             "password_hash": generate_password_hash("adminpass"),
-            "role": "Admin",
+            "role": "admin",
             "date_joined": datetime.now()
         }
-        users_col.insert_one(admin_user)
-        print("✅ Default admin user created")
+        users_col.insert_one(Admin_user)
+        print("✅ Default Admin user created")
+
+    
+    # Create default studentvol user
+    stuvol_exists = users_col.find_one({"username": "studentvol"})
+    if not stuvol_exists:
+        stuvol_user = {
+            "user_id": get_next_id(users_col, "user_id"),
+            "username": "studentvol",
+            "password_hash": generate_password_hash("studentvol"),
+            "role": "studentvol",
+            "date_joined": datetime.now()
+        }
+        users_col.insert_one(stuvol_user)
+        print("✅ Default studentvol user created (username: studentvol, password: studentvol)")
 
 def seed_sample_data():
     """Add sample counselors and resources if collections are empty"""
@@ -111,8 +216,67 @@ def seed_sample_data():
         resources_col.insert_many(sample_resources)
         print("✅ Sample resources added")
 
+def check(content: str) -> dict:
+    """
+    AI moderation function.
+    Returns dict with moderation results.
+    """
+    if not content:
+        return {"flagged": False, "ai_flagged": False, "categories": []}
+    
+    is_toxic, confidence, categories = ai_moderator.moderate(content)
+    
+    return {
+        "flagged": is_toxic,
+        "ai_flagged": is_toxic,
+        "confidence": confidence,
+        "categories": categories
+    }
+
+
+# --- Helper Functions for Admin ---
+def get_all_users():
+    """Fetch all users except admins"""
+    users = list(users_col.find({"role": {"$ne": "Admin"}}))  
+    for user in users:
+        user["_id"] = str(user["_id"])
+    return users
+
+def get_flagged_posts():
+    """Fetch all flagged posts."""
+    posts = list(peersupportposts_col.find({"flagged": True}).sort("datetime", -1))
+    for post in posts:
+        post["_id"] = str(post["_id"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+        post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+            reply["username"] = reply_user.get("username", "Unknown") if reply_user else "Unknown"
+    return posts
+
+def update_user_role(user_id, new_role):
+    users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+
+
+def get_crisis_logs():
+    logs = []
+    for log in crisis_col.find().sort("timestamp", -1):
+        logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ID as string for template
+            "username": log.get("username", "Unknown"),
+            "ip_address": log.get("ip_address", "N/A"),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") 
+                         if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
+            "resolved": log.get("resolved", False),
+            "resolved_at": log.get("resolved_at")
+        })
+    return logs
+
+
+
 # Initialize default data
-create_default_admin()
+create_default_Admin()
 seed_sample_data()
 
 # One-time update for existing users to add disclaimer fields
@@ -133,8 +297,10 @@ update_existing_users_disclaimer()
 def home():
     return render_template("welcome.html")
 
+# --- Authentication ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -146,7 +312,7 @@ def login():
             session["role"] = user["role"]
             session["disclaimer_accepted"] = user.get("disclaimer_accepted", False)
             
-            if user["role"] == "Admin":
+            if user["role"] == "admin":
                 return redirect(url_for("admin_dashboard"))
             
             # Check if user needs to see disclaimer
@@ -228,7 +394,6 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         
-        # Check if user already exists
         if users_col.find_one({"username": username}):
             flash("User already exists", "error")
         else:
@@ -236,10 +401,15 @@ def register():
                 "user_id": get_next_id(users_col, "user_id"),
                 "username": username,
                 "password_hash": generate_password_hash(password),
+<<<<<<< HEAD
                 "role": "User",
                 "date_joined": datetime.now(),
                 "disclaimer_accepted": False,  # NEW: Track disclaimer acceptance
                 "disclaimer_accepted_at": None  # NEW: Track when it was accepted
+=======
+                "role": "student",
+                "date_joined": datetime.now()
+>>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
             }
             users_col.insert_one(new_user)
             
@@ -253,6 +423,13 @@ def register():
             return redirect(url_for("disclaimer"))  # NEW: Redirect to disclaimer page
     return render_template("register.html")
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for("login"))
+
+# --- Dashboard ---
 @app.route("/dashboard")
 @require_disclaimer_acceptance()
 def dashboard():
@@ -268,6 +445,48 @@ def dashboard():
 #         return redirect(url_for("login"))
 #     return render_template("journal.html", username=session["username"])
 
+<<<<<<< HEAD
+=======
+try:
+    api_key = os.getenv("GROQ_API_KEY")
+    if api_key:
+        chatbot = EmotionalChatbot(api_key)
+        print("✅ Chatbot initialized successfully")
+    else:
+        chatbot = None
+        print("⚠️ GROQ_API_KEY not found - chatbot will not work")
+except Exception as e:
+    chatbot = None
+    print(f"❌ Failed to initialize chatbot: {e}")
+
+# --- Chatbot Routes ---
+@app.route("/chatbot")
+def chatbot_page():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    return render_template("chatbot.html", username=session["username"])
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    if not chatbot:
+        return jsonify({"response": "I'm sorry, the AI support is temporarily unavailable. Please try again later or contact our support team."}), 500
+    
+    data = request.get_json()
+    message = data.get("message", "").strip()
+    
+    if not message:
+        return jsonify({"response": "I'm here to listen. Please share what's on your mind."}), 400
+    
+    try:
+        response = chatbot.chat(message)
+        return jsonify({"response": response})
+    except Exception as e:
+        print(f"Chatbot error: {e}")
+        return jsonify({"response": "I'm here to support you. Could you tell me more about how you're feeling right now?"}), 500
+>>>>>>> b5da43bc22bfa8f27b495635ffc3241255de7c73
 
 @app.route("/journal", methods=["GET", "POST"])
 @require_disclaimer_acceptance() 
@@ -333,11 +552,9 @@ def add_journal():
     }
     
     try:
-        result = journals_col.insert_one(entry)
-        print(f"✅ Inserted journal with ID: {entry['journal_id']}")
+        journals_col.insert_one(entry)
         return jsonify({"message": "Journal added successfully", "id": entry["journal_id"]}), 201
     except Exception as e:
-        print(f"❌ Error inserting journal: {e}")
         return jsonify({"error": "Failed to save journal"}), 500
 
 # Initialize chatbot (add this after your MongoDB setup)
@@ -390,8 +607,8 @@ def get_journals(username):
     user_entries = list(journals_col.find({"user_id": session["user_id"]}).sort("journal_id", -1))
     for e in user_entries:
         e["_id"] = str(e["_id"])
-        e["id"] = e["journal_id"]  # For frontend compatibility
-        e["content"] = e["entry"]  # For frontend compatibility
+        e["id"] = e["journal_id"]
+        e["content"] = e["entry"]
     return jsonify(user_entries)
 
 @app.route("/delete_journal/<int:entry_id>", methods=["DELETE"])
@@ -405,7 +622,7 @@ def delete_journal(entry_id):
     return jsonify({"success": False, "error": "not found"}), 404
     
 
-# --- Mood Tracking Routes ---
+# --- Mood Tracking ---
 @app.route("/save_mood", methods=["POST"])
 def save_mood():
     if "user_id" not in session:
@@ -413,6 +630,8 @@ def save_mood():
     
     data = request.get_json()
     mood = data.get("mood")
+    
+    valid_moods = ['Very Happy', 'Feeling Blessed', 'Happy', 'Mind Blown', 'Frustrated', 'Sad', 'Angry', 'Crying']
 
     # ✅ Define valid moods
     valid_moods = [
@@ -473,10 +692,8 @@ def download_csv():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's mood data
     moods = list(moodtracking_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Create CSV in memory
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Date", "Time", "Mood"])
@@ -485,7 +702,6 @@ def download_csv():
         dt = mood["datetime"]
         writer.writerow([dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S"), mood["mood"]])
     
-    # Convert to BytesIO for file download
     output.seek(0)
     file_data = io.BytesIO()
     file_data.write(output.getvalue().encode('utf-8'))
@@ -495,6 +711,7 @@ def download_csv():
                      mimetype='text/csv',
                      as_attachment=True,
                      download_name=f'moods_{session["username"]}.csv')
+
 
 @app.route("/download_chart")
 def download_chart():
@@ -510,16 +727,13 @@ def appointments():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    # Get user's appointments
     user_appointments = list(appointments_col.find({"user_id": session["user_id"]}).sort("datetime", 1))
     
-    # Get counselor info for each appointment
     for appointment in user_appointments:
         counselor = counselors_col.find_one({"counselor_id": appointment["counselor_id"]})
         appointment["counselor_name"] = counselor["name"] if counselor else "Unknown"
         appointment["_id"] = str(appointment["_id"])
     
-    # Get all counselors for booking
     all_counselors = list(counselors_col.find({}))
     for counselor in all_counselors:
         counselor["_id"] = str(counselor["_id"])
@@ -529,6 +743,296 @@ def appointments():
                          counselors=all_counselors,
                          username=session["username"])
 
+@app.route('/appointment')
+def appointment():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('booking.html', username=session['username'])
+
+
+@app.route('/api/therapists', methods=['GET'])
+def get_therapists():
+    docs = list(therapists_col.find({}))
+    result = []
+    for d in docs:
+        result.append({
+            "_id": str(d["_id"]),
+            "name": d.get("name"),
+            "expertise": d.get("expertise"),
+            "years_experience": d.get("years_experience"),
+            "location": d.get("location")
+        })
+    return jsonify(result), 200
+
+@app.route('/api/therapists/<therapist_id>/slots', methods=['GET'])
+def get_slots(therapist_id):
+    date = request.args.get('date')
+    if not date:
+        abort(400, "Missing date param")
+    try:
+        # find slots for therapist + date
+        t_oid = ObjectId(therapist_id)
+    except:
+        abort(400, "Invalid therapist id")
+    docs = list(slots_col.find({"therapist_id": t_oid, "date": date}))
+    slots = []
+    for s in docs:
+        slots.append({
+            "_id": str(s["_id"]),
+            "therapist_id": str(s["therapist_id"]),
+            "date": s["date"],
+            "time": s["time"],
+            "status": s.get("status", "available"),
+            "booked_by": s.get("booked_by")  # can be user id
+        })
+    return jsonify({"slots": slots}), 200
+
+@app.route('/api/book', methods=['POST'])
+def book_slot():
+    payload = request.get_json() or {}
+    therapist_id = payload.get('therapist_id')   # may be null -> server auto-match
+    slot_id = payload.get('slot_id')             # optional: if client selected exact slot
+    date = payload.get('date')
+    time = payload.get('time')
+    user_id = payload.get('user_id')
+    session_type = payload.get('session_type', 'individual')
+    concerns = payload.get('concerns', '')
+
+    if not date or not time or not user_id:
+        return jsonify({"error":"Missing fields"}), 400
+
+    # If slot_id provided, attempt atomic update: only mark booked if status == 'available'
+    if slot_id:
+        try:
+            s_oid = ObjectId(slot_id)
+        except:
+            return jsonify({"error":"Invalid slot id"}), 400
+
+        res = slots_col.update_one(
+            {"_id": s_oid, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot already booked or unavailable"}), 409
+
+        # create booking record
+        booking = {
+          "slot_id": s_oid,
+          "therapist_id": ObjectId(therapist_id),
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message": "Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s_oid),
+            "date": date,
+            "time": time
+        }), 200
+
+    # If no slot_id, attempt server-side find+book: find first available slot for therapist on that date/time
+    if therapist_id:
+        try:
+            t_oid = ObjectId(therapist_id)
+        except:
+            return jsonify({"error":"Invalid therapist id"}),400
+        # find a slot for that exact time and date and try to book
+        res = slots_col.update_one(
+            {"therapist_id": t_oid, "date": date, "time": time, "status": "available"},
+            {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        )
+        if res.modified_count == 0:
+            return jsonify({"error":"Slot not available"}), 409
+        # find the slot doc now
+        s = slots_col.find_one({"therapist_id": t_oid, "date": date, "time": time})
+        booking = {
+          "slot_id": s["_id"],
+          "therapist_id": t_oid,
+          "user_id": user_id,
+          "date": date,
+          "time": time,
+          "session_type": session_type,
+          "concerns": concerns,
+          "created_at": datetime.utcnow()
+        }
+        booking_id = bookings_col.insert_one(booking).inserted_id
+        return jsonify({
+            "message":"Booked",
+            "booking_id": str(booking_id),
+            "therapist_id": therapist_id,
+            "slot_id": str(s["_id"]),
+            "date": date,
+            "time": time
+        }), 200
+
+    # Auto-match: if therapist_id omitted, find any therapist with available slot for date/time
+    # (basic example: first matching slot)
+    slot_doc = slots_col.find_one_and_update(
+      {"date": date, "time": time, "status": "available"},
+      {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+    )
+    if not slot_doc:
+      return jsonify({"error":"No available slots"}), 409
+    booking = {
+      "slot_id": slot_doc["_id"],
+      "therapist_id": slot_doc["therapist_id"],
+      "user_id": user_id,
+      "date": date,
+      "time": time,
+      "session_type": session_type,
+      "concerns": concerns,
+      "created_at": datetime.utcnow()
+    }
+    bid = bookings_col.insert_one(booking).inserted_id
+    return jsonify({"message":"Booked", "booking_id": str(bid), "therapist_id": str(slot_doc["therapist_id"]), "slot_id": str(slot_doc["_id"]), "date": date, "time": time}), 200
+
+
+# Utility: safe ObjectId -> str
+def oid_to_str(oid):
+    return str(oid) if oid is not None else None
+
+# -----------------------
+# GET /api/proctors
+# -----------------------
+# Returns a list of proctors
+# Response: [{ _id, name, expertise, department, years_experience, location, ...}, ...]
+@app.route('/api/proctors', methods=['GET'])
+def get_proctors():
+    try:
+        docs = list(proctors_col.find({}))
+        out = []
+        for d in docs:
+            out.append({
+                "_id": oid_to_str(d.get("_id")),
+                "name": d.get("name"),
+                "expertise": d.get("expertise"),
+                "department": d.get("department"),
+                "years_experience": d.get("years_experience"),
+                "location": d.get("location"),
+                "contact": d.get("contact")
+            })
+        return jsonify(out), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch proctors")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# GET /api/proctors/<proctor_id>/slots?date=YYYY-MM-DD
+# -----------------------
+# Returns slots for the specified proctor on a date.
+# Response: { slots: [ { _id, proctor_id, date, time, status, booked_by }, ... ] }
+@app.route('/api/proctors/<proctor_id>/slots', methods=['GET'])
+def get_proctor_slots(proctor_id):
+    date = request.args.get('date')
+    if not date:
+        return jsonify({"error": "Missing required query param: date (YYYY-MM-DD)"}), 400
+
+    # basic date-format validation (YYYY-MM-DD)
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    try:
+        p_oid = ObjectId(proctor_id)
+    except Exception:
+        return jsonify({"error": "Invalid proctor id"}), 400
+
+    try:
+        docs = list(slots_col.find({"proctor_id": p_oid, "date": date}))
+        slots = []
+        for s in docs:
+            slots.append({
+                "_id": oid_to_str(s.get("_id")),
+                "proctor_id": oid_to_str(s.get("proctor_id")),
+                "date": s.get("date"),
+                "time": s.get("time"),
+                "status": s.get("status", "available"),
+                "booked_by": s.get("booked_by")
+            })
+        return jsonify({"slots": slots}), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch proctor slots")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# GET /api/bookings?user_id=<user_id>
+# -----------------------
+# Returns bookings for a user. If no user_id provided, returns empty (or admin can query all).
+# Each booking includes: _id, role ('therapist'|'proctor'), name (therapist/proctor name), date, time, status, created_at
+@app.route('/api/bookings', methods=['GET'])
+def get_bookings():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Missing user_id query parameter"}), 400
+
+    try:
+        docs = list(bookings_col.find({"user_id": user_id}))
+        out = []
+        for b in docs:
+            # determine role & name
+            role = 'therapist' if b.get('therapist_id') else ('proctor' if b.get('proctor_id') else 'unknown')
+            name = None
+            extra = None
+            if role == 'therapist' and b.get('therapist_id'):
+                try:
+                    t = db.therapists.find_one({"_id": ObjectId(b['therapist_id'])})
+                    name = t.get('name') if t else None
+                    extra = t.get('expertise') if t else None
+                except Exception:
+                    name = None
+            elif role == 'proctor' and b.get('proctor_id'):
+                try:
+                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])})
+                    name = p.get('name') if p else None
+                    extra = p.get('department') if p else None
+                except Exception:
+                    name = None
+
+            out.append({
+                "_id": oid_to_str(b.get("_id")),
+                "role": role,
+                "name": name or b.get("name") or "",
+                "extra": extra or "",
+                "date": b.get("date"),
+                "time": b.get("time"),
+                "status": b.get("status", "confirmed"),
+                "slot_id": oid_to_str(b.get("slot_id")),
+                "created_at": b.get("created_at").isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at")
+            })
+        # optionally sort by date/time ascending
+        out.sort(key=lambda x: (x.get("date") or "", x.get("time") or ""))
+        return jsonify(out), 200
+    except Exception as e:
+        app.logger.exception("Failed to fetch bookings")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# -----------------------
+# OPTIONAL: helper endpoint to seed a proctor (dev only)
+# -----------------------
+@app.route('/api/admin/seed_proctor', methods=['POST'])
+def seed_proctor():
+    payload = request.get_json() or {}
+    name = payload.get('name') or 'Dr. Test Proctor'
+    doc = {
+        "name": name,
+        "expertise": payload.get('expertise', 'Exam proctoring'),
+        "department": payload.get('department', 'Exams'),
+        "years_experience": payload.get('years_experience', 3),
+        "location": payload.get('location', 'Campus'),
+        "contact": payload.get('contact', {})
+    }
+    res = proctors_col.insert_one(doc)
+    return jsonify({"inserted_id": oid_to_str(res.inserted_id)}), 201
 @app.route("/book_appointment", methods=["POST"])
 def book_appointment():
     if "user_id" not in session:
@@ -557,7 +1061,7 @@ def book_appointment():
     except Exception as e:
         return jsonify({"error": "Failed to book appointment"}), 500
 
-# --- Resources Routes ---
+# --- Resources ---
 @app.route("/resources")
 def resources():
     if "user_id" not in session:
@@ -571,72 +1075,584 @@ def resources():
                          resources=all_resources,
                          username=session["username"])
 
-# --- Peer Support Routes ---
-@app.route("/peer_support")
-def peer_support():
+@app.route("/peer")
+def peer():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
-    posts = list(peersupportposts_col.find({}).sort("datetime", -1))
-    
-    # Add username for non-anonymous posts
+
+    return render_template(
+        "peer.html",
+        username=session.get("username", "Guest"),
+        user_type=session.get("role", "User").lower()
+    )
+
+
+@app.route("/peer_data")
+def peer_data():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    posts = list(peersupportposts_col.find().sort("datetime", -1))
+
     for post in posts:
-        if not post["is_anonymous"]:
-            user = users_col.find_one({"user_id": post["user_id"]})
-            post["username"] = user["username"] if user else "Unknown"
-        else:
-            post["username"] = "Anonymous"
         post["_id"] = str(post["_id"])
-    
-    return render_template("peer_support.html", 
-                         posts=posts,
-                         username=session["username"])
+        user = users_col.find_one({"user_id": post["user_id"]})
+
+        if post.get("is_deleted"):
+            post["username"] = "Deleted User"
+            post["content"] = "Post deleted"
+        else:
+            post["username"] = "Anonymous" if post.get("is_anonymous") else user.get("username", "Unknown")
+            # Fix the role check to match the actual role value
+            post["isstudentvol"] = (user and user.get("role") == "studentvol")
+
+        for reply in post.get("replies", []):
+            reply["_id"] = str(reply["_id"])
+            reply_user = users_col.find_one({"user_id": reply["user_id"]})
+
+            if reply.get("is_deleted"):
+                reply["username"] = "Deleted User"
+                reply["content"] = "Reply deleted"
+            else:
+                # Fix the role check to match the actual role value
+                reply["isstudentvol"] = (reply_user and reply_user.get("role") == "studentvol")
+                reply["username"] = reply.get("username", reply_user.get("username", "Unknown") if reply_user else "Unknown")
+
+    return jsonify(posts)
+
 
 @app.route("/add_post", methods=["POST"])
 def add_post():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
+
     data = request.get_json()
     content = data.get("content", "").strip()
     is_anonymous = data.get("is_anonymous", False)
-    
+
     if not content:
         return jsonify({"error": "Content is required"}), 400
+
+    user_role = session.get("role")
     
+    # AI moderation
+    moderation_result = check(content)
+    flagged = moderation_result["flagged"]
+    ai_flagged = moderation_result["ai_flagged"]
+    categories = moderation_result.get("categories", [])
+
     post = {
-        "post_id": get_next_id(peersupportposts_col, "post_id"),
         "user_id": session["user_id"],
         "datetime": datetime.now(),
         "content": content,
-        "is_anonymous": bool(is_anonymous)
+        "is_anonymous": bool(is_anonymous),
+        "likes": [],
+        "dislikes": [],
+        "replies": [],
+        "flagged": flagged,
+        "ai_flagged": ai_flagged,
+        "flag_categories": categories,
+        "isstudentvol": (user_role == "studentvol"),
+        "is_deleted": False
     }
-    
-    try:
-        peersupportposts_col.insert_one(post)
-        return jsonify({"message": "Post added successfully!"})
-    except Exception as e:
-        return jsonify({"error": "Failed to add post"}), 500
 
-# --- Admin Routes ---
-@app.route("/admin")
+    result = peersupportposts_col.insert_one(post)
+    post["_id"] = str(result.inserted_id)
+    return jsonify({"message": "Post added successfully!", "post": post})
+
+
+@app.route("/add_reply/<post_id>", methods=["POST"])
+def add_reply(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    reply_content = data.get("reply", "").strip()
+    if not reply_content:
+        return jsonify({"error": "Reply content is required"}), 400
+
+    user = users_col.find_one({"user_id": session["user_id"]})
+    username = user.get("username", "Unknown") if user else "Unknown"
+
+    # AI moderation for replies
+    moderation_result = check(reply_content)
+    flagged = moderation_result["flagged"]
+    ai_flagged = moderation_result["ai_flagged"]
+    categories = moderation_result.get("categories", [])
+
+    reply = {
+        "_id": ObjectId(),
+        "user_id": session["user_id"],
+        "username": username,
+        "datetime": datetime.now(),
+        "content": reply_content,
+        "flagged": flagged,
+        "ai_flagged": ai_flagged,
+        "flag_categories": categories,
+        "likes": [],
+        "dislikes": [],
+        "isstudentvol": (session.get("role") == "studentvol"),
+        "is_deleted": False
+    }
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$push": {"replies": reply}}
+    )
+    reply["_id"] = str(reply["_id"])
+    return jsonify({"message": "Reply added successfully!", "reply": reply})
+
+
+@app.route("/like_post/<post_id>", methods=["POST"])
+def like_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    likes = post.get("likes", [])
+    dislikes = post.get("dislikes", [])
+
+    if action == "like":
+        if user_id in likes:
+            likes.remove(user_id)
+        else:
+            likes.append(user_id)
+            if user_id in dislikes:
+                dislikes.remove(user_id)
+    elif action == "dislike":
+        if user_id in dislikes:
+            dislikes.remove(user_id)
+        else:
+            dislikes.append(user_id)
+            if user_id in likes:
+                likes.remove(user_id)
+    else:
+        return jsonify({"error": "Invalid action"}), 400
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"likes": likes, "dislikes": dislikes}}
+    )
+
+    return jsonify({"likes": len(likes), "dislikes": len(dislikes)})
+
+
+@app.route("/like_reply/<post_id>/<reply_id>", methods=["POST"])
+def like_reply(post_id, reply_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    action = data.get("action")
+    user_id = session["user_id"]
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    replies = post.get("replies", [])
+    for reply in replies:
+        if str(reply["_id"]) == reply_id:
+            likes = reply.get("likes", [])
+            dislikes = reply.get("dislikes", [])
+
+            if action == "like":
+                if user_id in likes:
+                    likes.remove(user_id)
+                else:
+                    likes.append(user_id)
+                    if user_id in dislikes:
+                        dislikes.remove(user_id)
+            elif action == "dislike":
+                if user_id in dislikes:
+                    dislikes.remove(user_id)
+                else:
+                    dislikes.append(user_id)
+                    if user_id in likes:
+                        likes.remove(user_id)
+            else:
+                return jsonify({"error": "Invalid action"}), 400
+
+            reply["likes"] = likes
+            reply["dislikes"] = dislikes
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"replies": replies}}
+    )
+
+    return jsonify({"message": "Action recorded"})
+
+
+# --- Soft delete for users ---
+# --- User deleting own post ---
+@app.route("/delete_post/<post_id>", methods=["DELETE"])
+def delete_own_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    try:
+        post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+
+        # Convert both IDs to strings for comparison
+        post_user_id = str(post["user_id"])
+        session_user_id = str(session["user_id"])
+        user_role = session.get("role")
+
+        # Allow deletion if it's the owner's post OR if user is an Admin OR studentvol
+        if (post_user_id != session_user_id and 
+            user_role not in ["Admin", "studentvol"]):
+            return jsonify({"error": "Unauthorized"}), 403
+
+        # Soft delete for owners, hard delete for Admins and studentvols
+        if user_role in ["Admin", "studentvol"]:
+            peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+            return jsonify({"message": "Post permanently deleted"})
+        else:
+            peersupportposts_col.update_one(
+                {"_id": ObjectId(post_id)},
+                {"$set": {"content": "Post deleted", "is_deleted": True}}
+            )
+            return jsonify({"message": "Post deleted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- User deleting own reply ---
+@app.route("/delete_reply/<post_id>/<reply_id>", methods=["DELETE"])
+def delete_own_reply(post_id, reply_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    post = peersupportposts_col.find_one({"_id": ObjectId(post_id)})
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    replies = post.get("replies", [])
+    updated = False
+    user_role = session.get("role")
+
+    for reply in replies:
+        if str(reply["_id"]) == reply_id:
+            # Allow deletion if owner OR Admin OR studentvol
+            if (str(reply["user_id"]) != str(session["user_id"]) and 
+                user_role not in ["Admin", "studentvol"]):
+                return jsonify({"error": "Unauthorized"}), 403
+
+            if user_role in ["Admin", "studentvol"]:
+                replies = [r for r in replies if str(r["_id"]) != reply_id]  # remove reply entirely
+                updated = True
+            else:
+                reply["content"] = "Reply deleted"
+                reply["is_deleted"] = True
+                updated = True
+            break
+
+    if not updated:
+        return jsonify({"error": "Reply not found"}), 404
+
+    peersupportposts_col.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"replies": replies}}
+    )
+
+    return jsonify({"message": "Reply deleted"})
+
+
+# --- Flag content (studentvol only) ---
+@app.route("/flag_content/<content_type>/<content_id>", methods=["POST"])
+def flag_content(content_type, content_id):
+    if "user_id" not in session or session.get("role") != "studentvol":
+        return jsonify({"error": "studentvol access required"}), 403
+
+    try:
+        if content_type == "post":
+            result = peersupportposts_col.update_one(
+                {"_id": ObjectId(content_id)},
+                {"$set": {"flagged": True, "ai_flagged": False}}
+            )
+            if result.modified_count == 1:
+                return jsonify({"message": "Post flagged successfully"})
+            else:
+                return jsonify({"error": "Post not found"}), 404
+                
+        elif content_type == "reply":
+            # For replies, we need to find the post first
+            post = peersupportposts_col.find_one({"replies._id": ObjectId(content_id)})
+            if not post:
+                return jsonify({"error": "Reply not found"}), 404
+                
+            # Update the specific reply's flagged status
+            result = peersupportposts_col.update_one(
+                {"_id": post["_id"], "replies._id": ObjectId(content_id)},
+                {"$set": {"replies.$.flagged": True, "replies.$.ai_flagged": False}}
+            )
+            
+            if result.modified_count == 1:
+                return jsonify({"message": "Reply flagged successfully"})
+            else:
+                return jsonify({"error": "Failed to flag reply"}), 500
+                
+        else:
+            return jsonify({"error": "Invalid content type"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- Unflag content (Admin and studentvol) ---
+@app.route("/unflag_content/<content_type>/<content_id>", methods=["POST"])
+def unflag_content(content_type, content_id):
+    if "user_id" not in session or session.get("role") not in ["Admin", "studentvol"]:
+        return jsonify({"error": "Admin or studentvol access required"}), 403
+
+    try:
+        if content_type == "post":
+            result = peersupportposts_col.update_one(
+                {"_id": ObjectId(content_id)},
+                {"$set": {"flagged": False, "ai_flagged": False, "flag_categories": []}}
+            )
+            if result.modified_count == 1:
+                return jsonify({"message": "Post unflagged successfully"})
+            else:
+                return jsonify({"error": "Post not found"}), 404
+                
+        elif content_type == "reply":
+            # For replies, we need to find the post first
+            post = peersupportposts_col.find_one({"replies._id": ObjectId(content_id)})
+            if not post:
+                return jsonify({"error": "Reply not found"}), 404
+                
+            # Update the specific reply's flagged status
+            result = peersupportposts_col.update_one(
+                {"_id": post["_id"], "replies._id": ObjectId(content_id)},
+                {"$set": {
+                    "replies.$.flagged": False, 
+                    "replies.$.ai_flagged": False,
+                    "replies.$.flag_categories": []
+                }}
+            )
+            
+            if result.modified_count == 1:
+                return jsonify({"message": "Reply unflagged successfully"})
+            else:
+                return jsonify({"error": "Failed to unflag reply"}), 500
+                
+        else:
+            return jsonify({"error": "Invalid content type"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- Admin-only moderation (hard delete) ---
+@app.route("/moderate/delete/<post_id>", methods=["DELETE"])
+def admin_delete_post(post_id):
+    if "user_id" not in session or session.get("role") != "Admin":
+        return jsonify({"error": "Admin access required"}), 403
+
+    peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+    return jsonify({"message": "Post permanently deleted"})
+
+
+#---Crisis---
+
+@app.route("/crisis", methods=["POST"])
+def crisis():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    username = session["username"]
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+    crisis_doc = {
+        "username": username,
+        "ip_address": ip_address,
+        "timestamp": datetime.utcnow()
+    }
+    db["crisis"].insert_one(crisis_doc)
+
+    return jsonify({"message": "Crisis logged successfully"})
+
+
+@app.route("/admin", methods=["GET", "POST"])
 def admin_dashboard():
-    if "user_id" not in session or session["role"] != "Admin":
+    if "user_id" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
-    
-    # Get statistics
+
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
     stats = {
-        "total_users": users_col.count_documents({"role": "User"}),
+        "total_users": users_col.count_documents({"role": {"$ne": "admin"}}),
         "total_journals": journals_col.count_documents({}),
         "total_appointments": appointments_col.count_documents({}),
         "total_posts": peersupportposts_col.count_documents({})
     }
-    
-    return render_template("admin_dashboard.html", 
-                         username=session["username"],
-                         stats=stats)
 
-# --- Debug Routes ---
+    users = get_all_users()
+    logs = get_crisis_logs()
+    
+
+    return render_template(
+        "admin_dashboard.html",
+        username=session["username"],
+        stats=stats,    
+        users=users,
+        crisis_logs=logs
+    )
+
+
+
+@app.route("/Admin/users", methods=["GET", "POST"])
+def manage_users():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        user_id = request.form.get("user_id")
+        new_role = request.form.get("role")
+        if user_id and new_role:
+            update_user_role(user_id, new_role)
+
+    users = get_all_users()  # fetch only non-admin users
+    return render_template("admin_dashboard.html", users=users)
+
+@app.route("/Admin/flagged_posts", methods=["GET", "POST"])
+def Admin_flagged_posts():
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return "Unauthorized", 403
+
+    if request.method == "POST":
+        action = request.form.get("action")  # delete/unflag
+        post_id = request.form.get("post_id")
+        if action == "delete" and post_id:
+            peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
+        elif action == "unflag" and post_id:
+            peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
+
+    posts = get_flagged_posts()
+    return render_template("Admin_flagged_posts.html", posts=posts)
+
+@app.route("/admin/crisis_logs", methods=["GET"])
+def get_crisis_logs():
+    logs = []
+    for log in crisis_col.find().sort("timestamp", -1):
+        logs.append({
+            "id": str(log.get("_id", ObjectId())),  # ID as string for template
+            "username": log.get("username", "Unknown"),
+            "ip_address": log.get("ip_address", "N/A"),
+            "timestamp": log.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") 
+                         if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
+            "resolved": log.get("resolved", False),
+            "resolved_at": log.get("resolved_at")
+        })
+    return logs
+    
+
+
+@app.route("/resolve_crisis/<log_id>", methods=["POST"])
+def resolve_crisis(log_id):
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        result = crisis_col.update_one(
+            {"_id": ObjectId(log_id)},
+            {"$set": {"resolved": True, "resolved_at": datetime.now()}}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"error": "Crisis log not found"}), 404
+
+        return jsonify({"message": "Crisis log resolved successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/admin/mood_trends", methods=["GET"])
+def mood_trends():
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Admin only"}), 403
+
+    # Map moods to numeric values for average calculation
+    mood_map = {
+        "Very Happy": 6,
+        "Feeling Blessed": 5,
+        "Happy": 4,
+        "Mind Blown": 3,
+        "Frustrated": 2,
+        "Sad": 1,
+        "Angry": 0,
+        "Crying": -1
+    }
+
+    # Aggregate counts per mood per day
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$datetime"}},
+                    "mood": "$mood"
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.date": 1}}
+    ]
+
+    results = list(moodtracking_col.aggregate(pipeline))
+
+    # Reshape into { date: {mood: count, ...}, ... }
+    mood_data = {}
+    for r in results:
+        date = r["_id"]["date"]
+        mood = r["_id"]["mood"]
+        count = r["count"]
+        if date not in mood_data:
+            mood_data[date] = {}
+        mood_data[date][mood] = count
+
+
+    dates = sorted(mood_data.keys())
+    moods = sorted(mood_map.keys(), key=lambda m: -mood_map[m])  # keep consistent order
+
+    distribution = [
+        [mood_data[date].get(m, 0) for m in moods]
+        for date in dates
+    ]
+
+    averages = [
+        round(
+            sum((mood_map.get(m, 0) * mood_data[date].get(m, 0)) for m in moods) 
+            / max(sum(mood_data[date].values()), 1), 2
+        )
+        for date in dates
+    ]
+
+    data = {
+        "dates": dates,
+        "moods": moods,
+        "distribution": distribution,
+        "averages": averages
+    }
+    return jsonify(data), 200
+
+
+
+# --- Debug ---
 @app.route("/debug/all_collections")
 def debug_all_collections():
     if "user_id" not in session or session["role"] != "Admin":
@@ -644,8 +1660,6 @@ def debug_all_collections():
     
     try:
         collections_info = {}
-        
-        # Get info for each collection
         collections = {
             "users": users_col,
             "journals": journals_col,
@@ -674,13 +1688,172 @@ def debug_all_collections():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+# #assessment routes 
+# @app.route("/assessment")
+# def assessment():
+#     # If you require login, redirect to login if not logged in:
+#     if not session.get('username'):
+#         return redirect(url_for('login'))   # adapt to your auth route
+#     # render template (the template will pick username/user_id from session)
+#     return render_template("assessment.html")
 
-# --- Logout ---
-@app.route("/logout", methods=["POST"])
-def logout():
-    session.clear()
-    flash('Logged out successfully', 'success')
-    return redirect(url_for("login"))
+@app.route("/api/submit", methods=["POST"])
+def api_submit():
+    payload = request.get_json(silent=True) or {}
+    answers = payload.get("answers")
 
+    # basic validation
+    if not isinstance(answers, list) or len(answers) < 16:
+        return jsonify({"ok": False, "error": "Invalid answers array; expected 16 items"}), 400
+
+    # normalize answers to ints (null -> 0)
+    try:
+        answers_norm = [int(x) if x is not None else 0 for x in answers[:16]]
+    except Exception:
+        return jsonify({"ok": False, "error": "Answers must be numbers or null"}), 400
+
+    # compute GAD-7 (first 7) and PHQ-9 (next 9)
+    gad_scores = answers_norm[:7]
+    phq_scores = answers_norm[7:16]
+    gad_total = sum(gad_scores)
+    phq_total = sum(phq_scores)
+
+    # severity calculation (keep same thresholds you used client-side)
+    def gad_severity(total):
+        return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
+    def phq_severity(total):
+        return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
+
+    gad_sev = gad_severity(gad_total)
+    phq_sev = phq_severity(phq_total)
+
+    # associate user: prefer session user_id for security
+    user_id = session.get('user_id') or payload.get('user_id') or 'anon'
+
+    doc = {
+        "user_id": user_id,
+        "answers": answers_norm,
+        "gadTotal": int(gad_total),
+        "phqTotal": int(phq_total),
+        "gadSeverity": gad_sev,
+        "phqSeverity": phq_sev,
+        "timestamp": datetime.utcnow()
+    }
+
+    res = assess_col.insert_one(doc)
+    return jsonify({
+        "ok": True,
+        "id": str(res.inserted_id),
+        "gadTotal": doc["gadTotal"],
+        "phqTotal": doc["phqTotal"],
+        "gadSeverity": gad_sev,
+        "phqSeverity": phq_sev,
+        "timestamp": doc["timestamp"].isoformat() + "Z"
+    }), 200
+
+@app.route("/api/scores", methods=["GET"])
+def api_scores():
+    # prefer logged-in session user
+    uid = session.get('user_id') or request.args.get('user_id')
+    query = {}
+    if uid:
+        query["user_id"] = uid
+
+    cursor = assess_col.find(query).sort("timestamp", -1).limit(100)
+    out = []
+    for d in cursor:
+        out.append({
+            "id": str(d.get("_id")),
+            "user_id": d.get("user_id"),
+            "gadTotal": int(d.get("gadTotal", 0)),
+            "phqTotal": int(d.get("phqTotal", 0)),
+            "gadSeverity": d.get("gadSeverity"),
+            "phqSeverity": d.get("phqSeverity"),
+            "timestamp": d.get("timestamp").isoformat() + "Z" if d.get("timestamp") else None
+        })
+    return jsonify(out), 200
+
+from flask import render_template, session, redirect, url_for
+
+@app.route('/assessment')
+def assessment():
+    if not session.get('username'):
+        # redirect to login if you require auth
+        return redirect(url_for('login'))
+    # render the template; session values are available via session[...] inside template
+    return render_template('assessment.html')
+
+# crisis email message call------------------------------------------ 
+SENDER = os.environ.get("CRISIS_EMAIL")
+APP_PWD = os.environ.get("CRISIS_APP_PASSWORD")
+RECEIVER = os.environ.get("CRISIS_RECEIVER")
+
+executor = ThreadPoolExecutor(max_workers=4)
+logging.basicConfig(level=logging.DEBUG)
+CORS(app)   # allow cross-origin calls during dev
+
+@app.route("/send_email", methods=["POST"])
+def send_email():
+    SENDER = os.environ.get("CRISIS_EMAIL")
+    APP_PWD = os.environ.get("CRISIS_APP_PASSWORD")
+    RECEIVER = os.environ.get("CRISIS_RECEIVER")
+
+    if not (SENDER and APP_PWD and RECEIVER):
+        return jsonify({"ok": False, "error": "Missing env vars (CRISIS_EMAIL / CRISIS_APP_PASSWORD / CRISIS_RECEIVER)"}), 500
+
+    msg = EmailMessage()
+    msg["From"] = SENDER
+    msg["To"] = RECEIVER
+    msg["Subject"] = "🚨 Crisis Alert"
+    msg.set_content("Crisis button triggered in dashboard.")
+
+    # Attempt 1: SSL on 465
+    try:
+        logging.info("Trying SMTP_SSL smtp.gmail.com:465")
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:
+            smtp.login(SENDER, APP_PWD)
+            smtp.send_message(msg)
+        logging.info("Email sent via 465")
+        return jsonify({"ok": True, "method": "ssl465"}), 200
+    except Exception as e465:
+        logging.warning("465 attempt failed: %s", repr(e465))
+
+    # Attempt 2: STARTTLS on 587
+    try:
+        logging.info("Trying SMTP STARTTLS smtp.gmail.com:587")
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(SENDER, APP_PWD)
+            smtp.send_message(msg)
+        logging.info("Email sent via 587")
+        return jsonify({"ok": True, "method": "starttls587"}), 200
+    except Exception as e587:
+        logging.exception("587 attempt failed")
+
+    # Both attempts failed — return both errors
+    return jsonify({
+        "ok": False,
+        "error": "Both connection attempts failed",
+        "details_465": repr(e465),
+        "details_587": repr(e587)
+    }), 500
+
+
+# Login session verification
+@app.route("/session_info")
+def session_info():
+    if "user_id" not in session:
+        return jsonify({})
+    return jsonify({
+        "user_id": str(session["user_id"]),
+        "username": session.get("username"),
+        "role": session.get("role", "User")
+    })
+
+# --- Run App ---
 if __name__ == "__main__":
     app.run(debug=True)

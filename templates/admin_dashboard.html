@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce Admin Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #F5F7F2;
+      color: #333;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #7B9B8B;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+
+    .logo-container img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .logout-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #fff;
+        color: #333;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .toggle-btn {
+      background: #fff;
+      border: 2px solid #ccc;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: #fcd58d;
+    }
+
+    .user-icon-container {
+        position: relative;
+    }
+
+    .user-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .user-popup {
+        display: none;
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        padding: 10px;
+        z-index: 100;
+        min-width: 140px;
+    }
+
+    .user-popup .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-align: left;
+    }
+    .user-popup .popup-btn:hover {
+      background: #f2f2f2;
+    }
+
+    h2 {
+      color: #243B36;
+      margin-bottom: 1rem;
+    }
+
+    section {
+      padding: 2rem;
+    }
+
+    select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    }
+
+    select:hover {
+    border-color: #657A74;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .admin-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #7B9B8B;
+      color: white;
+    }
+
+    button {
+      background: linear-gradient(135deg, #657A74 , #243B36);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      margin-right: 5px;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #657A74 , #243B36);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ffeecf;
+      border-top: 2px solid #fcd58d;
+      margin-top: 2rem;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+      background: #121212;
+        color: #e0e0e0;
+    }
+
+    body.dark header {
+      background-color: #1f1f1f;
+      color: #f9e6d0;
+    }
+    
+    body.dark .admin-section, body.dark .card {
+      background: #2a2a2a;
+      color: #e0e0e0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce Admin</h1>
+        <h3>Manage users and content</h3>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
+        alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <section class="hero">
+    <h2>Welcome, Admin {{username}}</h2>
+    <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
+  </section>
+
+  <!-- Overview KPIs -->
+  <section class="admin-section" aria-labelledby="kpi-heading">
+    <h2 id="kpi-heading">Overview</h2>
+    <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:12px">
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f8faf8);box-shadow:0 6px 18px rgba(30,40,40,0.06)">
+        <div style="font-size:13px;color:#657A74">Active users</div>
+        <div id="kpi-active" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbf8ff);box-shadow:0 6px 18px rgba(60,35,85,0.04)">
+        <div style="font-size:13px;color:#657A74">New this month</div>
+        <div id="kpi-newmonthly" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#fff7f7);box-shadow:0 6px 18px rgba(160,40,40,0.03)">
+        <div style="font-size:13px;color:#657A74">Therapists</div>
+        <div id="kpi-therapists" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f7fff9);box-shadow:0 6px 18px rgba(30,90,60,0.03)">
+        <div style="font-size:13px;color:#657A74">Volunteers</div>
+        <div id="kpi-volunteers" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f9fffB);box-shadow:0 6px 18px rgba(150,130,30,0.03)">
+        <div style="font-size:13px;color:#657A74">Proctors</div>
+        <div id="kpi-proctors" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f5f7ff);box-shadow:0 6px 18px rgba(30,60,150,0.03)">
+        <div style="font-size:13px;color:#657A74">Bounce rate</div>
+        <div id="kpi-bounce" style="font-size:20px;font-weight:800;color:#b45309">—%</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 430px;gap:14px;margin-top:18px">
+      <div class="card" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Daily Page Hits (last 30 days)</strong>
+          <button id="refreshStats" class="toggle-btn">Refresh</button>
+        </div>
+        <canvas id="hitsChart" height="120"></canvas>
+      </div>
+
+      <div class="card" style="padding:12px">
+        <strong>Mood trend (avg score)</strong>
+        <canvas id="moodChart" height="150"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Crisis Mode / IP Logs -->
+  <section class="admin-section">
+    <h2>Crisis Mode Logs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Time</th>
+          <th>IP Address</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in crisis_logs %}
+        <tr>
+          <td>{{ log.username }}</td>
+          <td>{{ log.timestamp }}</td>
+          <td>{{ log.ip_address }}</td>
+          <td>
+            {% if log.resolved %}
+              <span style="color: green;">Resolved</span>
+            {% else %}
+              <span style="color: red;">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if not log.resolved %}
+            <button class="resolve-btn" onclick="resolveCrisis('{{ log.id }}')">Mark Resolved</button>
+            {% else %}
+            <span style="color: #666;">Resolved at {{ log.resolved_at or 'N/A' }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center;">No crisis logs found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  
+  
+  <!-- User Management -->
+  <section class="admin-section">
+    <h2>User Management</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Change Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.username }}</td>
+          <td>{{ user.role }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('manage_users') }}">
+              <input type="hidden" name="user_id" value="{{ user._id }}">
+              <select name="role">
+                <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                <option value="studentvol" {% if user.role == 'studentvol' %}selected{% endif %}>Volunteer</option>
+              </select>
+              <button type="submit">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  
+  
+  <!-- Mood Stats -->
+  <section class="admin-section">
+    <h2>Mood Statistics</h2>
+    <div id="mood-stats">
+      <!-- You can render charts using Chart.js here -->
+      <div style="width:80%; margin:auto;">
+      <h2>All Users Mood Trends</h2>
+      <button onclick="showLine()">📈 Line Chart</button>
+      <button onclick="showStacked()">🌊 Stacked Area</button>
+    
+      <canvas id="lineChart" height="120"></canvas>
+      <canvas id="stackedChart" height="120" style="display:none;"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Status -->
+  <section class="admin-section">
+    <h2>Recent Bookings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>User</th>
+          <th>Therapist/Proctor</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>{{ booking.id }}</td>
+          <td>{{ booking.username }}</td>
+          <td>{{ booking.therapist }}</td>
+          <td>{{ booking.date }}</td>
+          <td>{{ booking.status }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center;">No bookings found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+<script>
+
+let hitsChart = null, moodChart = null;
+
+function toggleUserPopup() {
+  const popup = document.getElementById('user-popup');
+  popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleMode() {
+  document.body.classList.toggle('dark');
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function(event) {
+  const popup = document.getElementById('user-popup');
+  const userIcon = document.querySelector('.user-icon');
+  if (!popup.contains(event.target) && !userIcon.contains(event.target)) {
+    popup.style.display = 'none';
+  }
+});
+
+async function resolveCrisis(logId) {
+  try {
+    const response = await fetch(`/resolve_crisis/${logId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (response.ok) {
+      location.reload(); // Refresh the page to show updated status
+    } else {
+      alert('Failed to resolve crisis log');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error resolving crisis log');
+  }
+}
+
+async function loadAdminStats(){
+  try {
+    const res = await fetch('/admin/api/stats');
+    const js = await res.json();
+    if (!js.ok) return console.error(js);
+
+    const k = js.kpis;
+    document.getElementById('kpi-active').textContent = k.active_users;
+    document.getElementById('kpi-newmonthly').textContent = k.new_monthly_users;
+    document.getElementById('kpi-therapists').textContent = k.therapists;
+    document.getElementById('kpi-volunteers').textContent = k.volunteers;
+    document.getElementById('kpi-proctors').textContent = k.proctors;
+    document.getElementById('kpi-bounce').textContent = k.bounce_rate_percent + '%';
+  } catch (e) {
+    console.error('loadAdminStats failed', e);
+    // Set fallback values
+    document.getElementById('kpi-active').textContent = '0';
+    document.getElementById('kpi-newmonthly').textContent = '0';
+    document.getElementById('kpi-therapists').textContent = '0';
+    document.getElementById('kpi-volunteers').textContent = '0';
+    document.getElementById('kpi-proctors').textContent = '0';
+    document.getElementById('kpi-bounce').textContent = '0%';
+  }
+}
+
+async function loadDailyHits(){
+  try {
+    const res = await fetch('/admin/api/daily_hits');
+    const js = await res.json();
+    const ctx = document.getElementById('hitsChart').getContext('2d');
+    if (hitsChart) hitsChart.destroy();
+    hitsChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: js.labels, datasets: [{ label:'Page views', data: js.counts, fill:true, tension:0.2 }] },
+      options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  } catch(e){ 
+    console.error('loadDailyHits failed', e); 
+  }
+}
+
+async function loadMoodTrend(){
+  try {
+    const res = await fetch('/admin/api/mood_trend');
+    const js = await res.json();
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    if (moodChart) moodChart.destroy();
+    moodChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: js.labels, datasets: [{ label:'Avg Mood', data: js.avgs, fill:false, tension:0.2, borderColor:'#ff6384' }]},
+      options: { responsive:true, scales:{y:{beginAtZero:true, suggestedMax:10}} }
+    });
+  } catch(e) { 
+    console.error('loadMoodTrend failed', e); 
+  }
+}
+
+document.getElementById('refreshStats').addEventListener('click', () => {
+  loadAdminStats(); loadDailyHits(); loadMoodTrend();
+});
+
+// initial load
+document.addEventListener('DOMContentLoaded', function() {
+  loadAdminStats(); 
+  loadDailyHits(); 
+  loadMoodTrend();
+});
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const buttons = document.querySelectorAll(".resolve-btn");
+      
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const logId = btn.dataset.id;
+          console.log("Sending logId:", logId); // DEBUG
+
+          fetch("/resolve_crisis/" + logId, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log("Server response:", data); // DEBUG
+            if (data.message) {
+              // Remove the row from the table
+              btn.closest("tr").remove();
+              console.log(data.message);
+            } else if (data.error) {
+              alert("Error: " + data.error);
+            }
+          })
+          .catch(err => console.error("Error resolving log:", err));
+        });
+      });
+    });
+
+    window.onload = function() {
+      fetch("/admin/crisis_logs")
+        .then(response => response.json())
+        .then(data => {
+          console.log("Crisis Logs:", data);
+          // TODO: append data to your table / UI
+        })
+        .catch(err => console.error("Error fetching crisis logs:", err));
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"> </script>
+
+<script>
+let lineChart, stackedChart;
+
+async function loadData() {
+  try {
+    const res = await fetch("/admin/mood_trends"); // note: no "api" now
+    const data = await res.json();
+
+    console.log("DEBUG: Fetched mood trend data:", data); // Debug
+
+    const ctxLine = document.getElementById("lineChart").getContext("2d");
+    const ctxStack = document.getElementById("stackedChart").getContext("2d");
+
+    // Destroy old charts if they exist
+    if (lineChart) lineChart.destroy();
+    if (stackedChart) stackedChart.destroy();
+
+    // Line chart for average mood
+    lineChart = new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          label: "Average Mood",
+          data: data.averages,
+          borderColor: "#2b8a3e",
+          backgroundColor: "#2b8a3e33",
+          fill: false,
+          tension: 0.4,
+          pointRadius : 5,
+          pointHoverRadius : 7,
+
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: { display: true, text: "Average Mood Over Time" }
+        },
+        scales: { y: { suggestedMin: -1, suggestedMax: 6 } }
+      }
+    });
+
+    // Stacked area chart for mood distribution
+    stackedChart = new Chart(ctxStack, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: data.moods.map((mood, i) => ({
+          label: mood,
+          data: data.distribution.map(row => row[i] ?? 0),
+          fill: true,
+          tension: 0.4,
+
+          borderColor: getRandomColor(i),
+          backgroundColor: getRandomColor(i, 0.3)
+        }))
+      },
+      options: {
+        responsive: true,
+        plugins: { title: { display: true, text: "Mood Distribution Over Time" } },
+        scales: { y: { stacked: true } }
+      }
+    });
+
+  } catch (err) {
+    console.error("ERROR loading mood trends:", err);
+  }
+}
+
+// Helper to generate semi-random colors
+function getRandomColor(index, alpha=1) {
+  const colors = [
+    `rgba(255, 99, 132, ${alpha})`,
+    `rgba(54, 162, 235, ${alpha})`,
+    `rgba(255, 206, 86, ${alpha})`,
+    `rgba(75, 192, 192, ${alpha})`,
+    `rgba(153, 102, 255, ${alpha})`,
+    `rgba(255, 159, 64, ${alpha})`,
+    `rgba(199, 199, 199, ${alpha})`,
+    `rgba(83, 102, 255, ${alpha})`
+  ];
+  return colors[index % colors.length];
+}
+
+function showLine() {
+  document.getElementById("lineChart").style.display = "block";
+  document.getElementById("stackedChart").style.display = "none";
+}
+
+function showStacked() {
+  document.getElementById("lineChart").style.display = "none";
+  document.getElementById("stackedChart").style.display = "block";
+}
+
+loadData();
+</script>
+
+</body>
+</html>
