@@ -13,10 +13,10 @@
     header h1 { margin:0; font-size:1.8rem; color:#fff; }
     .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
-    .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; background:none; border:none; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding: 5px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
     .popup-btn:hover { background:#f2f2f2; }
-
+ a {text-decoration: none;}
     main { padding:2rem; max-width:800px; margin:0 auto; }
     h2 { color:#243B36; text-align:center; margin-bottom:2rem; }
 
@@ -72,26 +72,22 @@
         <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
       </div>
       <div class="header-text">
-        <h1 data-en="SoulAce" data-ur="سول ایس" data-hi="सोलएस">SoulAce</h1>
-        <h3 data-en="Wellness begins here." data-ur="یہاں سے فلاح و بہبود شروع ہوتی ہے۔" data-hi="यहां से वेलनेस शुरू होती है।">Wellness begins here.</h3>
+        <h1 >SoulAce</h1>
+        <h3>Wellness begins here</h3>
       </div>
     </div>
     <div class="header-right">
       <div class="user-icon-container">
         <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
         <div id="user-popup" class="user-popup">
+          <!-- Google Translate -->
+        <div id="google_translate_element" style="margin-bottom:10px;"></div>
           <div style="margin-bottom:10px;">
-            <label for="lang-select" style="font-weight:bold;">🌐 Language:</label>
-            <select id="lang-select">
-              <option value="en">English</option>
-              <option value="ur">Urdu</option>
-              <option value="hi">Hindi</option>
-            </select>
           </div>
-          <a href="{{ url_for('dashboard') }}" class="popup-btn" data-en="🏠 Home" data-ur="🏠 ہوم" data-hi="🏠 होम">🏠 Home</a>
-          <button onclick="toggleMode()" class="popup-btn" data-en="🌙 Change Mode" data-ur="🌙 موڈ تبدیل کریں" data-hi="🌙 मोड बदलें">🌙 Change Mode</button>
+          <button onclick="location.href='{{ url_for('dashboard') }}'" class="popup-btn">🏠 Home</button>
+          <button onclick="toggleMode()" class="popup-btn" >🌙 Change Mode</button>
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn" data-en="🚪 Logout" data-ur="🚪 لاگ آؤٹ" data-hi="🚪 लॉग आउट">🚪 Logout</button>
+            <button type="submit" class="popup-btn">🚪 Logout</button>
           </form>
         </div>
       </div>
@@ -99,35 +95,35 @@
   </header>
 
   <main>
-    <h2 data-en="AI Support Chat 🤖" data-ur="AI مدد چیٹ 🤖" data-hi="AI सहायता चैट 🤖">AI Support Chat 🤖</h2>
+    <h2>AI Support Chat 🤖</h2>
     
     <div class="chat-container">
-      <div class="chat-header" data-en="Your Personal AI Companion" data-ur="آپ کا ذاتی AI ساتھی" data-hi="आपका व्यक्तिगत AI साथी">
+      <div class="chat-header">
         Your Personal AI Companion
       </div>
       
       <div class="chat-messages" id="chat-messages">
-        <div class="welcome-message" data-en="👋 Hi! I'm here to listen and support you. How are you feeling today?" data-ur="👋 ہیلو! میں یہاں آپ کی سننے اور مدد کے لیے ہوں۔ آج آپ کیسا محسوس کر رہے ہیں؟" data-hi="👋 नमस्ते! मैं यहा आपकी सुनने और मदद के लिए हूँ। आज आप कैसा महसूस कर रहे हैं?">
+        <div class="welcome-message" >
           👋 Hi! I'm here to listen and support you. How are you feeling today?
         </div>
         
         <div class="quick-responses">
-          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling anxious')" data-en="I'm feeling anxious" data-ur="میں بے چین محسوس کر رہا ہوں" data-hi="मैं चिंतित महसूस कर रहा हूँ">I'm feeling anxious</button>
-          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling sad')" data-en="I'm feeling sad" data-ur="میں اداس محسوس کر رہا ہوں" data-hi="मैं उदास महसूस कर रहा हूँ">I'm feeling sad</button>
-          <button class="quick-btn" onclick="sendQuickMessage('I\'m stressed')" data-en="I'm stressed" data-ur="میں تناؤ میں ہوں" data-hi="मैं तनावग्रस्त हूँ">I'm stressed</button>
-          <button class="quick-btn" onclick="sendQuickMessage('I need someone to talk to')" data-en="I need someone to talk to" data-ur="مجھے کسی سے بات کرنے کی ضرورت ہے" data-hi="मुझे किसी से बात करने की जरूरत है">I need someone to talk to</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling anxious')" >I'm feeling anxious</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m feeling sad')">I'm feeling sad</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I\'m stressed')">I'm stressed</button>
+          <button class="quick-btn" onclick="sendQuickMessage('I need someone to talk to')" >I need someone to talk to</button>
         </div>
       </div>
       
       <div class="chat-input-container">
-        <input type="text" id="chat-input" placeholder="Type your message..." data-en="Type your message..." data-ur="اپنا پیغام ٹائپ کریں..." data-hi="अपना संदेश टाइप करें...">
-        <button id="send-btn" onclick="sendMessage()" data-en="Send" data-ur="بھیجیں" data-hi="भेजें">Send</button>
+        <input type="text" id="chat-input" placeholder="Type your message..." >
+        <button id="send-btn" onclick="sendMessage()">Send</button>
       </div>
     </div>
   </main>
 
   <footer>
-    <p data-en="SoulAce © 2025 — Built with 💙 by SynapSix" data-ur="سول ایس © 2025 – 💙 کے ساتھ بنایا گیا SynapSix کی طرف سے" data-hi="SoulAce © 2025 – 💙 के साथ SynapSix द्वारा निर्मित">SoulAce © 2025 – Built with 💙 by SynapSix</p>
+    <p >SoulAce © 2025 – Built with 💙 by SynapSix</p>
   </footer>
 
   <script>
@@ -161,7 +157,13 @@
         sendMessage();
       }
     });
-
+// Google Translate
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement(
+    {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+    'google_translate_element'
+  );
+}
     function addMessage(content, isUser = false) {
       const messagesContainer = document.getElementById('chat-messages');
       const messageDiv = document.createElement('div');
@@ -263,6 +265,7 @@
       document.getElementById('chat-input').focus();
     });
   </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
 

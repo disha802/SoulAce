@@ -13,8 +13,9 @@
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
     .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding:10px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding: 5px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
     .popup-btn:hover { background:#f2f2f2; }
+    a {text-decoration: none;}
     main { padding:2rem; }
     h2 { color:#243B36; }
     input, textarea { width:100%; padding:12px; margin:12px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
@@ -58,21 +59,22 @@
       </div>
       <div class="header-text">
         <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
+        <h3>Wellness begins here</h3>
       </div>
     </div>
     <div class="header-right">
       <div class="user-icon-container">
         <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
         <div id="user-popup" class="user-popup">
-          <a href="{{ url_for('dashboard') }}" class="popup-btn">🏠 Home</a>
-          <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
-          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">🚪 Logout</button>
-          </form>
           <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
           <!-- Google Translate Dropdown inside profile -->
           <div id="google_translate_element"></div>
+          <button onclick="location.href='{{ url_for('dashboard') }}'" class="popup-btn">🏠 Home</button>
+          <button onclick="toggleMode()" class="popup-btn" >🌙 Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">🚪 Logout</button>
+          </form>
+          </form>
         </div>
       </div>
     </div>

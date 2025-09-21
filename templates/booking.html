@@ -14,9 +14,13 @@
     .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
     .header-right { display:flex; align-items:center; gap:10px; position:relative; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
-    .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
-
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding: 5px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
+    .popup-btn:hover { background:#f2f2f2; }
+    a {text-decoration: none;}
+  #google_translate_element {
+  margin-top:8px;
+}
   footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
 
   /* --- overall --- */
@@ -82,7 +86,179 @@
   background: #e0e0e0;
   transform: translateY(-1px);
 }
+/* Dark Mode Styles - Add this to your existing <style> section */
 
+/* Dark mode root variables for easy color management */
+body.dark-mode {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-card: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  --border-color: #444444;
+  --accent-color: #7B9B8B;
+  --hover-bg: #404040;
+}
+
+/* Main background and text colors */
+body.dark-mode {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Header adjustments */
+body.dark-mode header {
+  background-color: #2a4a3a;
+}
+
+body.dark-mode .header-text h3 {
+  color: #e6d7b8;
+}
+
+/* Cards and panels */
+body.dark-mode .card {
+  background: var(--bg-card);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Form elements */
+body.dark-mode .form-input,
+body.dark-mode .form-select,
+body.dark-mode .form-textarea {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .form-input::placeholder,
+body.dark-mode .form-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Person cards */
+body.dark-mode .person-card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .person-card:hover {
+  background: var(--hover-bg);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .person-card.selected {
+  border-color: var(--accent-color);
+  background: rgba(123,155,139,0.15);
+}
+
+/* Slots panel and slots */
+body.dark-mode .slots-panel {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .slot.available {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .slot.booked {
+  background: #4a2c2c;
+  border-color: #6b3636;
+  color: #ff9999;
+}
+
+body.dark-mode .slot.mine {
+  background: #2c4a2c;
+  border-color: #366b36;
+  color: #99ff99;
+}
+
+/* Booking items */
+body.dark-mode .booking-item {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Meta text and small text */
+body.dark-mode .meta-small,
+body.dark-mode .small {
+  color: var(--text-muted);
+}
+
+/* Pills */
+body.dark-mode .pill {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+/* Empty states */
+body.dark-mode .empty {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+/* User popup */
+body.dark-mode .user-popup {
+  background: var(--bg-card);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  color: var(--text-primary);
+}
+
+body.dark-mode .user-popup .popup-btn:hover {
+  background: var(--hover-bg);
+}
+
+/* Back button */
+body.dark-mode .back-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+body.dark-mode .back-btn:hover {
+  background: var(--hover-bg);
+}
+
+/* Footer */
+body.dark-mode footer {
+  background: #2a2a2a;
+  border-top-color: #444;
+  color: var(--text-secondary);
+}
+
+/* Error messages */
+body.dark-mode .error {
+  color: #ff6b6b;
+}
+
+/* Headings */
+body.dark-mode h2,
+body.dark-mode h3 {
+  color: var(--text-primary);
+}
+
+/* Lead text */
+body.dark-mode p.lead {
+  color: var(--text-secondary);
+}
+
+/* Avatar in booking items - dark mode variant */
+body.dark-mode .booking-item .avatar {
+  background: #2a4a2a !important;
+  color: #7B9B8B !important;
+}
+
+/* Transition for smooth mode switching */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card, .person-card, .form-input, .form-select, .form-textarea, .slot, .booking-item, .user-popup {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
 </style>
 </head>
 <body>
@@ -92,8 +268,8 @@
         <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
       </div>
       <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
+        <h1  >SoulAce</h1>
+        <h3 >Wellness begins here</h3>
       </div>
     </div>
     <div class="header-right">
@@ -102,15 +278,18 @@
         <div id="user-popup" class="user-popup">
           <!-- Google Translate -->
           <div id="google_translate_element" style="margin-bottom:10px;"></div>
-          <hr>
-          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <div style="margin-bottom:10px;">
+          </div>
+          <a href="{{ url_for('dashboard') }}" class="popup-btn" >🏠 Home</a>
+          <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">Logout</button>
+            <button type="submit" class="popup-btn">🚪 Logout</button>
           </form>
         </div>
       </div>
     </div>
   </header>
+
 
   <div class="container">
     <div class="columns">
@@ -119,8 +298,11 @@
         <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
         <div class="hero-row">
           <div style="flex:1">
-            <h2>Hello {{ username }}, Book your session</h2>
-            <p class="lead">Select a Therapist or Proctor on the right, pick date & slot, then provide your 10-digit UID to confirm.</p>
+          <h2 
+  Hello {{ username }}, Book your session
+</h2>
+            <p class="lead" 
+  Select a Therapist or Proctor on the right, pick date & slot, then provide your 10-digit UID to confirm.</p>
           </div>
         </div>
 
@@ -161,11 +343,51 @@
 
       <!-- RIGHT-1: Therapist -->
       <aside class="therapist-panel">
-        <div class="card">
-          <div class="panel-header">
-            <strong>Choose Therapist</strong>
-            <button class="btn" id="refreshTherapists">Refresh</button>
-          </div>
+  <div class="card">
+    <div class="panel-header">
+      <strong>
+        Choose Therapist
+      </strong>
+      <button class="btn" id="refreshTherapists">
+        Refresh
+      </button>
+    </div>
+  </div>
+</aside>
+      <!-- RIGHT-2: Proctor -->
+     <aside class="proctor-panel">
+  <div class="card">
+    <div class="panel-header">
+      <strong>
+        Choose Proctor
+      </strong>
+      <button>
+        Refresh
+      </button>
+    </div>
+
+    <div id="proctorList" class="list">
+      <div class="empty">
+        Loading proctors…
+      </div>
+    </div>
+
+    <div id="proctorSlotsPanel" class="slots-panel" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong id="pSlotsName"></strong>
+          <div class="meta-small" id="pSlotsMeta"></div>
+        </div>
+        <div class="small">
+          Date:
+          <input id="pSlotsDate" type="date" class="form-input" style="width:auto;display:inline-block">
+        </div>
+      </div>
+      <div id="pSlotsGrid" class="slots-grid"></div>
+    </div>
+  </div>
+</aside>
+
 
           <div id="therapistList" class="list">
             <div class="empty">Loading therapists…</div>
@@ -184,30 +406,7 @@
         </div>
       </aside>
 
-      <!-- RIGHT-2: Proctor -->
-      <aside class="proctor-panel">
-        <div class="card">
-          <div class="panel-header">
-            <strong>Choose Proctor</strong>
-            <button class="btn" id="refreshProctors">Refresh</button>
-          </div>
 
-          <div id="proctorList" class="list">
-            <div class="empty">Loading proctors…</div>
-          </div>
-
-          <div id="proctorSlotsPanel" class="slots-panel" style="display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <strong id="pSlotsName"></strong>
-                <div class="meta-small" id="pSlotsMeta"></div>
-              </div>
-              <div class="small">Date: <input id="pSlotsDate" type="date" class="form-input" style="width:auto;display:inline-block"></div>
-            </div>
-            <div id="pSlotsGrid" class="slots-grid"></div>
-          </div>
-        </div>
-      </aside>
     </div>
   </div>
   
@@ -355,6 +554,13 @@ async function fetchProctors() {
     console.error(err);
   }
 }
+// Language switcher
+document.getElementById("lang-select").addEventListener("change", function() {
+  const lang = this.value;
+  document.querySelectorAll("[data-en]").forEach(el => {
+    el.textContent = el.dataset[lang] || el.dataset.en;
+  });
+});
 
 /* ---------- Generic people renderer ---------- */
 function renderPeople(items, container, onClick) {
@@ -572,7 +778,13 @@ async function fetchBookings() {
     console.error(err);
   }
 }
-
+ // Google Translate Script
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+        'google_translate_element'
+      );
+    }
 function renderBookings(bookings) {
   const now = new Date();
   const upcoming = [], past = [];
@@ -607,10 +819,31 @@ function renderBookings(bookings) {
   renderList(upcoming, upcomingListEl);
   renderList(past, pastListEl);
 }
+ // Google Translate Script
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
+        'google_translate_element'
+      );
+    }
+function toggleUserPopup() {
+  const popup = document.getElementById('user-popup');
+  if (popup) {
+    const isVisible = popup.style.display === 'block';
+    popup.style.display = isVisible ? 'none' : 'block';
+  }
+}
+
+function toggleMode() {
+  // Add your mode toggle functionality here
+  // For example, switching between light/dark themes
+  document.body.classList.toggle('dark-mode');
+  // You'll need to add corresponding CSS for dark-mode class
+}
 
 /* ---------- Utility ---------- */
 function escapeHtml(s='') { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 </script>
-
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

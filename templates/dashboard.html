@@ -13,13 +13,13 @@
   .logo-container { width:60px; height:60px; }
   .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
   .logout-btn, .toggle-btn { padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
-  header h1 { margin:0; font-size:1.8rem; color:#fff; }
+  header h1 { margin:0; font-size:1.8rem; color:hwb(0 100% 0%); }
   .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
   .user-icon-container { position:relative; }
   .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-  .toggle-btn { background:#fff; border:2px solid #ccc; padding:0.4rem 0.8rem; border-radius:20px; cursor:pointer; font-size:0.9rem; transition: all 0.3s; }
-  .toggle-btn:hover { background:#fcd58d; }
-  .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
+  .toggle-btn { background:hsl(0, 0%, 100%); border:2px solid hsl(0, 0%, 100%); padding:0.4rem 0.8rem; border-radius:20px; cursor:pointer; font-size:0.9rem; transition: all 0.3s; }
+  .toggle-btn:hover { background:hsl(0, 0%, 100%); }
+  .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(179, 179, 179, 0.2); padding:10px; z-index:100; min-width:160px; }
   .user-popup .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; }
   .user-popup .popup-btn:hover { background:#f2f2f2; }
 
@@ -33,10 +33,14 @@
   .mood-btn { font-size:25px; cursor:pointer; border:2px solid #ccc; border-radius:50%; padding:10px; background:white; transition:0.2s; margin-bottom:8px; }
   .mood-btn:hover { border-color:#555; }
   .label { font-size:16px; font-weight:bold; }
-  button, .popup-btn { background:linear-gradient(135deg, #657A74 , #243B36); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
-  button:hover, .popup-btn:hover { background:linear-gradient(45deg, #657A74 , #243B36); transform:translateY(-2px); box-shadow:0 6px 10px rgba(0,0,0,0.25); }
+  button, .popup-btn { background:linear-gradient(135deg, hsl(0, 0%, 100%) , #ffffff); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
+  button:hover, .popup-btn:hover { background:linear-gradient(45deg, #657A74 , #657A74); transform:translateY(-2px); box-shadow:0 6px 10px rgba(0,0,0,0.25); }
+  
+  button, .dwnld-btn { background:linear-gradient(135deg, #657A74 , #657A74); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
+  button:hover, .dwnld-btn:hover { background:linear-gradient(45deg, #657A74 , #657A74); transform:translateY(-2px); box-shadow:0 6px 10px rgba(0,0,0,0.25); }
+  
   .features { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; padding:2rem; }
-  .feature-card { background:#fff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:transform 0.3s; display:block; text-decoration:none; color:inherit; }
+  .feature-card { background:#ffffff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:transform 0.3s; display:block; text-decoration:none; color:inherit; }
   .feature-card:hover { transform:translateY(-5px); }
   .feature-card span img { width:80px; height:80px; object-fit:contain; display:block; margin:0 auto 0.5rem; }
   .feature-card p { color:#657A74; }
@@ -72,6 +76,8 @@
   body.dark .header-right { color:#f9e6d0; }
   body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
   body.dark .user-popup .popup-btn { color:#f9e6d0; }
+
+  body.dark .dwnld-btn { color:#f9e6d0; }
   body.dark .toggle-btn { background:#444; color:#f9e6d0; border:1px solid #666; }
   body.dark .hero { background:#1f1f1f; color:#e0e0e0; }
   body.dark .feature-card { background:#2a2a2a; color:#e0e0e0; box-shadow:0 2px 6px rgba(0,0,0,0.5); }
@@ -87,7 +93,7 @@
     </div>
     <div class="header-text">
       <h1>SoulAce</h1>
-      <h3>Wellness begins here.</h3>
+      <h3>Wellness begins here</h3>
     </div>
   </div>
 
@@ -151,7 +157,7 @@
     </div>
   </div>
   <form action="/download_chart" method="get">
-    <button type="submit">📥 Download analysis</button>
+    <button type="submit" class="dwnld-btn">📥 Download analysis</button>
   </form>
 </section>
 

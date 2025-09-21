@@ -14,9 +14,10 @@
     .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
     .header-right { display:flex; align-items:center; gap:10px; position:relative; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
-    .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
-
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding: 5px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
+    .popup-btn:hover { background:#f2f2f2; }
+    a {text-decoration: none;}
     /* Main content layout */
     .main-container {
       display: flex;
@@ -330,7 +331,7 @@
       </div>
       <div class="header-text">
         <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
+        <h3>Wellness begins here</h3>
       </div>
     </div>
     <div class="header-right">
@@ -340,6 +341,7 @@
           <!-- Google Translate -->
           <div id="google_translate_element" style="margin-bottom:10px;"></div>
           <hr>
+         <button onclick="location.href='{{ url_for('dashboard') }}'" class="popup-btn">🏠 Home</button>
           <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
           <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
             <button type="submit" class="popup-btn">Logout</button>
