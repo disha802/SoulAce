@@ -1592,93 +1592,6 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    
-# #assessment routes 
-# @app.route("/assessment")
-# def assessment():
-#     # If you require login, redirect to login if not logged in:
-#     if not session.get('username'):
-#         return redirect(url_for('login'))   # adapt to your auth route
-#     # render template (the template will pick username/user_id from session)
-#     return render_template("assessment.html")
-
-@app.route("/api/submit", methods=["POST"])
-def api_submit():
-    payload = request.get_json(silent=True) or {}
-    answers = payload.get("answers")
-
-    # basic validation
-    if not isinstance(answers, list) or len(answers) < 16:
-        return jsonify({"ok": False, "error": "Invalid answers array; expected 16 items"}), 400
-
-    # normalize answers to ints (null -> 0)
-    try:
-        answers_norm = [int(x) if x is not None else 0 for x in answers[:16]]
-    except Exception:
-        return jsonify({"ok": False, "error": "Answers must be numbers or null"}), 400
-
-    # compute GAD-7 (first 7) and PHQ-9 (next 9)
-    gad_scores = answers_norm[:7]
-    phq_scores = answers_norm[7:16]
-    gad_total = sum(gad_scores)
-    phq_total = sum(phq_scores)
-
-    # severity calculation (keep same thresholds you used client-side)
-    def gad_severity(total):
-        return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
-    def phq_severity(total):
-        return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
-
-    gad_sev = gad_severity(gad_total)
-    phq_sev = phq_severity(phq_total)
-
-    # associate user: prefer session user_id for security
-    user_id = session.get('user_id') or payload.get('user_id') or 'anon'
-
-    doc = {
-        "user_id": user_id,
-        "answers": answers_norm,
-        "gadTotal": int(gad_total),
-        "phqTotal": int(phq_total),
-        "gadSeverity": gad_sev,
-        "phqSeverity": phq_sev,
-        "timestamp": datetime.utcnow()
-    }
-
-    res = assess_col.insert_one(doc)
-    return jsonify({
-        "ok": True,
-        "id": str(res.inserted_id),
-        "gadTotal": doc["gadTotal"],
-        "phqTotal": doc["phqTotal"],
-        "gadSeverity": gad_sev,
-        "phqSeverity": phq_sev,
-        "timestamp": doc["timestamp"].isoformat() + "Z"
-    }), 200
-
-@app.route("/api/scores", methods=["GET"])
-def api_scores():
-    # prefer logged-in session user
-    uid = session.get('user_id') or request.args.get('user_id')
-    query = {}
-    if uid:
-        query["user_id"] = uid
-
-    cursor = assess_col.find(query).sort("timestamp", -1).limit(100)
-    out = []
-    for d in cursor:
-        out.append({
-            "id": str(d.get("_id")),
-            "user_id": d.get("user_id"),
-            "gadTotal": int(d.get("gadTotal", 0)),
-            "phqTotal": int(d.get("phqTotal", 0)),
-            "gadSeverity": d.get("gadSeverity"),
-            "phqSeverity": d.get("phqSeverity"),
-            "timestamp": d.get("timestamp").isoformat() + "Z" if d.get("timestamp") else None
-        })
-    return jsonify(out), 200
-
-from flask import render_template, session, redirect, url_for
 
 @app.route('/assessment')
 def assessment():
@@ -1687,6 +1600,86 @@ def assessment():
         return redirect(url_for('login'))
     # render the template; session values are available via session[...] inside template
     return render_template('assessment.html')
+
+@app.route("/api/submit", methods=["POST"])
+def api_submit():
+    payload = request.get_json(silent=True) or {}
+    answers = payload.get("answers")
+
+    # expect 28 answers (7 GAD + 9 PHQ + 12 GHQ)
+    if not isinstance(answers, list) or len(answers) < 28:
+        return jsonify({"ok": False, "error": "Invalid answers; expected 28 items"}), 400
+
+    try:
+        answers_norm = [int(x) if x is not None else 0 for x in answers[:28]]
+    except Exception:
+        return jsonify({"ok": False, "error": "Answers must be numbers or null"}), 400
+
+    gad_scores = answers_norm[:7]
+    phq_scores = answers_norm[7:16]
+    ghq_scores = answers_norm[16:28]
+
+    gad_total = sum(gad_scores)
+    phq_total = sum(phq_scores)
+    ghq_total = sum(ghq_scores)
+    ghq_likert_total = sum(ghq_scores)
+    ghq_bimodal_total = sum(1 if x >= 2 else 0 for x in ghq_scores)
+
+    def gad_severity(total):
+        return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
+    def phq_severity(total):
+        return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
+    def ghq_severity(total):
+        return 'Severe distress' if total >= 20 else 'Moderate distress' if total >= 12 else 'Normal'
+
+    doc = {
+        "user_id": session.get('user_id') or payload.get('user_id') or 'anon',
+        "answers": answers_norm,
+        "gadTotal": gad_total,
+        "phqTotal": phq_total,
+        "ghqLikertTotal": ghq_likert_total,
+        "ghqBimodalTotal": ghq_bimodal_total,
+        "gadSeverity": gad_severity(gad_total),
+        "phqSeverity": phq_severity(phq_total),
+        "ghqSeverity": ghq_severity(ghq_likert_total),
+        "timestamp": datetime.utcnow()
+    }
+    res = assess_col.insert_one(doc)
+
+    return jsonify({
+        "ok": True,
+        "id": str(res.inserted_id),
+        "gadTotal": doc["gadTotal"],
+        "phqTotal": doc["phqTotal"],
+        "ghqLikertTotal": doc["ghqLikertTotal"],
+        "ghqBimodalTotal": doc["ghqBimodalTotal"],
+        "gadSeverity": doc["gadSeverity"],
+        "phqSeverity": doc["phqSeverity"],
+        "ghqSeverity": doc["ghqSeverity"],
+        "timestamp": doc["timestamp"].isoformat() + "Z"
+    }), 200
+
+@app.route("/api/scores", methods=["GET"])
+def api_scores():
+    uid = session.get('user_id') or request.args.get('user_id')
+    query = {"user_id": uid} if uid else {}
+    cursor = assess_col.find(query).sort("timestamp", -1).limit(100)
+
+    out = []
+    for d in cursor:
+        out.append({
+            "id": str(d["_id"]),
+            "user_id": d.get("user_id"),
+            "gadTotal": d.get("gadTotal", 0),
+            "phqTotal": d.get("phqTotal", 0),
+            "ghqTotal": d.get("ghqTotal", 0),
+            "gadSeverity": d.get("gadSeverity"),
+            "phqSeverity": d.get("phqSeverity"),
+            "ghqSeverity": d.get("ghqSeverity"),
+            "timestamp": d["timestamp"].isoformat() + "Z" if d.get("timestamp") else None
+        })
+    return jsonify(out), 200
+
 
 # crisis email message call------------------------------------------ 
 SENDER = os.environ.get("CRISIS_EMAIL")

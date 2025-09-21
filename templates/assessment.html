@@ -52,7 +52,7 @@ header h1 { margin:0; font-size:1.8rem; color:#fff; }
   width:100%;
   padding:10px 14px;
   border:none;
-  background:#3b82f6; /* Button background color */
+  background:#657A74; /* Button background color */
   color:#fff;          /* Text color */
   border-radius:8px;
   text-align:left;     /* Left aligned text */
@@ -62,7 +62,7 @@ header h1 { margin:0; font-size:1.8rem; color:#fff; }
 }
 
 .user-popup .popup-btn:hover {
-  background:#2563eb;  /* Darker on hover */
+  background:#3c4c48;  /* Darker on hover */
 }
 
 #google_translate_element {
@@ -130,7 +130,7 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
         <button class="popup-btn" onclick="toggleTranslateDropdown()">🌐 Change Language</button>
         <div id="google_translate_element" style="display:none;"></div>
         <button class="popup-btn" onclick="window.location='/dashboard'">🏠 Home</button>
-        <button class="popup-btn" onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button>
+        <button class="popup-btn" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
         <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
           <button type="submit" class="popup-btn">🚪 Logout</button>
         </form>
@@ -145,7 +145,7 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h1>Quick Mental Health Screen</h1>
-        <p class="lead">GAD-7 + PHQ-9 — How often in the last 2 weeks have you been bothered by these problems?</p>
+        <p class="lead">GAD-7 + PHQ-9 + GHQ-12 — How often in the last 2 weeks have you been bothered by these problems?</p>
       </div>
       <div style="text-align:right">
         <div class="note">Signed in as <strong id="uname">You</strong></div>
@@ -169,7 +169,7 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:800">Your Latest Scores</div>
-          <div class="note">After you finish, charts will appear here.</div>
+          <div class="note" id="scoresNote">Loading previous scores...</div>
         </div>
         <div style="text-align:right">
           <div id="lastUpdate" class="note">—</div>
@@ -188,11 +188,27 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
             <div class="score-big" id="phqTotal">0</div>
             <div class="note" id="phqSeverity">None-Minimal</div>
           </div>
+          <div>
+            <div class="note">General Health (GHQ-12)</div>
+            <div class="score-big" id="ghqLikert">0</div>
+            <div class="note" id="ghqSeverity">Normal</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="note">GHQ-12 Bimodal: <strong id="ghqBimodal">0</strong></div>
         </div>
         <div style="margin-top:10px">
-          <button id="exportBtn" class="btn secondary">Copy results</button>
-          <button id="viewHistoryBtn" class="btn primary">Refresh history</button>
+          <button id="downloadBtn" class="btn secondary">Download results</button>
+          <button id="viewHistoryBtn" class="btn primary">View history</button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Chart Area -->
+    <div class="card" id="chartArea" style="display:none;">
+      <h3 style="margin-top:0;">Score Trends</h3>
+      <div style="position: relative; height: 200px; width: 100%;">
+        <canvas id="scoresChart"></canvas>
       </div>
     </div>
   </aside>
@@ -208,6 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.__USER_ID = "{{ session.get('user_id','') }}";
   const __USERNAME_FROM_SERVER = "{{ session.get('username','You')|e }}";
   document.getElementById('uname').textContent = __USERNAME_FROM_SERVER;
+
+  // Load previous scores on page load
+  loadPreviousScores();
 
   // USER POPUP
   function toggleUserPopup(){
@@ -247,8 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // QUESTIONS
+  /* QUESTIONS: GAD-7 (7), PHQ-9 (9), then GHQ-12 (12) */
+  /* GHQ-12 items include orientation: 'pos' for positively worded items (higher = better) and 'neg' for negatively worded */
   const questions = [
+    /* GAD-7 */
     {id:'gad1', text:'Feeling nervous, anxious, or on edge.' , scale:'GAD'},
     {id:'gad2', text:'Not being able to stop or control worrying.' , scale:'GAD'},
     {id:'gad3', text:'Worrying too much about different things.' , scale:'GAD'},
@@ -256,22 +277,54 @@ document.addEventListener('DOMContentLoaded', () => {
     {id:'gad5', text:'Being so restless that it is hard to sit still.' , scale:'GAD'},
     {id:'gad6', text:'Becoming easily annoyed or irritable.' , scale:'GAD'},
     {id:'gad7', text:'Feeling afraid as if something awful might happen.' , scale:'GAD'},
+
+    /* PHQ-9 */
     {id:'phq1', text:'Little interest or pleasure in doing things.' , scale:'PHQ'},
     {id:'phq2', text:'Feeling down, depressed, or hopeless.' , scale:'PHQ'},
     {id:'phq3', text:'Trouble falling or staying asleep, or sleeping too much.' , scale:'PHQ'},
     {id:'phq4', text:'Feeling tired or having little energy.' , scale:'PHQ'},
     {id:'phq5', text:'Poor appetite or overeating.' , scale:'PHQ'},
-    {id:'phq6', text:'Feeling bad about yourself or that you are a failure or have let yourself or your family down.' , scale:'PHQ'},
-    {id:'phq7', text:'Trouble concentrating on things.' , scale:'PHQ'},
+    {id:'phq6', text:'Feeling bad about yourself — or that you are a failure or have let yourself or your family down.' , scale:'PHQ'},
+    {id:'phq7', text:'Trouble concentrating on things, such as reading the newspaper or watching television.' , scale:'PHQ'},
     {id:'phq8', text:'Moving or speaking slowly OR being fidgety/restless.' , scale:'PHQ'},
-    {id:'phq9', text:'Thoughts that you would be better off dead, or of hurting yourself.' , scale:'PHQ'}
+    {id:'phq9', text:'Thoughts that you would be better off dead, or of hurting yourself in some way.' , scale:'PHQ'},
+
+    /* GHQ-12 */
+    {id:'ghq1',  text:"Have you recently been able to concentrate on whatever you're doing?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq2',  text:"Have you recently lost much sleep over worry?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq3',  text:"Have you recently felt that you were playing a useful part in things?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq4',  text:"Have you recently felt capable of making decisions about things?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq5',  text:"Have you recently felt constantly under strain?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq6',  text:"Have you recently felt you couldn't overcome your difficulties?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq7',  text:"Have you recently been able to enjoy your normal day-to-day activities?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq8',  text:"Have you recently been able to face up to problems?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq9',  text:"Have you recently been feeling unhappy or depressed?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq10', text:"Have you recently been losing confidence in yourself?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq11', text:"Have you recently been thinking of yourself as a worthless person?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq12', text:"Have you recently been feeling reasonably happy, all things considered?", orientation:'pos', scale:'GHQ'}
   ];
+
   const options = [
     {label:'Not at all', score:0},
     {label:'Several days', score:1},
     {label:'More than half the days', score:2},
     {label:'Nearly every day', score:3}
   ];
+
+  const ghq_options = {
+    pos: [
+      {label:'More so than usual', score:0},
+      {label:'Same as usual', score:1},
+      {label:'Less than usual', score:2},
+      {label:'Much less than usual', score:3}
+    ],
+    neg: [
+      {label:'Not at all', score:0},
+      {label:'No more than usual', score:1},
+      {label:'Rather more than usual', score:2},
+      {label:'Much more than usual', score:3}
+    ]
+  };
 
   let answers = new Array(questions.length).fill(null);
   let curIndex = 0;
@@ -287,11 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
       el.className='q-card';
       el.style.display=(idx===curIndex?'block':'none');
       el.dataset.index=idx;
+      
+      // Determine which scale label to show
+      let scaleLabel = q.scale === 'GAD' ? 'GAD-7' : q.scale === 'PHQ' ? 'PHQ-9' : 'GHQ-12';
+      
       el.innerHTML=`
         <div class="q-top">
           <div>
             <div class="q-title">Question ${idx+1} of ${questions.length}</div>
-            <div class="q-sub">${q.scale==='GAD'?'GAD-7':'PHQ-9'}</div>
+            <div class="q-sub">${scaleLabel}</div>
           </div>
           <div class="q-sub">${q.scale}</div>
         </div>
@@ -299,7 +356,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="options"></div>
       `;
       const optsWrap=el.querySelector('.options');
-      options.forEach(op=>{
+
+      // FIXED: Use the correct options based on scale
+      let optsToUse = options;
+      if (q.scale === 'GHQ') {
+        optsToUse = q.orientation === 'pos' ? ghq_options.pos : ghq_options.neg;
+      }
+      
+      // FIXED: Use optsToUse instead of options
+      optsToUse.forEach(op=>{
         const btn=document.createElement('div');
         btn.className='option';
         btn.innerHTML=`<div class="lab">${op.label}</div>`;
@@ -307,10 +372,23 @@ document.addEventListener('DOMContentLoaded', () => {
           answers[idx]=op.score;
           optsWrap.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
           btn.classList.add('selected');
-          setTimeout(()=>{ if(curIndex<questions.length-1){ curIndex++; updateView(); } }, 220);
+          
+          // Update the submit button text if we're on the last question
+          if(idx === questions.length - 1) {
+            nextBtn.textContent = 'Submit';
+            nextBtn.style.background = '#059669'; // Green color to indicate ready to submit
+          }
+          
+          setTimeout(()=>{ 
+            if(curIndex<questions.length-1){ 
+              curIndex++; 
+              updateView(); 
+            }
+          }, 220);
         });
         optsWrap.appendChild(btn);
       });
+
       qCon.appendChild(el);
     });
     updateView();
@@ -321,17 +399,381 @@ document.addEventListener('DOMContentLoaded', () => {
       const i=Number(card.dataset.index);
       card.style.display=(i===curIndex)?'block':'none';
     });
-    backBtn.disabled=curIndex===0;
-    nextBtn.textContent=(curIndex===questions.length-1)?'Submit':'Next →';
-    const answered = answers.filter(a=>a!==null).length;
-    progressFill.style.width = Math.round((answered/questions.length)*100)+'%';
+    
+    backBtn.disabled = curIndex === 0;
+    backBtn.style.opacity = curIndex === 0 ? '0.5' : '1';
+    
+    nextBtn.textContent = (curIndex === questions.length - 1) ? 'Submit' : 'Next →';
+    
+    // Fixed progress calculation - shows current question progress
+    const currentProgress = Math.round(((curIndex + 1) / questions.length) * 100);
+    progressFill.style.width = currentProgress + '%';
   }
 
   backBtn.addEventListener('click', ()=>{ if(curIndex>0) curIndex--; updateView(); });
-  nextBtn.addEventListener('click', ()=>{ if(curIndex===questions.length-1){ alert('Submit logic here'); return;} curIndex++; updateView(); });
+  
+  // Fixed submit handler
+  nextBtn.addEventListener('click', ()=>{
+    if(curIndex === questions.length - 1){
+      // Check if all questions are answered (including current one)
+      const unanswered = answers.some(a => a === null);
+      if(unanswered) {
+        // Find which question number is unanswered for better error message
+        const firstUnanswered = answers.findIndex(a => a === null) + 1;
+        alert(`Please answer question ${firstUnanswered} before submitting.`);
+        return;
+      }
+      
+      // Submit to API
+      fetch("/api/submit", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ user_id: window.__USER_ID, answers })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data.ok){
+          // Update the display with all scores
+          document.getElementById("gadTotal").textContent = data.gadTotal;
+          document.getElementById("phqTotal").textContent = data.phqTotal;
+          document.getElementById("gadSeverity").textContent = data.gadSeverity;
+          document.getElementById("phqSeverity").textContent = data.phqSeverity;
+          document.getElementById("ghqLikert").textContent = data.ghqLikertTotal;
+          document.getElementById("ghqBimodal").textContent = data.ghqBimodalTotal;
+          document.getElementById("ghqSeverity").textContent = data.ghqSeverity;
+          
+          // Show the scores area and update timestamp
+          document.getElementById("currentScoresArea").style.display = "block";
+          document.getElementById("lastUpdate").textContent = new Date().toLocaleString();
+          document.getElementById('scoresNote').textContent = "Latest assessment completed";
+          
+          // Refresh the chart with new data
+          setTimeout(() => {
+            fetch("/api/scores?user_id=" + window.__USER_ID)
+              .then(r => r.json())
+              .then(chartData => {
+                if(chartData.length > 1) {
+                  // Destroy existing chart if it exists
+                  if(window.scoresChart) {
+                    window.scoresChart.destroy();
+                  }
+                  createScoreChart(chartData);
+                }
+              })
+              .catch(err => console.error("Error refreshing chart:", err));
+          }, 500);
+          
+          // Hide the question area and show completion message
+          document.querySelector("main.question-area").innerHTML = `
+            <div style="text-align:center; padding:40px;">
+              <h2 style="color: #3b82f6; margin-bottom: 20px;">✅ Assessment Complete!</h2>
+              <p style="font-size: 18px; margin-bottom: 30px;">Your results have been saved and are displayed in the summary panel.</p>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="window.location.reload()" class="btn secondary">Take Again</button>
+                <button onclick="window.location='/dashboard'" class="btn primary">Return to Dashboard</button>
+              </div>
+            </div>
+          `;
+          
+          console.log("Assessment completed successfully:", data);
+        } else {
+          alert("Error: " + (data.error || "Unknown error occurred"));
+          console.error("Submission error:", data);
+        }
+      })
+      .catch(err => {
+        console.error("Network error:", err);
+        alert("Network error: Unable to submit assessment. Please check your connection and try again.");
+      });
+      return;
+    }
+    
+    // Move to next question
+    if(curIndex < questions.length - 1) {
+      curIndex++;
+      updateView();
+    }
+  });
+
+  // Download results functionality
+  document.getElementById("downloadBtn").addEventListener("click", function() {
+    const gadTotal = document.getElementById("gadTotal").textContent;
+    const phqTotal = document.getElementById("phqTotal").textContent;
+    const gadSeverity = document.getElementById("gadSeverity").textContent;
+    const phqSeverity = document.getElementById("phqSeverity").textContent;
+    const ghqLikert = document.getElementById("ghqLikert").textContent;
+    const ghqBimodal = document.getElementById("ghqBimodal").textContent;
+    const ghqSeverity = document.getElementById("ghqSeverity").textContent;
+    const timestamp = document.getElementById("lastUpdate").textContent;
+    
+    const results = `Mental Health Assessment Results
+Date: ${timestamp}
+Username: ${__USERNAME_FROM_SERVER}
+
+=== SCORES ===
+GAD-7 (Anxiety): ${gadTotal}/21 - ${gadSeverity}
+PHQ-9 (Depression): ${phqTotal}/27 - ${phqSeverity}
+GHQ-12 (General Health): ${ghqLikert}/36 - ${ghqSeverity}
+GHQ-12 Bimodal: ${ghqBimodal}/12
+
+=== ASSESSMENT INFORMATION ===
+GAD-7: Generalized Anxiety Disorder 7-item scale
+- Minimal: 0-4
+- Mild: 5-9
+- Moderate: 10-14
+- Severe: 15-21
+
+PHQ-9: Patient Health Questionnaire 9-item scale
+- None-Minimal: 0-4
+- Mild: 5-9
+- Moderate: 10-14
+- Moderately Severe: 15-19
+- Severe: 20-27
+
+GHQ-12: General Health Questionnaire 12-item scale
+- Normal: 0-11
+- Moderate distress: 12-19
+- Severe distress: 20-36
+
+Note: This is a screening tool, not a diagnostic assessment.
+Please consult with a healthcare professional for proper evaluation.
+`;
+
+    // Create and download the file
+    const blob = new Blob([results], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Mental_Health_Assessment_${__USERNAME_FROM_SERVER}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  });
+
+  // View history functionality
+  document.getElementById("viewHistoryBtn").addEventListener("click", function() {
+    fetch("/api/scores?user_id=" + window.__USER_ID)
+      .then(r => r.json())
+      .then(data => {
+        if(data.length === 0) {
+          alert("No previous assessments found.");
+          return;
+        }
+        
+        let historyHtml = "<h3>Assessment History</h3><div style='max-height:300px;overflow-y:auto;'>";
+        data.forEach((assessment, index) => {
+          const date = new Date(assessment.timestamp).toLocaleDateString();
+          historyHtml += `
+            <div style="border:1px solid #ddd;padding:10px;margin:5px 0;border-radius:5px;">
+              <strong>Assessment ${index + 1}</strong> - ${date}<br>
+              GAD-7: ${assessment.gadTotal} (${assessment.gadSeverity})<br>
+              PHQ-9: ${assessment.phqTotal} (${assessment.phqSeverity})<br>
+              GHQ-12: ${assessment.ghqLikertTotal || 0} (${assessment.ghqSeverity || 'Normal'})
+            </div>
+          `;
+        });
+        historyHtml += "</div>";
+        
+        // Create a modal-like display
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position:fixed;top:0;left:0;width:100%;height:100%;
+          background:rgba(0,0,0,0.5);z-index:1000;display:flex;
+          align-items:center;justify-content:center;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+          background:white;padding:20px;border-radius:10px;
+          max-width:500px;width:90%;max-height:80%;overflow-y:auto;
+        `;
+        content.innerHTML = historyHtml + `
+          <button onclick="this.closest('div').remove()" 
+                  style="margin-top:15px;padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:5px;cursor:pointer;">
+            Close
+          </button>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+          if(e.target === modal) {
+            modal.remove();
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching history:", err);
+        alert("Unable to load assessment history.");
+      });
+  });
 
   renderQuestions();
+
+  // Function to load previous scores on page load
+  function loadPreviousScores() {
+    if (!window.__USER_ID) {
+      document.getElementById('scoresNote').textContent = "Please log in to see previous scores.";
+      return;
+    }
+
+    fetch("/api/scores?user_id=" + window.__USER_ID)
+      .then(r => r.json())
+      .then(data => {
+        if(data.length === 0) {
+          document.getElementById('scoresNote').textContent = "No previous assessments found.";
+          return;
+        }
+        
+        // Show latest scores
+        const latest = data[0];
+        document.getElementById("gadTotal").textContent = latest.gadTotal;
+        document.getElementById("phqTotal").textContent = latest.phqTotal;
+        document.getElementById("gadSeverity").textContent = latest.gadSeverity;
+        document.getElementById("phqSeverity").textContent = latest.phqSeverity;
+        document.getElementById("ghqLikert").textContent = latest.ghqLikertTotal || 0;
+        document.getElementById("ghqBimodal").textContent = latest.ghqBimodalTotal || 0;
+        document.getElementById("ghqSeverity").textContent = latest.ghqSeverity || "Normal";
+        
+        const lastDate = new Date(latest.timestamp).toLocaleDateString();
+        document.getElementById("lastUpdate").textContent = lastDate;
+        document.getElementById('scoresNote').textContent = `Latest assessment from ${lastDate}`;
+        
+        // Show the scores area
+        document.getElementById("currentScoresArea").style.display = "block";
+        
+        // Create charts if we have multiple assessments
+        if(data.length > 1) {
+          createScoreChart(data);
+        }
+      })
+      .catch(err => {
+        console.error("Error loading previous scores:", err);
+        document.getElementById('scoresNote').textContent = "Unable to load previous scores.";
+      });
+  }
+
+  // Function to create score trend chart
+  function createScoreChart(assessments) {
+    const ctx = document.getElementById('scoresChart').getContext('2d');
+    
+    // Sort by date (oldest first)
+    const sortedData = assessments.reverse();
+    
+    const labels = sortedData.map(a => new Date(a.timestamp).toLocaleDateString());
+    const gadScores = sortedData.map(a => a.gadTotal);
+    const phqScores = sortedData.map(a => a.phqTotal);
+    const ghqScores = sortedData.map(a => a.ghqLikertTotal || 0);
+
+    // Store chart instance globally for later destruction
+    window.scoresChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'GAD-7 (Anxiety)',
+          data: gadScores,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.1,
+          fill: false
+        }, {
+          label: 'PHQ-9 (Depression)',
+          data: phqScores,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.1,
+          fill: false
+        }, {
+          label: 'GHQ-12 (General Distress)',
+          data: ghqScores,
+          borderColor: '#059669',
+          backgroundColor: 'rgba(5, 150, 105, 0.1)',
+          tension: 0.1,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              padding: 15,
+              font: {
+                size: 11
+              }
+            }
+          },
+          title: {
+            display: false // Remove title to save space
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 21,
+            ticks: {
+              font: {
+                size: 10
+              },
+              stepSize: 5
+            },
+            title: {
+              display: true,
+              text: 'Score',
+              font: {
+                size: 11
+              }
+            }
+          },
+          x: {
+            ticks: {
+              font: {
+                size: 9
+              },
+              maxRotation: 45,
+              minRotation: 0
+            },
+            title: {
+              display: true,
+              text: 'Date',
+              font: {
+                size: 11
+              }
+            }
+          }
+        },
+        elements: {
+          point: {
+            radius: 3
+          },
+          line: {
+            borderWidth: 2
+          }
+        }
+      }
+    });
+
+    // Show the chart area
+    document.getElementById('chartArea').style.display = 'block';
+  }
 });
+
+// Global function for Google Translate initialization
+window.googleTranslateElementInit = function() {
+  console.log("Google Translate initialized");
+};
+
+// Make toggleUserPopup globally accessible
+window.toggleUserPopup = function(){
+  const popup = document.getElementById('user-popup');
+  popup.style.display = (popup.style.display==='block') ? 'none':'block';
+};
 </script>
 
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
