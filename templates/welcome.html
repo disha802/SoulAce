@@ -59,131 +59,83 @@
             50% { transform: translateY(-20px) rotate(1deg); }
         }
 
-        /* Floating Cultural Elements */
-        .floating-elements {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .floating-shape {
-            position: absolute;
-            opacity: 0.15;
-            animation: culturalFloat 8s ease-in-out infinite;
-            font-size: 2rem;
-        }
-
-        .floating-shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
-        .floating-shape:nth-child(2) { top: 25%; right: 15%; animation-delay: 2s; }
-        .floating-shape:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 4s; }
-        .floating-shape:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 6s; }
-
-        @keyframes culturalFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
-            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.2; }
-        }
-
-        /* Header */
+        /* Header - exactly matching dashboard.html */
         header {
-            position: relative;
-            z-index: 10;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, var(--sage-green) 0%, var(--kashmir-blue) 100%);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            background-color: #7B9B8B;
         }
 
-        .logo-section {
+        .header-left {
             display: flex;
             align-items: center;
             gap: 15px;
-        }
-
-        .logo-circle {
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, var(--soft-white), var(--saffron));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            box-shadow: 0 6px 20px rgba(241, 143, 1, 0.3);
-            animation: pulse 3s ease-in-out infinite;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(241, 143, 1, 0.3); }
-            50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(241, 143, 1, 0.5); }
-        }
-
-        .logo-text h1 {
-            color: white;
-            font-size: 1.9rem;
-            font-weight: 700;
-            margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .logo-text p {
-            color: var(--soft-white);
-            font-size: 0.95rem;
-            margin: 0;
-            opacity: 0.9;
-            font-style: italic;
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
-        .mode-toggle {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+        .header-text {
+            display: flex;
+            flex-direction: column;
         }
 
-        .mode-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+        .logo-container {
+            width: 60px;
+            height: 60px;
         }
 
-        .login-btn {
-            background: linear-gradient(135deg, var(--saffron), #e67e00);
-            color: white;
-            padding: 12px 28px;
+        .logo-container img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .logout-btn, .toggle-btn {
+            padding: 8px 12px;
             border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #fff;
+        }
+
+        .header-text h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: normal;
+            color: #FFF7E4;
+        }
+
+        .toggle-btn, .login-btn {
+            background: linear-gradient(135deg, #657A74, #243B36);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(241, 143, 1, 0.4);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(241, 143, 1, 0.6);
-            background: linear-gradient(135deg, #e67e00, var(--saffron));
+        .toggle-btn:hover, .login-btn:hover {
+            background: linear-gradient(45deg, #657A74, #243B36);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.25);
         }
 
         /* Main Content */
@@ -327,7 +279,197 @@
             font-size: 0.95rem;
         }
 
-        /* FAQ Section - Redesigned */
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 60px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .testimonials-section::before {
+            content: '';
+            position: absolute;
+            top: 100px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
+            z-index: 1;
+        }
+
+        .testimonials-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #000;
+            z-index: 1;
+        }
+
+        .testimonials-container {
+            text-align: center;
+        }
+
+        .testimonials-title {
+            font-family: var(--serif-family);
+            font-size: 2.2rem;
+            color: var(--dark-green);
+            margin-bottom: 15px;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        .testimonials-subtitle {
+            color: var(--mountain-gray);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+            opacity: 0.8;
+            position: relative;
+            z-index: 2;
+        }
+
+        .testimonials-slider {
+            position: relative;
+            overflow: hidden;
+            margin: 40px 0;
+            z-index: 2;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .testimonials-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 500%;
+        }
+
+        .testimonial-item {
+            flex: 0 0 20%;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .testimonial-stars {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--mountain-gray);
+            margin-bottom: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .testimonial-author {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: var(--dark-green);
+            font-size: 0.95rem;
+        }
+
+        .author-role {
+            font-size: 0.85rem;
+            color: var(--sage-green);
+            opacity: 0.8;
+        }
+
+        /* Navigation Buttons */
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, var(--sage-green), var(--kashmir-blue));
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .slider-nav:hover {
+            transform: translateY(-50%) scale(1.1);
+            background: linear-gradient(135deg, var(--saffron), #e67e00);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .slider-nav.prev {
+            left: -70px;
+        }
+
+        .slider-nav.next {
+            right: -70px;
+        }
+
+        /* Dots Indicator */
+        .slider-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(123, 155, 139, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--sage-green);
+            transform: scale(1.2);
+        }
+
+        .dot:hover {
+            background: var(--kashmir-blue);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .slider-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .slider-nav.prev {
+                left: -50px;
+            }
+            
+            .slider-nav.next {
+                right: -50px;
+            }
+            
+            .testimonials-slider {
+                max-width: 90%;
+            }
+        }
         .faq-section {
             padding: 60px 20px;
             max-width: 900px;
@@ -529,19 +671,14 @@
             box-shadow: 0 15px 40px rgba(241, 143, 1, 0.6);
         }
 
-        /* Footer */
+        /* Footer - matching dashboard.html */
         footer {
-            background: linear-gradient(135deg, var(--warm-yellow) 0%, #f4d03f 100%);
-            color: var(--dark-green);
             text-align: center;
-            padding: 35px 20px;
-            margin-top: 0;
-            border-top: 3px solid var(--sage-green);
-        }
-
-        footer p {
-            opacity: 0.9;
-            font-weight: 500;
+            padding: 1rem;
+            font-size: 0.9rem;
+            background: #ffeecf;
+            border-top: 2px solid #fcd58d;
+            margin-top: 2rem;
         }
 
         /* Dark Mode Styles */
@@ -557,7 +694,18 @@
         }
 
         body.dark header {
-            background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+            background-color: #1f1f1f;
+            color: #f9e6d0;
+        }
+
+        body.dark .header-text h3 {
+            color: #ccc;
+        }
+
+        body.dark .toggle-btn, body.dark .login-btn {
+            background: #444;
+            color: #f9e6d0;
+            border: 1px solid #666;
         }
 
         body.dark .feature-card {
@@ -603,15 +751,15 @@
         }
 
         body.dark footer {
-            background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+            background: #1f1f1f;
             color: #e0e0e0;
-            border-top-color: #444;
+            border-top: 2px solid #444;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             header { padding: 15px 20px; }
-            .logo-text h1 { font-size: 1.6rem; }
+            .header-text h1 { font-size: 1.6rem; }
             .hero { padding: 50px 20px 40px; }
             .features-grid { grid-template-columns: 1fr; gap: 20px; }
             .faq-container { padding: 35px 25px; }
@@ -619,33 +767,26 @@
             .faq-answer-content { padding: 0 25px 20px 25px; }
             .cta-title { font-size: 2rem; }
             .header-right { gap: 10px; }
-            .mode-toggle { padding: 8px 12px; font-size: 0.85rem; }
+            .toggle-btn { padding: 8px 12px; font-size: 0.85rem; }
         }
     </style>
 </head>
 <body>
-    <!-- Floating Cultural Elements -->
-    <div class="floating-elements">
-        <div class="floating-shape">🏔️</div>
-        <div class="floating-shape">🌸</div>
-        <div class="floating-shape">🕊️</div>
-        <div class="floating-shape">🍃</div>
-    </div>
-
-    <!-- Header -->
+    <!-- Header - matching dashboard.html -->
     <header>
-        <div class="logo-section">
-            <div class="logo-circle">
-                🌺
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
             </div>
-            <div class="logo-text">
+            <div class="header-text">
                 <h1>SoulAce</h1>
-                <p>जहाँ से शुरू होती है खुशी</p>
+                <h3>Wellness begins here.</h3>
             </div>
         </div>
+
         <div class="header-right">
-            <button onclick="toggleMode()" class="mode-toggle">🌙 Dark Mode</button>
-            <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+            <button onclick="toggleMode()" class="toggle-btn">🌞🌙</button>
+            <a href="/login" class="login-btn">Login</a>
         </div>
     </header>
 
@@ -653,16 +794,13 @@
     <main>
         <!-- Hero Section -->
         <section class="hero">
-            <div class="cultural-accent">🏔️ ✨ 🌸</div>
-            <h1 class="hero-title">Begin Your Wellness Journey in the Valley of Peace</h1>
-            <h2 class="hero-subtitle">Anonymous • Safe • Culturally Sensitive</h2>
+            <h1 class="hero-title">Tiny steps towards a lighter, brighter you...</h1>
+            <h2 class="hero-subtitle">Anonymous • Safe • Friendly</h2>
             <p class="hero-description">
-                Like the serene valleys of Kashmir, find your inner peace through our compassionate platform. 
-                Connect with licensed therapists, access AI-powered support, and discover healing in a 
-                stigma-free environment that honors your cultural values.
+                Take a moment to breathe and find your calm. With caring therapists and gentle AI support by your side, you can begin your journey of healing in a space that truly understands you.
             </p>
             <div class="cultural-quote">
-                "तेरे दिल में शांति हो, तेरे मन में सुकून हो" • "دل میں سکون ہو، زندگی میں خوشی ہو"
+                "Your mind is your home--lets make it feel cozy"
             </div>
         </section>
 
@@ -673,13 +811,13 @@
                 <div class="feature-card">
                     <span class="feature-icon">🤖</span>
                     <h3>AI Companion (24/7)</h3>
-                    <p>Your digital friend that understands emotions and provides support in Hindi, Urdu, and English with cultural sensitivity.</p>
+                    <p>Your digital friend that understand your emotions and provides support is available 24/7 just for you.</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">👩‍⚕️</span>
                     <h3>Licensed Professionals</h3>
-                    <p>Connect with qualified therapists who understand South Asian culture and mental health perspectives.</p>
+                    <p>Connect with qualified therapists who understands you.</p>
                 </div>
                 
                 <div class="feature-card">
@@ -691,23 +829,92 @@
                 <div class="feature-card">
                     <span class="feature-icon">🗣️</span>
                     <h3>Multilingual Support</h3>
-                    <p>Express yourself comfortably in Hindi (हिंदी), Urdu (اردو), or English with culturally aware responses.</p>
+                    <p>Express yourself comfortably in your preferred language with culturally aware responses and understanding.</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">📔</span>
                     <h3>Personal Reflection</h3>
-                    <p>Track your emotional journey with intelligent prompts that respect your cultural background and values.</p>
+                    <p>Track your emotional journey with intelligent prompts that respect your beliefs and values.</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">🤝</span>
                     <h3>Community Support</h3>
-                    <p>Connect with others who share similar experiences in moderated, culturally sensitive peer forums.</p>
+                    <p>Connect with others who share similar experiences in moderated peer forums.</p>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="testimonials-container">
+            <h2 class="testimonials-title">What Our Users Say</h2>
+            <p class="testimonials-subtitle">Real stories from people who found healing through SoulAce</p>
+            
+            <div class="testimonials-grid">
+                <div class="testimonials-slider">
+                    <button class="slider-nav prev" onclick="changeSlide(-1)">‹</button>
+                    <div class="testimonials-track" id="testimonials-track">
+                        <div class="testimonial-item">
+                            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                            <p class="testimonial-text">"SoulAce helped me through my darkest times. The AI companion understood my emotions and the therapist sessions were life-changing. I feel hopeful again."</p>
+                            <div class="testimonial-author">
+                                <span class="author-name">- Sarah K.</span>
+                                <span class="author-role">College Student</span>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonial-item">
+                            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                            <p class="testimonial-text">"The privacy and anonymity gave me courage to seek help. The cultural sensitivity made all the difference in my healing journey."</p>
+                            <div class="testimonial-author">
+                                <span class="author-name">- Ahmad R.</span>
+                                <span class="author-role">Working Professional</span>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonial-item">
+                            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                            <p class="testimonial-text">"Being able to express myself in my native language while getting professional help was incredible. The peer support community is amazing too."</p>
+                            <div class="testimonial-author">
+                                <span class="author-name">- Priya M.</span>
+                                <span class="author-role">Graduate Student</span>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonial-item">
+                            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                            <p class="testimonial-text">"The 24/7 AI support was there when I needed it most. No judgment, just understanding and practical guidance. Truly grateful."</p>
+                            <div class="testimonial-author">
+                                <span class="author-name">- David L.</span>
+                                <span class="author-role">Recent Graduate</span>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonial-item">
+                            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                            <p class="testimonial-text">"SoulAce gave me tools to manage anxiety while respecting my cultural values. The journaling feature helped me track my progress beautifully."</p>
+                            <div class="testimonial-author">
+                                <span class="author-name">- Maria C.</span>
+                                <span class="author-role">Teacher</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="slider-nav next" onclick="changeSlide(1)">›</button>
+                </div>
+                
+                <div class="slider-dots" id="slider-dots">
+                    <span class="dot active" onclick="currentSlide(1)"></span>
+                    <span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span>
+                    <span class="dot" onclick="currentSlide(4)"></span>
+                    <span class="dot" onclick="currentSlide(5)"></span>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- FAQ Section -->
     <section class="faq-section">
@@ -734,7 +941,7 @@
                 </div>
                 <div class="faq-answer">
                     <div class="faq-answer-content">
-                        Our AI is trained with cultural sensitivity in mind, understanding the unique emotional expressions and family dynamics common in South Asian communities. It responds in Hindi, Urdu, and English, recognizing cultural phrases and providing coping strategies that align with our values while maintaining modern therapeutic approaches.
+                        Our AI is trained with cultural sensitivity in mind, understanding the unique emotional expressions and family dynamics common in diverse communities. It responds in multiple languages, recognizing cultural phrases and providing coping strategies that align with various values while maintaining modern therapeutic approaches.
                     </div>
                 </div>
             </div>
@@ -746,7 +953,31 @@
                 </div>
                 <div class="faq-answer">
                     <div class="faq-answer-content">
-                        Yes! Our licensed therapists are specifically chosen for their understanding of South Asian culture, family structures, and mental health stigmas. They specialize in culturally competent care for issues like family pressure, arranged marriages, career expectations, and intergenerational trauma while respecting religious and cultural values.
+                        Yes! Our licensed therapists are specifically chosen for their understanding of diverse cultural backgrounds, family structures, and mental health perspectives. They specialize in culturally competent care for various issues while respecting different religious and cultural values.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h3>How much does it cost to use SoulAce?</h3>
+                    <div class="faq-icon">+</div>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        We offer a freemium model with basic features available at no cost, including AI chat support and community forums. Premium features like one-on-one therapy sessions have affordable pricing options with flexible payment plans. We believe mental health support should be accessible to everyone.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h3>Is SoulAce suitable for severe mental health conditions?</h3>
+                    <div class="faq-icon">+</div>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        While SoulAce provides excellent support for anxiety, depression, stress, and everyday mental health challenges, we always recommend consulting with healthcare professionals for severe conditions. Our platform includes crisis support features and can help connect you with appropriate emergency resources when needed.
                     </div>
                 </div>
             </div>
@@ -761,5 +992,67 @@
                 Join our community of individuals who have found healing, support, and hope through SoulAce. 
                 Your mental wellness matters, and culturally sensitive help is just one click away.
             </p>
-            <a href="{{ url_for('login') }}" class="cta-button">Start Your Journey Today</a>
+            <a href="/login" class="cta-button">Start Your Journey Today</a>
         </div>
+    </section>
+
+    <!-- Footer - matching dashboard.html -->
+    <footer>
+        <p>SoulAce © 2025 – Built with 💙 by Synapsix</p>
+    </footer>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+
+        function changeSlide(direction) {
+            currentSlideIndex += direction;
+            
+            if (currentSlideIndex >= totalSlides) {
+                currentSlideIndex = 0;
+            } else if (currentSlideIndex < 0) {
+                currentSlideIndex = totalSlides - 1;
+            }
+            
+            updateSlider();
+        }
+
+        function currentSlide(slideIndex) {
+            currentSlideIndex = slideIndex - 1;
+            updateSlider();
+        }
+
+        function updateSlider() {
+            const track = document.getElementById('testimonials-track');
+            const dots = document.querySelectorAll('.dot');
+            
+            // Move the slider
+            track.style.transform = `translateX(-${currentSlideIndex * 20}%)`;
+            
+            // Update dots
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlideIndex);
+            });
+        }
+
+        function toggleMode() {
+            document.body.classList.toggle('dark');
+        }
+
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Toggle current item
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
