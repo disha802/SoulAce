@@ -212,11 +212,6 @@ body.dark-mode .user-popup .popup-btn:hover {
   background: var(--hover-bg);
 }
 
-/* Back button */
-body.dark-mode .back-btn {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
 
 body.dark-mode .back-btn:hover {
   background: var(--hover-bg);
@@ -295,24 +290,15 @@ body {
     <div class="columns">
       <!-- MAIN: Booking card + bookings lists -->
       <div class="card">
-        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
         <div class="hero-row">
           <div style="flex:1">
-          <h2 
-  Hello {{ username }}, Book your session
-</h2>
-            <p class="lead" 
-  Select a Therapist or Proctor on the right, pick date & slot, then provide your 10-digit UID to confirm.</p>
+          <h2>Hello {{ username }}, Book your session </h2>
+            <p> 
+  Select a Therapist or Proctor on the right, pick date & slot.</p>
           </div>
         </div>
 
         <form id="bookingForm" style="margin-top:1.25rem" novalidate>
-          <div class="form-group">
-            <label for="studentUid">Student UID (10 digits) <span style="color:#b00020">*</span></label>
-            <input id="studentUid" name="studentUid" class="form-input" type="text" inputmode="numeric" pattern="^\d{10}$" maxlength="10" placeholder="e.g. 0123456789" required>
-            <div id="uidError" class="error">Please enter a valid 10-digit UID.</div>
-          </div>
-
           <div class="form-group">
             <label for="concerns">Areas of Concern (optional)</label>
             <textarea id="concerns" class="form-textarea" placeholder="Briefly describe what you'd like to discuss"></textarea>
@@ -361,7 +347,7 @@ body {
       <strong>
         Choose Proctor
       </strong>
-      <button>
+      <button class="btn" id ="refreshTherapists">
         Refresh
       </button>
     </div>
@@ -464,19 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ---------- Booking submit ---------- */
 async function onBookingSubmit(e) {
   e.preventDefault();
-
-  // UID validation
-  const uidInput = document.getElementById('studentUid');
-  const uidErr = document.getElementById('uidError');
-  const uidVal = (uidInput.value || '').trim();
-  const uidPattern = /^\d{10}$/;
-  if (!uidPattern.test(uidVal)) {
-    uidErr.style.display = 'block';
-    uidInput.focus();
-    return;
-  } else {
-    uidErr.style.display = 'none';
-  }
 
   if (!document.getElementById('agreement').checked) {
     alert('Please accept terms.');
