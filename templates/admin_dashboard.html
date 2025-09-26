@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SoulAce Admin Dashboard</title>
-  <link rel="icon" href="..\static\header-logo.png" type="image/png">
   <style>
     body {
       margin: 0;
@@ -191,6 +190,44 @@
       box-shadow: 0 6px 10px rgba(0,0,0,0.25);
     }
 
+    .severity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .severity-item {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+    }
+
+    .severity-item .count {
+      font-size: 18px;
+      font-weight: bold;
+      color: #243B36;
+    }
+
+    .severity-item .label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .severity-container {
+      width: 300px;     /* controls width */
+      height: 300px;    /* controls height */
+      margin: auto;     /* center it nicely */
+    }
+
+    #severityChart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+
     footer {
       text-align: center;
       padding: 1rem;
@@ -215,6 +252,11 @@
       background: #2a2a2a;
       color: #e0e0e0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    
+    body.dark .severity-item {
+      background: #3a3a3a;
+      border-color: #4a4a4a;
     }
     
   </style>
@@ -248,7 +290,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <section class="hero">
-    <h2>Welcome, Admin {{username}}</h2>
+    <h2>Welcome, {{username}}</h2>
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
   
@@ -303,6 +345,92 @@
       <div class="card" style="padding:12px">
         <strong>Mood trend (avg score)</strong>
         <canvas id="moodChart" height="150"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assessment Scores Analytics -->
+  <section class="admin-section">
+    <h2>Assessment Scores Analytics</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      
+      <!-- Average Scores Card -->
+      <div class="card" style="padding: 20px;">
+        <h3 style="margin-top: 0; color: #243B36;">Average Scores</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: bold; color: #e74c3c;" id="avg-gad">—</div>
+            <div style="font-size: 14px; color: #666;">Average GAD-7</div>
+            <div style="font-size: 12px; margin-top: 5px;" id="avg-gad-severity">—</div>
+          </div>
+          <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: bold; color: #3498db;" id="avg-phq">—</div>
+            <div style="font-size: 14px; color: #666;">Average PHQ-9</div>
+            <div style="font-size: 12px; margin-top: 5px;" id="avg-phq-severity">—</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+          <span style="font-size: 16px; font-weight: 600;" id="total-assessments">—</span>
+          <span style="font-size: 14px; color: #666;">Total Assessments</span>
+        </div>
+      </div>
+
+      <!-- Severity Distribution Chart -->
+      <div class="card" style="padding: 20px;">
+        <h3 style="margin-top: 0; color: #243B36;">Severity Distribution</h3>
+        <div class="severity-container">
+          <canvas id="severityChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAD-7 Severity Breakdown -->
+    <div style="margin-top: 20px;">
+      <h4>GAD-7 Anxiety Severity Distribution</h4>
+      <div class="severity-grid" id="gad-severity-grid">
+        <div class="severity-item">
+          <div class="count" id="gad-minimal">—</div>
+          <div class="label">Minimal</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="gad-mild">—</div>
+          <div class="label">Mild</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="gad-moderate">—</div>
+          <div class="label">Moderate</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="gad-severe">—</div>
+          <div class="label">Severe</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHQ-9 Severity Breakdown -->
+    <div style="margin-top: 20px;">
+      <h4>PHQ-9 Depression Severity Distribution</h4>
+      <div class="severity-grid" id="phq-severity-grid">
+        <div class="severity-item">
+          <div class="count" id="phq-none">—</div>
+          <div class="label">None-Minimal</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="phq-mild">—</div>
+          <div class="label">Mild</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="phq-moderate">—</div>
+          <div class="label">Moderate</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="phq-modsevere">—</div>
+          <div class="label">Mod. Severe</div>
+        </div>
+        <div class="severity-item">
+          <div class="count" id="phq-severe">—</div>
+          <div class="label">Severe</div>
+        </div>
       </div>
     </div>
   </section>
@@ -373,6 +501,7 @@
               <select name="role">
                 <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
                 <option value="studentvol" {% if user.role == 'studentvol' %}selected{% endif %}>Volunteer</option>
+                <option value="therapist" {% if user.role == 'therapist' %}selected{% endif %}>Therapist</option>
               </select>
               <button type="submit">Update</button>
             </form>
@@ -401,44 +530,13 @@
     </div>
   </section>
 
-  <!-- Booking Status -->
-  <section class="admin-section">
-    <h2>Recent Bookings</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Booking ID</th>
-          <th>User</th>
-          <th>Therapist/Proctor</th>
-          <th>Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for booking in bookings %}
-        <tr>
-          <td>{{ booking.id }}</td>
-          <td>{{ booking.username }}</td>
-          <td>{{ booking.therapist }}</td>
-          <td>{{ booking.date }}</td>
-          <td>{{ booking.status }}</td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="5" style="text-align:center;">No bookings found</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
-
   <footer>
-    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+    <p>SoulAce © 2025 – Built with 💙 by SynapSix</p>
   </footer>
 
 <script>
 
-let hitsChart = null, moodChart = null;
+let hitsChart = null, moodChart = null, severityChart = null;
 
 function toggleUserPopup() {
   const popup = document.getElementById('user-popup');
@@ -475,6 +573,95 @@ async function resolveCrisis(logId) {
   } catch (error) {
     console.error('Error:', error);
     alert('Error resolving crisis log');
+  }
+}
+
+function getGadSeverity(score) {
+  if (score >= 15) return 'Severe';
+  if (score >= 10) return 'Moderate';
+  if (score >= 5) return 'Mild';
+  return 'Minimal';
+}
+
+function getPhqSeverity(score) {
+  if (score >= 20) return 'Severe';
+  if (score >= 15) return 'Moderately Severe';
+  if (score >= 10) return 'Moderate';
+  if (score >= 5) return 'Mild';
+  return 'None-Minimal';
+}
+
+async function loadAverageScores() {
+  try {
+    const res = await fetch('/admin/api/average_scores');
+    const data = await res.json();
+    
+    if (!data.ok) {
+      console.error('Failed to load average scores:', data.error);
+      return;
+    }
+
+    // Update average scores display
+    document.getElementById('avg-gad').textContent = data.avg_gad.toFixed(1);
+    document.getElementById('avg-phq').textContent = data.avg_phq.toFixed(1);
+    document.getElementById('total-assessments').textContent = data.total_assessments;
+    
+    // Update severity labels
+    document.getElementById('avg-gad-severity').textContent = getGadSeverity(data.avg_gad);
+    document.getElementById('avg-phq-severity').textContent = getPhqSeverity(data.avg_phq);
+
+    // Update GAD-7 severity distribution
+    const gadDist = data.gad_severity_distribution;
+    document.getElementById('gad-minimal').textContent = gadDist.Minimal || 0;
+    document.getElementById('gad-mild').textContent = gadDist.Mild || 0;
+    document.getElementById('gad-moderate').textContent = gadDist.Moderate || 0;
+    document.getElementById('gad-severe').textContent = gadDist.Severe || 0;
+
+    // Update PHQ-9 severity distribution
+    const phqDist = data.phq_severity_distribution;
+    document.getElementById('phq-none').textContent = phqDist['None-Minimal'] || 0;
+    document.getElementById('phq-mild').textContent = phqDist.Mild || 0;
+    document.getElementById('phq-moderate').textContent = phqDist.Moderate || 0;
+    document.getElementById('phq-modsevere').textContent = phqDist['Moderately severe'] || 0;
+    document.getElementById('phq-severe').textContent = phqDist.Severe || 0;
+
+    // Create severity distribution chart
+    const ctx = document.getElementById('severityChart').getContext('2d');
+    if (severityChart) severityChart.destroy();
+    
+    severityChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['GAD-7 Severe', 'GAD-7 Moderate', 'GAD-7 Mild', 'GAD-7 Minimal'],
+        datasets: [{
+          label: 'GAD-7 Distribution',
+          data: [gadDist.Severe || 0, gadDist.Moderate || 0, gadDist.Mild || 0, gadDist.Minimal || 0],
+          backgroundColor: [
+            '#e74c3c',  // Severe - red
+            '#f39c12',  // Moderate - orange  
+            '#f1c40f',  // Mild - yellow
+            '#2ecc71'   // Minimal - green
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          title: {
+            display: true,
+            text: 'GAD-7 Anxiety Severity Distribution'
+          }
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error loading average scores:', error);
   }
 }
 
@@ -536,7 +723,10 @@ async function loadMoodTrend(){
 }
 
 document.getElementById('refreshStats').addEventListener('click', () => {
-  loadAdminStats(); loadDailyHits(); loadMoodTrend();
+  loadAdminStats(); 
+  loadDailyHits(); 
+  loadMoodTrend();
+  loadAverageScores();
 });
 
 // initial load
@@ -544,6 +734,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadAdminStats(); 
   loadDailyHits(); 
   loadMoodTrend();
+  loadAverageScores();
 });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -578,6 +769,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.onload = function() {
       fetch("/admin/crisis_logs")
+  
         .then(response => response.json())
         .then(data => {
           console.log("Crisis Logs:", data);
