@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SoulAce — GAD7 + PHQ9</title>
-<link rel="icon" href="..\static\header-logo.png" type="image/png">
+
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -39,34 +39,56 @@ header h1 { margin:0; font-size:1.8rem; color:#fff; }
   background:#fff;
   border-radius:12px;
   box-shadow:0 5px 15px rgba(0,0,0,0.2);
-  padding:12px;
+  padding:10px;
   z-index:100;
-  min-width:220px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  min-width:160px;
 }
 
 .user-popup .popup-btn {
   display:block;
   width:100%;
-  padding:10px 14px;
-  border:none;
-  background:#657A74; /* Button background color */
-  color:#fff;          /* Text color */
-  border-radius:8px;
-  text-align:left;     /* Left aligned text */
-  cursor:pointer;
+  margin-bottom:8px;
+  background:#fff;
+  color:#243B36;
   font-weight:600;
-  transition:0.2s;
+  padding:5px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  box-shadow:0 4px 6px rgba(0,0,0,0.2);
+  text-align:left;
 }
 
 .user-popup .popup-btn:hover {
-  background:#3c4c48;  /* Darker on hover */
+  background:#f2f2f2;
 }
 
 #google_translate_element {
-  margin-top:8px;
+  margin-bottom: 8px;
+}
+
+/* Google Translate Styling */
+.goog-te-banner-frame.skiptranslate { 
+  display: none !important; 
+}
+
+body { 
+  top: 0px !important; 
+}
+
+.goog-te-gadget-icon { 
+  display: none !important; 
+}
+
+#google_translate_element select {
+  background: #fff;
+  border-radius: 8px;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 5px;
 }
 
 /* Container and layout */
@@ -89,7 +111,7 @@ footer { width:100%; flex-shrink:0; text-align:center; padding:1rem; font-size:0
 .controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
 .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
 .btn.secondary{background:#f1f1f1;color:#243B36}
-.btn.primary{background:var(--accent);color:#fff; background-color: #657A74;}
+.btn.primary{background:var(--accent);color:#fff}
 .progress{height:10px;background:#f0f2f1;border-radius:999px;overflow:hidden;margin-top:8px}
 .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent), #60a5fa);transition:width .25s ease}
 
@@ -105,7 +127,7 @@ canvas{background:transparent;border-radius:8px}
 body.dark-mode { background:#1f2937; color:#f3f4f6; }
 body.dark-mode header { background:#374151; }
 body.dark-mode .card { background:#111827; color:#f3f4f6; }
-body.dark-mode .user-popup { background:#374151; color:#f3f4f6; }
+body.dark-mode .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
 body.dark-mode .btn.primary { background:#2563eb; color:#fff; }
 body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
 </style>
@@ -127,10 +149,11 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
     <div class="user-icon-container">
       <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
       <div id="user-popup" class="user-popup">
-        <button class="popup-btn" onclick="toggleTranslateDropdown()">🌐 Change Language</button>
-        <div id="google_translate_element" style="display:none;"></div>
-        <button class="popup-btn" onclick="window.location='/dashboard'">🏠 Home</button>
-        <button class="popup-btn" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+        <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
+        <!-- Google Translate Dropdown inside profile -->
+        <div id="google_translate_element"></div>
+        <button onclick="window.location='/dashboard'" class="popup-btn">🏠 Home</button>
+        <button onclick="toggleDarkMode()" class="popup-btn">🌙 Change Mode</button>
         <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
           <button type="submit" class="popup-btn">🚪 Logout</button>
         </form>
@@ -228,17 +251,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load previous scores on page load
   loadPreviousScores();
 
-  // USER POPUP
-  function toggleUserPopup(){
-    const popup = document.getElementById('user-popup');
-    popup.style.display = (popup.style.display==='block') ? 'none':'block';
+  // Debug: Check if Google Translate element exists
+  const translateEl = document.getElementById('google_translate_element');
+  console.log("Google Translate element found:", translateEl);
+  if (!translateEl) {
+    console.error("google_translate_element not found in DOM");
   }
-  document.querySelector('.user-icon').addEventListener('click', toggleUserPopup);
+
+  // USER POPUP - Make this global and simple
+  window.toggleUserPopup = function(){
+    const popup = document.getElementById('user-popup');
+    if(popup.style.display === 'block') {
+      popup.style.display = 'none';
+    } else {
+      popup.style.display = 'block';
+    }
+  };
+  
+  // Close popup when clicking outside
   document.addEventListener('click', function(e){
     const popup = document.getElementById('user-popup');
     const icon = document.querySelector('.user-icon');
-    if(!popup.contains(e.target) && e.target!==icon){
-      popup.style.display='none';
+    if(!popup.contains(e.target) && e.target !== icon){
+      popup.style.display = 'none';
     }
   });
 
@@ -247,24 +282,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('dark-mode');
   }
 
-  // GOOGLE TRANSLATE
-  let translateLoaded = false;
-  window.toggleTranslateDropdown = function(){
-    const el = document.getElementById('google_translate_element');
-    if(el.style.display==='block'){
-      el.style.display='none';
-    } else {
-      el.style.display='block';
-      if(!translateLoaded){
-        new google.translate.TranslateElement({
-          pageLanguage: 'en',
-          includedLanguages: 'en,hi,ur',
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-        }, 'google_translate_element');
-        translateLoaded = true;
-      }
+  // GOOGLE TRANSLATE - Debug version
+  window.googleTranslateElementInit = function() {
+    console.log("Google Translate init called");
+    try {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,ur,es,fr,de',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+      console.log("Google Translate element created successfully");
+    } catch(error) {
+      console.error("Google Translate error:", error);
     }
-  }
+  };
 
   /* QUESTIONS: GAD-7 (7), PHQ-9 (9), then GHQ-12 (12) */
   /* GHQ-12 items include orientation: 'pos' for positively worded items (higher = better) and 'neg' for negatively worded */
@@ -764,19 +796,31 @@ Please consult with a healthcare professional for proper evaluation.
   }
 });
 
-// Global function for Google Translate initialization
-window.googleTranslateElementInit = function() {
-  console.log("Google Translate initialized");
-};
 
-// Make toggleUserPopup globally accessible
-window.toggleUserPopup = function(){
-  const popup = document.getElementById('user-popup');
-  popup.style.display = (popup.style.display==='block') ? 'none':'block';
-};
 </script>
 
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<!-- Debug script to check if Google Translate loads -->
+<script>
+window.addEventListener('load', function() {
+  console.log("Page fully loaded");
+  console.log("google object available:", typeof google);
+  console.log("google.translate available:", typeof google?.translate);
+  
+  // Force initialization if it didn't happen
+  setTimeout(function() {
+    if (typeof google !== 'undefined' && google.translate) {
+      console.log("Google Translate is available, trying manual init");
+      if (typeof googleTranslateElementInit === 'function') {
+        googleTranslateElementInit();
+      }
+    } else {
+      console.error("Google Translate script failed to load");
+    }
+  }, 2000);
+});
+</script>
 
 </body>
 </html>

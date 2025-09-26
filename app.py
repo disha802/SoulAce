@@ -1418,7 +1418,7 @@ def visits_data():
 
 
 
-@app.route("/Admin/users", methods=["GET", "POST"])
+@app.route("/admin/users", methods=["GET", "POST"])
 def manage_users():
     if "user_id" not in session or session.get("role", "").lower() != "admin":
         return "Unauthorized", 403
@@ -1555,7 +1555,7 @@ def mood_trends():
 @app.route("/admin/api/average_scores", methods=["GET"])
 def admin_average_scores():
     try:
-        # Get all assessment records
+        # Get all assessment recordsf
         cursor = assess_col.find({})
         
         gad_scores = []
