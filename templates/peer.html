@@ -500,6 +500,16 @@ document.addEventListener('click', function(event) {
     }
   }
 });
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchPosts();
+      }
+    });
+  }
+});
 
 // Forum functionality
 function normalizePosts(raw) {
@@ -783,6 +793,8 @@ async function unflagContent(contentType, contentId, postId=null){
 
 function searchPosts(){
   const q = document.getElementById('search-input').value.toLowerCase().trim();
+   console.log('Search query:', q);
+  console.log('All posts:', allPosts.length);
   if(!q){ 
     applyFilter();
     return; 
@@ -795,18 +807,44 @@ function searchPosts(){
     basePosts = basePosts.filter(post => post.ai_flagged && !post.is_deleted);
   }
   
+  console.log('Base posts for search:', basePosts.length);
   posts = basePosts.filter(post => {
+    const title = (post.title || '').toLowerCase();
+    const content = (post.content || '').toLowerCase();
+    const author = post.is_anonymous ? '' : (post.username || post.author || '').toLowerCase();
     const inTitle = (post.title||'').toLowerCase().includes(q);
     const inContent = (post.content||'').toLowerCase().includes(q);
     const inAuthor = (!post.is_anonymous && (post.username||'').toLowerCase().includes(q));
-    const inReplies = (post.replies || []).some(r => (r.content||'').toLowerCase().includes(q) || (!r.anonymous && (r.author||'').toLowerCase().includes(q)));
-    return inTitle || inContent || inAuthor || inReplies;
+    const inReplies = (post.replies || []).some(r => {
+      const replyContent = (r.content || '').toLowerCase();
+      const replyAuthor = r.anonymous ? '' : (r.author || r.username || '').toLowerCase();
+      return replyContent.includes(q) || replyAuthor.includes(q);
+    });
+     const found = inTitle || inContent || inAuthor || inReplies;
+      if (found) {
+      console.log('Found match in post:', {
+        title: post.title,
+        matchedIn: {
+          title: inTitle,
+          content: inContent, 
+          author: inAuthor,
+          replies: inReplies
+        }
+      });
+    }
+    
+    return found;
   });
+  
+  console.log('Search results:', posts.length);
   renderPosts(posts);
 }
 
 function clearSearch(){ 
-  document.getElementById('search-input').value=''; 
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.value = ''; 
+  }
   applyFilter();
 }
 
@@ -881,7 +919,10 @@ function renderPosts(postsArray){
     postHeader.appendChild(authorSpan); 
     postHeader.appendChild(dateSpan);
 
-    const titleEl = document.createElement('h3'); 
+    const titleEl = document.createElement('h3');
+    titleEl.style.marginTop = '8px';
+titleEl.style.marginBottom = '8px';
+titleEl.style.color = 'var(--accent-2)';
     titleEl.textContent = p.title || '';
     const contentDiv = document.createElement('div'); 
     contentDiv.className = 'post-content';
@@ -942,11 +983,17 @@ function renderPosts(postsArray){
       actionsDiv.appendChild(delBtn);
     }
 
-    postEl.appendChild(postHeader);
-    if(p.title) postEl.appendChild(titleEl);
+    postEl.appendChild(postHeader);   
     postEl.appendChild(contentDiv);
     postEl.appendChild(actionsDiv);
-
+if (p.title && p.title.trim() !== '') {
+    titleEl.textContent = p.title.trim();
+    titleEl.style.display = 'block';
+    postEl.appendChild(titleEl);
+} else {
+    // Optional: Show a default title or hide completely
+    titleEl.style.display = 'none';
+}
     const replyForm = document.createElement('div'); 
     replyForm.id = `reply-form-${p.id||p._id}`; 
     replyForm.className = 'reply-form'; 
