@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SoulAce - Your Mental Health Companion</title>
+<link rel="icon" href="..\static\header-logo.png" type="image/png">
 <style>
   body { margin:0; font-family:'Segoe UI', sans-serif; color:#333; transition: background 0.4s, color 0.4s; background: url("{{url_for('static', filename='dashboard bg.jpg')}}") no-repeat center center fixed; background-size: cover;}
   header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
@@ -194,16 +195,37 @@
     <p>Pen down your thoughts and feelings of the day.</p>
   </a>
 </section>
+<button class="crisis-btn" id= "crisis-btn" type="button">🚨 Crisis</button>
 
 <footer>
   <p>SoulAce © 2025 — Built with 💙 by Synapsix</p>
 </footer>
-  <!-- <button class="crisis-btn" onclick="alert('Crisis logged')">🚨 Crisis</button> -->
-  <button class="crisis-btn" type="button">🚨 Crisis</button>
 
 <script>
 async function sendCrisis() {
+  
+  try {
+        const response = await fetch("/crisis", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message); // ✅ Crisis logged successfully
+        } else {
+            alert(result.error || "Something went wrong");
+        }
+    } catch (err) {
+        console.error("Error:", err);
+        alert("Network error, try again!");
+    }
+  
   console.log("[client] clicking crisis...");
+
 
   // quick ping test first (uncomment to test separately)
   // const ping = await fetch("/ping");
@@ -230,7 +252,7 @@ async function sendCrisis() {
   }
 }
 
-document.getElementById("crisis-Btn").addEventListener("click", sendCrisis);
+document.getElementById("crisis-btn").addEventListener("click", sendCrisis);
 </script>
 
 

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SoulAce Admin Dashboard</title>
+  <link rel="icon" href="..\static\header-logo.png" type="image/png">
   <style>
     body {
       margin: 0;
@@ -250,9 +251,18 @@
     <h2>Welcome, Admin {{username}}</h2>
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
-
+  
   <!-- Overview KPIs -->
   <section class="admin-section" aria-labelledby="kpi-heading">
+    <h2>Student Page Analytics</h2>
+<p>Total Visits: <span id="totalVisits">{{ total_visits }}</span></p>
+
+<h3>Visits by Date</h3>
+<ul id="visitsByDate">
+  {% for item in visits_by_date %}
+    <li>{{ item._id }} → {{ item.count }}</li>
+  {% endfor %}
+</ul>
     <h2 id="kpi-heading">Overview</h2>
     <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:12px">
       <div class="kpi-card" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f8faf8);box-shadow:0 6px 18px rgba(30,40,40,0.06)">
@@ -675,6 +685,26 @@ function showStacked() {
 }
 
 loadData();
+
+ async function fetchVisits() {
+    const res = await fetch("/admin/visits_data");
+    const data = await res.json();
+
+    // update total visits
+    document.getElementById("totalVisits").innerText = data.total_visits;
+
+    // update visits by date
+    const ul = document.getElementById("visitsByDate");
+    ul.innerHTML = "";
+    data.visits_by_date.forEach(item => {
+      const li = document.createElement("li");
+      li.innerText = `${item._id} → ${item.count}`;
+      ul.appendChild(li);
+    });
+  }
+
+  // refresh every 5 seconds
+  setInterval(fetchVisits, 5000);
 </script>
 
 </body>

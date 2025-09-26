@@ -3,72 +3,141 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SoulAce â€” GAD7 + PHQ9</title>
-
+<title>SoulAce — GAD7 + PHQ9</title>
+<link rel="icon" href="..\static\header-logo.png" type="image/png">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  /* Base inspired by booking.html: soft off-white page, card, bigger fonts */
-  :root {
-    --page-bg: #F5F7F2;
-    --card-bg: #ffffff;
-    --muted: #657A74;
-    --accent: #3b82f6;
-    --glass: rgba(0,0,0,0.02);
-    --max-width: 1100px;
-  }
-  html,body{height:100%;margin:0;font-family: 'Segoe UI', Roboto, system-ui, -apple-system, Arial;}
-  body{background:var(--page-bg);color:#243B36;display:flex;align-items:flex-start;justify-content:center;padding:28px 12px;}
+:root {
+  --page-bg: #F5F7F2;
+  --card-bg: #ffffff;
+  --muted: #657A74;
+  --accent: #3b82f6;
+  --glass: rgba(0,0,0,0.02);
+  --max-width: 1100px;
+}
 
-  .container{width:100%;max-width:var(--max-width);display:grid;grid-template-columns:1fr 380px;gap:18px;}
-  @media (max-width:980px){ .container{grid-template-columns:1fr} }
+html, body { height:100%; margin:0; font-family:'Segoe UI', Roboto, system-ui, -apple-system, Arial; }
+body { display:flex; flex-direction:column; min-height:100vh; margin:0; background:var(--page-bg); color:#333; transition:0.4s; }
 
-  .card{background:var(--card-bg);padding:20px;border-radius:12px;box-shadow:0 6px 22px rgba(30,40,40,0.06);border:1px solid rgba(0,0,0,0.03)}
-  h1{margin:0 0 6px 0;font-size:22px}
-  p.lead{margin:0;color:var(--muted);font-size:14px}
+header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; z-index:1000; }
+.header-left { display:flex; align-items:center; gap:15px; }
+.header-text { display:flex; flex-direction:column; }
+.logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+header h1 { margin:0; font-size:1.8rem; color:#fff; }
+.header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
+.header-right { display:flex; align-items:center; gap:10px; position:relative; }
+.user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
 
-  /* question panel (left main) */
-  .question-area { display:flex;flex-direction:column;gap:16px; }
-  .q-card{background:linear-gradient(180deg, #fff, #fbfcfb);padding:18px;border-radius:12px;border:1px solid rgba(0,0,0,0.03); }
-  .q-top{display:flex;justify-content:space-between;align-items:center}
-  .q-title{font-size:18px;font-weight:700}
-  .q-sub{color:var(--muted);font-size:13px}
+/* User popup updated */
+.user-popup {
+  display:none;
+  position:absolute;
+  top:50px;
+  right:0;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.2);
+  padding:12px;
+  z-index:100;
+  min-width:220px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
 
-  .question-text{font-size:20px;margin:12px 0 8px 0;color:#102023}
+.user-popup .popup-btn {
+  display:block;
+  width:100%;
+  padding:10px 14px;
+  border:none;
+  background:#657A74; /* Button background color */
+  color:#fff;          /* Text color */
+  border-radius:8px;
+  text-align:left;     /* Left aligned text */
+  cursor:pointer;
+  font-weight:600;
+  transition:0.2s;
+}
 
-  /* options */
-  .options{display:flex;gap:12px;flex-wrap:wrap}
-  .option{flex:1 1 45%;min-width:160px;padding:12px 14px;border-radius:10px;border:1px solid #e6e6e6;background:#fff;cursor:pointer;user-select:none}
-  .option .lab{font-weight:700;font-size:15px}
-  .option .desc{color:var(--muted);font-size:13px;margin-top:6px}
-  .option.selected{outline:3px solid rgba(59,130,246,0.12);box-shadow:0 8px 18px rgba(59,130,246,0.06)}
+.user-popup .popup-btn:hover {
+  background:#3c4c48;  /* Darker on hover */
+}
 
-  /* controls */
-  .controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-  .btn.secondary{background:#f1f1f1;color:#243B36}
-  .btn.primary{background:var(--accent);color:#fff}
+#google_translate_element {
+  margin-top:8px;
+}
 
-  .progress{height:10px;background:#f0f2f1;border-radius:999px;overflow:hidden;margin-top:8px}
-  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent), #60a5fa);transition:width .25s ease}
+/* Container and layout */
+.container { flex:1 0 auto; display:grid; grid-template-columns:1fr 380px; gap:18px; max-width: var(--max-width); width:100%; margin:0 auto; padding:28px 12px; }
+@media (max-width:980px){ .container{grid-template-columns:1fr} }
 
-  /* right column: summary + charts */
-  .summary-col{display:flex;flex-direction:column;gap:14px}
-  .score-summary{padding:14px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfcfb);border:1px solid rgba(0,0,0,0.03)}
-  .score-row{display:flex;justify-content:space-between;align-items:center}
-  .score-big{font-size:22px;font-weight:800}
-  .sev{font-weight:700;color:#3b3b3b}
-  .warn{color:#b45309;font-weight:800}
+footer { width:100%; flex-shrink:0; text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:auto; }
 
-  canvas{background:transparent;border-radius:8px}
+.card{background:var(--card-bg);padding:20px;border-radius:12px;box-shadow:0 6px 22px rgba(30,40,40,0.06);border:1px solid rgba(0,0,0,0.03)}
+.question-area { display:flex;flex-direction:column;gap:16px; }
+.q-card{background:linear-gradient(180deg, #fff, #fbfcfb);padding:18px;border-radius:12px;border:1px solid rgba(0,0,0,0.03); }
+.q-top{display:flex;justify-content:space-between;align-items:center}
+.q-title{font-size:18px;font-weight:700}
+.q-sub{color:var(--muted);font-size:13px}
+.question-text{font-size:20px;margin:12px 0 8px 0;color:#102023}
+.options{display:flex;gap:12px;flex-wrap:wrap}
+.option{flex:1 1 45%;min-width:160px;padding:12px 14px;border-radius:10px;border:1px solid #e6e6e6;background:#fff;cursor:pointer;user-select:none}
+.option .lab{font-weight:700;font-size:15px}
+.option.selected{outline:3px solid rgba(59,130,246,0.12);box-shadow:0 8px 18px rgba(59,130,246,0.06)}
+.controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn.secondary{background:#f1f1f1;color:#243B36}
+.btn.primary{background:var(--accent);color:#fff; background-color: #657A74;}
+.progress{height:10px;background:#f0f2f1;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent), #60a5fa);transition:width .25s ease}
 
-  .note{font-size:13px;color:var(--muted)}
+.summary-col{display:flex;flex-direction:column;gap:14px}
+.score-summary{padding:14px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfcfb);border:1px solid rgba(0,0,0,0.03)}
+.score-row{display:flex;justify-content:space-between;align-items:center}
+.score-big{font-size:22px;font-weight:800}
+.sev{font-weight:700;color:#3b3b3b}
+.warn{color:#b45309;font-weight:800}
+canvas{background:transparent;border-radius:8px}
+.note{font-size:13px;color:var(--muted)}
 
-  footer.small{margin-top:10px;font-size:12px;color:var(--muted)}
+body.dark-mode { background:#1f2937; color:#f3f4f6; }
+body.dark-mode header { background:#374151; }
+body.dark-mode .card { background:#111827; color:#f3f4f6; }
+body.dark-mode .user-popup { background:#374151; color:#f3f4f6; }
+body.dark-mode .btn.primary { background:#2563eb; color:#fff; }
+body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
 </style>
+
 </head>
 <body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+    </div>
+    <div class="header-text">
+      <h1>SoulAce</h1>
+      <h3>Wellness begins here.</h3>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-icon-container">
+      <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+      <div id="user-popup" class="user-popup">
+        <button class="popup-btn" onclick="toggleTranslateDropdown()">🌐 Change Language</button>
+        <div id="google_translate_element" style="display:none;"></div>
+        <button class="popup-btn" onclick="window.location='/dashboard'">🏠 Home</button>
+        <button class="popup-btn" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+          <button type="submit" class="popup-btn">🚪 Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
 
 <div class="container">
   <!-- LEFT: questions -->
@@ -76,43 +145,37 @@
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h1>Quick Mental Health Screen</h1>
-        <p class="lead">GAD-7 + PHQ-9 â€” How often in the last 2 weeks have you been bothered by these problems?</p>
+        <p class="lead">GAD-7 + PHQ-9 + GHQ-12 — How often in the last 2 weeks have you been bothered by these problems?</p>
       </div>
       <div style="text-align:right">
         <div class="note">Signed in as <strong id="uname">You</strong></div>
       </div>
     </div>
-
-    <div id="questionContainer">
-      <!-- JS will populate question cards (one visible at a time in vertical stack) -->
-    </div>
-
+    <div id="questionContainer"></div>
     <div class="progress" aria-hidden="true"><i id="progressFill"></i></div>
     <div class="controls">
-      <button id="backBtn" class="btn secondary">â† Back</button>
+      <button id="backBtn" class="btn secondary">← Back</button>
       <div style="display:flex;gap:8px">
         <button id="saveBtn" class="btn" style="display:none">Save & Exit</button>
-        <button id="nextBtn" class="btn primary">Next â†’</button>
+        <button id="nextBtn" class="btn primary">Next →</button>
       </div>
     </div>
-
-    <footer class="small">This is a screening tool only â€” not a diagnostic. If PHQ-9 item 9 indicates suicidal ideation, please show crisis contacts immediately.</footer>
+    <footer class="small">This is a screening tool only — not a diagnostic. If PHQ-9 item 9 indicates suicidal ideation, please show crisis contacts immediately.</footer>
   </main>
 
-  <!-- RIGHT: results & charts -->
+  <!-- RIGHT: summary + charts -->
   <aside class="summary-col">
     <div class="card score-summary">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:800">Your Latest Scores</div>
-          <div class="note">After you finish, charts will appear here.</div>
+          <div class="note" id="scoresNote">Loading previous scores...</div>
         </div>
         <div style="text-align:right">
-          <div id="lastUpdate" class="note">â€”</div>
+          <div id="lastUpdate" class="note">—</div>
           <div style="font-size:12px;color:var(--muted)">Local</div>
         </div>
       </div>
-
       <div id="currentScoresArea" style="margin-top:12px;display:none">
         <div class="score-row">
           <div>
@@ -125,338 +188,595 @@
             <div class="score-big" id="phqTotal">0</div>
             <div class="note" id="phqSeverity">None-Minimal</div>
           </div>
+          <div>
+            <div class="note">General Health (GHQ-12)</div>
+            <div class="score-big" id="ghqLikert">0</div>
+            <div class="note" id="ghqSeverity">Normal</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="note">GHQ-12 Bimodal: <strong id="ghqBimodal">0</strong></div>
         </div>
         <div style="margin-top:10px">
-          <button id="exportBtn" class="btn secondary">Copy results</button>
-          <button id="viewHistoryBtn" class="btn primary">Refresh history</button>
+          <button id="downloadBtn" class="btn secondary">Download results</button>
+          <button id="viewHistoryBtn" class="btn primary">View history</button>
         </div>
       </div>
     </div>
-
-    <div class="card" id="chartCard" style="display:none;flex-direction:column">
-      <div style="font-weight:800;margin-bottom:8px">Charts</div>
-      <canvas id="barChart" height="200"></canvas>
-      <div style="height:10px"></div>
-      <canvas id="lineChart" height="180"></canvas>
+    
+    <!-- Chart Area -->
+    <div class="card" id="chartArea" style="display:none;">
+      <h3 style="margin-top:0;">Score Trends</h3>
+      <div style="position: relative; height: 200px; width: 100%;">
+        <canvas id="scoresChart"></canvas>
+      </div>
     </div>
-
-    <div class="card" id="safetyCard" style="display:none">
-      <div style="font-weight:800;color:#b45309">Safety note</div>
-      <div class="note" id="safetyText" style="margin-top:8px"></div>
-    </div>
-
   </aside>
 </div>
 
+<footer>
+  <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+</footer>
+
 <script>
-      // Injected by Flask (place this at the very top of your script block)
-  window.__USER_ID = "{{ session.get('user_id', '') }}";
-  // Use |e to escape username safely
-  const __USERNAME_FROM_SERVER = "{{ session.get('username', 'You')|e }}";
+document.addEventListener('DOMContentLoaded', () => {
+  // USER DATA
+  window.__USER_ID = "{{ session.get('user_id','') }}";
+  const __USERNAME_FROM_SERVER = "{{ session.get('username','You')|e }}";
+  document.getElementById('uname').textContent = __USERNAME_FROM_SERVER;
 
-  // Wait for DOM to be ready before touching elements
-  document.addEventListener('DOMContentLoaded', () => {
-    // set visible username
-    const unameEl = document.getElementById('uname');
-    if (unameEl) unameEl.textContent = __USERNAME_FROM_SERVER;
+  // Load previous scores on page load
+  loadPreviousScores();
 
-    // also expose user id (some pages use it)
-    if (!window.__USER_ID) {
-      // optional: fallback - keeps existing behavior
-      window.__USER_ID = '';
+  // USER POPUP
+  function toggleUserPopup(){
+    const popup = document.getElementById('user-popup');
+    popup.style.display = (popup.style.display==='block') ? 'none':'block';
+  }
+  document.querySelector('.user-icon').addEventListener('click', toggleUserPopup);
+  document.addEventListener('click', function(e){
+    const popup = document.getElementById('user-popup');
+    const icon = document.querySelector('.user-icon');
+    if(!popup.contains(e.target) && e.target!==icon){
+      popup.style.display='none';
     }
   });
-  window.__USER_ID = "{{ session.get('user_id','') }}";
-  document.getElementById('uname').textContent = "{{ session.get('username','You') }}";
-/* QUESTIONS & OPTIONS (same mapping as before) */
-const questions = [
-  {id:'gad1', text:'Feeling nervous, anxious, or on edge.' , scale:'GAD'},
-  {id:'gad2', text:'Not being able to stop or control worrying.' , scale:'GAD'},
-  {id:'gad3', text:'Worrying too much about different things.' , scale:'GAD'},
-  {id:'gad4', text:'Trouble relaxing.' , scale:'GAD'},
-  {id:'gad5', text:'Being so restless that it is hard to sit still.' , scale:'GAD'},
-  {id:'gad6', text:'Becoming easily annoyed or irritable.' , scale:'GAD'},
-  {id:'gad7', text:'Feeling afraid as if something awful might happen.' , scale:'GAD'},
-  {id:'phq1', text:'Little interest or pleasure in doing things.' , scale:'PHQ'},
-  {id:'phq2', text:'Feeling down, depressed, or hopeless.' , scale:'PHQ'},
-  {id:'phq3', text:'Trouble falling or staying asleep, or sleeping too much.' , scale:'PHQ'},
-  {id:'phq4', text:'Feeling tired or having little energy.' , scale:'PHQ'},
-  {id:'phq5', text:'Poor appetite or overeating.' , scale:'PHQ'},
-  {id:'phq6', text:'Feeling bad about yourself â€” or that you are a failure or have let yourself or your family down.' , scale:'PHQ'},
-  {id:'phq7', text:'Trouble concentrating on things, such as reading the newspaper or watching television.' , scale:'PHQ'},
-  {id:'phq8', text:'Moving or speaking slowly OR being fidgety/restless.' , scale:'PHQ'},
-  {id:'phq9', text:'Thoughts that you would be better off dead, or of hurting yourself in some way.' , scale:'PHQ'}
-];
 
-const options = [
-  {label:'Not at all', score:0},
-  {label:'Several days', score:1},
-  {label:'More than half the days', score:2},
-  {label:'Nearly every day', score:3}
-];
+  // DARK MODE
+  window.toggleDarkMode = function(){
+    document.body.classList.toggle('dark-mode');
+  }
 
-let answers = new Array(questions.length).fill(null);
-let curIndex = 0;
+  // GOOGLE TRANSLATE
+  let translateLoaded = false;
+  window.toggleTranslateDropdown = function(){
+    const el = document.getElementById('google_translate_element');
+    if(el.style.display==='block'){
+      el.style.display='none';
+    } else {
+      el.style.display='block';
+      if(!translateLoaded){
+        new google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,hi,ur',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+        translateLoaded = true;
+      }
+    }
+  }
 
-/* UI refs */
-const qCon = document.getElementById('questionContainer');
-const progressFill = document.getElementById('progressFill');
-const backBtn = document.getElementById('backBtn');
-const nextBtn = document.getElementById('nextBtn');
-const saveBtn = document.getElementById('saveBtn');
-const unameEl = document.getElementById('uname');
-const currentScoresArea = document.getElementById('currentScoresArea');
-const gadTotalEl = document.getElementById('gadTotal');
-const phqTotalEl = document.getElementById('phqTotal');
-const gadSeverityEl = document.getElementById('gadSeverity');
-const phqSeverityEl = document.getElementById('phqSeverity');
-const chartCard = document.getElementById('chartCard');
-const chartBarCanvas = document.getElementById('barChart');
-const chartLineCanvas = document.getElementById('lineChart');
-const exportBtn = document.getElementById('exportBtn');
-const viewHistoryBtn = document.getElementById('viewHistoryBtn');
-const lastUpdate = document.getElementById('lastUpdate');
-const safetyCard = document.getElementById('safetyCard');
-const safetyText = document.getElementById('safetyText');
+  /* QUESTIONS: GAD-7 (7), PHQ-9 (9), then GHQ-12 (12) */
+  /* GHQ-12 items include orientation: 'pos' for positively worded items (higher = better) and 'neg' for negatively worded */
+  const questions = [
+    /* GAD-7 */
+    {id:'gad1', text:'Feeling nervous, anxious, or on edge.' , scale:'GAD'},
+    {id:'gad2', text:'Not being able to stop or control worrying.' , scale:'GAD'},
+    {id:'gad3', text:'Worrying too much about different things.' , scale:'GAD'},
+    {id:'gad4', text:'Trouble relaxing.' , scale:'GAD'},
+    {id:'gad5', text:'Being so restless that it is hard to sit still.' , scale:'GAD'},
+    {id:'gad6', text:'Becoming easily annoyed or irritable.' , scale:'GAD'},
+    {id:'gad7', text:'Feeling afraid as if something awful might happen.' , scale:'GAD'},
 
-/* Generate simple stacked vertical list of question cards but only one shown at a time */
-function renderQuestions(){
-  qCon.innerHTML = '';
-  questions.forEach((q, idx) => {
-    const el = document.createElement('div');
-    el.className = 'q-card';
-    el.style.display = (idx === curIndex ? 'block' : 'none');
-    el.dataset.index = idx;
-    el.innerHTML = `
-      <div class="q-top">
-        <div>
-          <div class="q-title">Question ${idx+1} of ${questions.length}</div>
-          <div class="q-sub">${q.scale === 'GAD' ? 'GAD-7' : 'PHQ-9'}</div>
+    /* PHQ-9 */
+    {id:'phq1', text:'Little interest or pleasure in doing things.' , scale:'PHQ'},
+    {id:'phq2', text:'Feeling down, depressed, or hopeless.' , scale:'PHQ'},
+    {id:'phq3', text:'Trouble falling or staying asleep, or sleeping too much.' , scale:'PHQ'},
+    {id:'phq4', text:'Feeling tired or having little energy.' , scale:'PHQ'},
+    {id:'phq5', text:'Poor appetite or overeating.' , scale:'PHQ'},
+    {id:'phq6', text:'Feeling bad about yourself — or that you are a failure or have let yourself or your family down.' , scale:'PHQ'},
+    {id:'phq7', text:'Trouble concentrating on things, such as reading the newspaper or watching television.' , scale:'PHQ'},
+    {id:'phq8', text:'Moving or speaking slowly OR being fidgety/restless.' , scale:'PHQ'},
+    {id:'phq9', text:'Thoughts that you would be better off dead, or of hurting yourself in some way.' , scale:'PHQ'},
+
+    /* GHQ-12 */
+    {id:'ghq1',  text:"Have you recently been able to concentrate on whatever you're doing?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq2',  text:"Have you recently lost much sleep over worry?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq3',  text:"Have you recently felt that you were playing a useful part in things?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq4',  text:"Have you recently felt capable of making decisions about things?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq5',  text:"Have you recently felt constantly under strain?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq6',  text:"Have you recently felt you couldn't overcome your difficulties?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq7',  text:"Have you recently been able to enjoy your normal day-to-day activities?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq8',  text:"Have you recently been able to face up to problems?", orientation:'pos', scale:'GHQ'},
+    {id:'ghq9',  text:"Have you recently been feeling unhappy or depressed?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq10', text:"Have you recently been losing confidence in yourself?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq11', text:"Have you recently been thinking of yourself as a worthless person?", orientation:'neg', scale:'GHQ'},
+    {id:'ghq12', text:"Have you recently been feeling reasonably happy, all things considered?", orientation:'pos', scale:'GHQ'}
+  ];
+
+  const options = [
+    {label:'Not at all', score:0},
+    {label:'Several days', score:1},
+    {label:'More than half the days', score:2},
+    {label:'Nearly every day', score:3}
+  ];
+
+  const ghq_options = {
+    pos: [
+      {label:'More so than usual', score:0},
+      {label:'Same as usual', score:1},
+      {label:'Less than usual', score:2},
+      {label:'Much less than usual', score:3}
+    ],
+    neg: [
+      {label:'Not at all', score:0},
+      {label:'No more than usual', score:1},
+      {label:'Rather more than usual', score:2},
+      {label:'Much more than usual', score:3}
+    ]
+  };
+
+  let answers = new Array(questions.length).fill(null);
+  let curIndex = 0;
+  const qCon = document.getElementById('questionContainer');
+  const progressFill = document.getElementById('progressFill');
+  const backBtn = document.getElementById('backBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function renderQuestions(){
+    qCon.innerHTML = '';
+    questions.forEach((q, idx)=>{
+      const el = document.createElement('div');
+      el.className='q-card';
+      el.style.display=(idx===curIndex?'block':'none');
+      el.dataset.index=idx;
+      
+      // Determine which scale label to show
+      let scaleLabel = q.scale === 'GAD' ? 'GAD-7' : q.scale === 'PHQ' ? 'PHQ-9' : 'GHQ-12';
+      
+      el.innerHTML=`
+        <div class="q-top">
+          <div>
+            <div class="q-title">Question ${idx+1} of ${questions.length}</div>
+            <div class="q-sub">${scaleLabel}</div>
+          </div>
+          <div class="q-sub">${q.scale}</div>
         </div>
-        <div class="q-sub">${q.scale}</div>
-      </div>
-      <div class="question-text">${q.text}</div>
-      <div class="options" aria-hidden="false"></div>
-    `;
-    // options
-    const optsWrap = el.querySelector('.options');
-    options.forEach((op, oi) => {
-      const btn = document.createElement('div');
-      btn.className = 'option';
-      if(answers[idx] === op.score) btn.classList.add('selected');
-      btn.innerHTML = `<div class="lab">${op.label}</div>`;
-      btn.addEventListener('click', () => {
-        answers[idx] = op.score;
-        // mark selected visually
-        optsWrap.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-        btn.classList.add('selected');
+        <div class="question-text">${q.text}</div>
+        <div class="options"></div>
+      `;
+      const optsWrap=el.querySelector('.options');
 
-        // small auto-next to keep flow (except last)
-        setTimeout(() => {
-          if (curIndex < questions.length - 1) { curIndex++; updateView(); }
-        }, 220);
+      // FIXED: Use the correct options based on scale
+      let optsToUse = options;
+      if (q.scale === 'GHQ') {
+        optsToUse = q.orientation === 'pos' ? ghq_options.pos : ghq_options.neg;
+      }
+      
+      // FIXED: Use optsToUse instead of options
+      optsToUse.forEach(op=>{
+        const btn=document.createElement('div');
+        btn.className='option';
+        btn.innerHTML=`<div class="lab">${op.label}</div>`;
+        btn.addEventListener('click', ()=>{
+          answers[idx]=op.score;
+          optsWrap.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+          btn.classList.add('selected');
+          
+          // Update the submit button text if we're on the last question
+          if(idx === questions.length - 1) {
+            nextBtn.textContent = 'Submit';
+            nextBtn.style.background = '#059669'; // Green color to indicate ready to submit
+          }
+          
+          setTimeout(()=>{ 
+            if(curIndex<questions.length-1){ 
+              curIndex++; 
+              updateView(); 
+            }
+          }, 220);
+        });
+        optsWrap.appendChild(btn);
       });
-      optsWrap.appendChild(btn);
+
+      qCon.appendChild(el);
+    });
+    updateView();
+  }
+
+  function updateView(){
+    document.querySelectorAll('.q-card').forEach(card=>{
+      const i=Number(card.dataset.index);
+      card.style.display=(i===curIndex)?'block':'none';
+    });
+    
+    backBtn.disabled = curIndex === 0;
+    backBtn.style.opacity = curIndex === 0 ? '0.5' : '1';
+    
+    nextBtn.textContent = (curIndex === questions.length - 1) ? 'Submit' : 'Next →';
+    
+    // Fixed progress calculation - shows current question progress
+    const currentProgress = Math.round(((curIndex + 1) / questions.length) * 100);
+    progressFill.style.width = currentProgress + '%';
+  }
+
+  backBtn.addEventListener('click', ()=>{ if(curIndex>0) curIndex--; updateView(); });
+  
+  // Fixed submit handler
+  nextBtn.addEventListener('click', ()=>{
+    if(curIndex === questions.length - 1){
+      // Check if all questions are answered (including current one)
+      const unanswered = answers.some(a => a === null);
+      if(unanswered) {
+        // Find which question number is unanswered for better error message
+        const firstUnanswered = answers.findIndex(a => a === null) + 1;
+        alert(`Please answer question ${firstUnanswered} before submitting.`);
+        return;
+      }
+      
+      // Submit to API
+      fetch("/api/submit", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ user_id: window.__USER_ID, answers })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data.ok){
+          // Update the display with all scores
+          document.getElementById("gadTotal").textContent = data.gadTotal;
+          document.getElementById("phqTotal").textContent = data.phqTotal;
+          document.getElementById("gadSeverity").textContent = data.gadSeverity;
+          document.getElementById("phqSeverity").textContent = data.phqSeverity;
+          document.getElementById("ghqLikert").textContent = data.ghqLikertTotal;
+          document.getElementById("ghqBimodal").textContent = data.ghqBimodalTotal;
+          document.getElementById("ghqSeverity").textContent = data.ghqSeverity;
+          
+          // Show the scores area and update timestamp
+          document.getElementById("currentScoresArea").style.display = "block";
+          document.getElementById("lastUpdate").textContent = new Date().toLocaleString();
+          document.getElementById('scoresNote').textContent = "Latest assessment completed";
+          
+          // Refresh the chart with new data
+          setTimeout(() => {
+            fetch("/api/scores?user_id=" + window.__USER_ID)
+              .then(r => r.json())
+              .then(chartData => {
+                if(chartData.length > 1) {
+                  // Destroy existing chart if it exists
+                  if(window.scoresChart) {
+                    window.scoresChart.destroy();
+                  }
+                  createScoreChart(chartData);
+                }
+              })
+              .catch(err => console.error("Error refreshing chart:", err));
+          }, 500);
+          
+          // Hide the question area and show completion message
+          document.querySelector("main.question-area").innerHTML = `
+            <div style="text-align:center; padding:40px;">
+              <h2 style="color: #3b82f6; margin-bottom: 20px;">✅ Assessment Complete!</h2>
+              <p style="font-size: 18px; margin-bottom: 30px;">Your results have been saved and are displayed in the summary panel.</p>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="window.location.reload()" class="btn secondary">Take Again</button>
+                <button onclick="window.location='/dashboard'" class="btn primary">Return to Dashboard</button>
+              </div>
+            </div>
+          `;
+          
+          console.log("Assessment completed successfully:", data);
+        } else {
+          alert("Error: " + (data.error || "Unknown error occurred"));
+          console.error("Submission error:", data);
+        }
+      })
+      .catch(err => {
+        console.error("Network error:", err);
+        alert("Network error: Unable to submit assessment. Please check your connection and try again.");
+      });
+      return;
+    }
+    
+    // Move to next question
+    if(curIndex < questions.length - 1) {
+      curIndex++;
+      updateView();
+    }
+  });
+
+  // Download results functionality
+  document.getElementById("downloadBtn").addEventListener("click", function() {
+    const gadTotal = document.getElementById("gadTotal").textContent;
+    const phqTotal = document.getElementById("phqTotal").textContent;
+    const gadSeverity = document.getElementById("gadSeverity").textContent;
+    const phqSeverity = document.getElementById("phqSeverity").textContent;
+    const ghqLikert = document.getElementById("ghqLikert").textContent;
+    const ghqBimodal = document.getElementById("ghqBimodal").textContent;
+    const ghqSeverity = document.getElementById("ghqSeverity").textContent;
+    const timestamp = document.getElementById("lastUpdate").textContent;
+    
+    const results = `Mental Health Assessment Results
+Date: ${timestamp}
+Username: ${__USERNAME_FROM_SERVER}
+
+=== SCORES ===
+GAD-7 (Anxiety): ${gadTotal}/21 - ${gadSeverity}
+PHQ-9 (Depression): ${phqTotal}/27 - ${phqSeverity}
+GHQ-12 (General Health): ${ghqLikert}/36 - ${ghqSeverity}
+GHQ-12 Bimodal: ${ghqBimodal}/12
+
+=== ASSESSMENT INFORMATION ===
+GAD-7: Generalized Anxiety Disorder 7-item scale
+- Minimal: 0-4
+- Mild: 5-9
+- Moderate: 10-14
+- Severe: 15-21
+
+PHQ-9: Patient Health Questionnaire 9-item scale
+- None-Minimal: 0-4
+- Mild: 5-9
+- Moderate: 10-14
+- Moderately Severe: 15-19
+- Severe: 20-27
+
+GHQ-12: General Health Questionnaire 12-item scale
+- Normal: 0-11
+- Moderate distress: 12-19
+- Severe distress: 20-36
+
+Note: This is a screening tool, not a diagnostic assessment.
+Please consult with a healthcare professional for proper evaluation.
+`;
+
+    // Create and download the file
+    const blob = new Blob([results], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Mental_Health_Assessment_${__USERNAME_FROM_SERVER}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  });
+
+  // View history functionality
+  document.getElementById("viewHistoryBtn").addEventListener("click", function() {
+    fetch("/api/scores?user_id=" + window.__USER_ID)
+      .then(r => r.json())
+      .then(data => {
+        if(data.length === 0) {
+          alert("No previous assessments found.");
+          return;
+        }
+        
+        let historyHtml = "<h3>Assessment History</h3><div style='max-height:300px;overflow-y:auto;'>";
+        data.forEach((assessment, index) => {
+          const date = new Date(assessment.timestamp).toLocaleDateString();
+          historyHtml += `
+            <div style="border:1px solid #ddd;padding:10px;margin:5px 0;border-radius:5px;">
+              <strong>Assessment ${index + 1}</strong> - ${date}<br>
+              GAD-7: ${assessment.gadTotal} (${assessment.gadSeverity})<br>
+              PHQ-9: ${assessment.phqTotal} (${assessment.phqSeverity})<br>
+              GHQ-12: ${assessment.ghqLikertTotal || 0} (${assessment.ghqSeverity || 'Normal'})
+            </div>
+          `;
+        });
+        historyHtml += "</div>";
+        
+        // Create a modal-like display
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position:fixed;top:0;left:0;width:100%;height:100%;
+          background:rgba(0,0,0,0.5);z-index:1000;display:flex;
+          align-items:center;justify-content:center;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+          background:white;padding:20px;border-radius:10px;
+          max-width:500px;width:90%;max-height:80%;overflow-y:auto;
+        `;
+        content.innerHTML = historyHtml + `
+          <button onclick="this.closest('div').remove()" 
+                  style="margin-top:15px;padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:5px;cursor:pointer;">
+            Close
+          </button>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+          if(e.target === modal) {
+            modal.remove();
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching history:", err);
+        alert("Unable to load assessment history.");
+      });
+  });
+
+  renderQuestions();
+
+  // Function to load previous scores on page load
+  function loadPreviousScores() {
+    if (!window.__USER_ID) {
+      document.getElementById('scoresNote').textContent = "Please log in to see previous scores.";
+      return;
+    }
+
+    fetch("/api/scores?user_id=" + window.__USER_ID)
+      .then(r => r.json())
+      .then(data => {
+        if(data.length === 0) {
+          document.getElementById('scoresNote').textContent = "No previous assessments found.";
+          return;
+        }
+        
+        // Show latest scores
+        const latest = data[0];
+        document.getElementById("gadTotal").textContent = latest.gadTotal;
+        document.getElementById("phqTotal").textContent = latest.phqTotal;
+        document.getElementById("gadSeverity").textContent = latest.gadSeverity;
+        document.getElementById("phqSeverity").textContent = latest.phqSeverity;
+        document.getElementById("ghqLikert").textContent = latest.ghqLikertTotal || 0;
+        document.getElementById("ghqBimodal").textContent = latest.ghqBimodalTotal || 0;
+        document.getElementById("ghqSeverity").textContent = latest.ghqSeverity || "Normal";
+        
+        const lastDate = new Date(latest.timestamp).toLocaleDateString();
+        document.getElementById("lastUpdate").textContent = lastDate;
+        document.getElementById('scoresNote').textContent = `Latest assessment from ${lastDate}`;
+        
+        // Show the scores area
+        document.getElementById("currentScoresArea").style.display = "block";
+        
+        // Create charts if we have multiple assessments
+        if(data.length > 1) {
+          createScoreChart(data);
+        }
+      })
+      .catch(err => {
+        console.error("Error loading previous scores:", err);
+        document.getElementById('scoresNote').textContent = "Unable to load previous scores.";
+      });
+  }
+
+  // Function to create score trend chart
+  function createScoreChart(assessments) {
+    const ctx = document.getElementById('scoresChart').getContext('2d');
+    
+    // Sort by date (oldest first)
+    const sortedData = assessments.reverse();
+    
+    const labels = sortedData.map(a => new Date(a.timestamp).toLocaleDateString());
+    const gadScores = sortedData.map(a => a.gadTotal);
+    const phqScores = sortedData.map(a => a.phqTotal);
+    const ghqScores = sortedData.map(a => a.ghqLikertTotal || 0);
+
+    // Store chart instance globally for later destruction
+    window.scoresChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'GAD-7 (Anxiety)',
+          data: gadScores,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.1,
+          fill: false
+        }, {
+          label: 'PHQ-9 (Depression)',
+          data: phqScores,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.1,
+          fill: false
+        }, {
+          label: 'GHQ-12 (General Distress)',
+          data: ghqScores,
+          borderColor: '#059669',
+          backgroundColor: 'rgba(5, 150, 105, 0.1)',
+          tension: 0.1,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              padding: 15,
+              font: {
+                size: 11
+              }
+            }
+          },
+          title: {
+            display: false // Remove title to save space
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 21,
+            ticks: {
+              font: {
+                size: 10
+              },
+              stepSize: 5
+            },
+            title: {
+              display: true,
+              text: 'Score',
+              font: {
+                size: 11
+              }
+            }
+          },
+          x: {
+            ticks: {
+              font: {
+                size: 9
+              },
+              maxRotation: 45,
+              minRotation: 0
+            },
+            title: {
+              display: true,
+              text: 'Date',
+              font: {
+                size: 11
+              }
+            }
+          }
+        },
+        elements: {
+          point: {
+            radius: 3
+          },
+          line: {
+            borderWidth: 2
+          }
+        }
+      }
     });
 
-    qCon.appendChild(el);
-  });
-
-  updateView();
-}
-
-/* update visible card & progress */
-function updateView(){
-  document.querySelectorAll('.q-card').forEach(card => {
-    const i = Number(card.dataset.index);
-    card.style.display = (i === curIndex) ? 'block' : 'none';
-  });
-  backBtn.disabled = curIndex === 0;
-  nextBtn.textContent = (curIndex === questions.length - 1) ? 'Submit' : 'Next â†’';
-  // progress percent = answered count / total
-  const answered = answers.filter(x => x !== null).length;
-  const percent = Math.round((answered / questions.length) * 100);
-  progressFill.style.width = percent + '%';
-}
-
-/* navigation */
-backBtn.addEventListener('click', () => { if(curIndex>0) curIndex--; updateView(); });
-nextBtn.addEventListener('click', () => {
-  if (curIndex === questions.length - 1) {
-    // submit
-    submitAnswers();
-    return;
+    // Show the chart area
+    document.getElementById('chartArea').style.display = 'block';
   }
-  curIndex++; updateView();
 });
 
-exportBtn.addEventListener('click', () => {
-  const payload = computePayload();
-  navigator.clipboard?.writeText(JSON.stringify(payload, null, 2)).then(()=> alert('Copied to clipboard.'));
-});
+// Global function for Google Translate initialization
+window.googleTranslateElementInit = function() {
+  console.log("Google Translate initialized");
+};
 
-viewHistoryBtn.addEventListener('click', fetchHistoryAndDraw);
-
-/* compute totals & severities */
-function computePayload(){
-  const gad = answers.slice(0,7).map(v => v===null?0:v);
-  const phq = answers.slice(7).map(v => v===null?0:v);
-  const gadTotal = gad.reduce((a,b)=>a+b,0);
-  const phqTotal = phq.reduce((a,b)=>a+b,0);
-
-  const gadSeverity = (gadTotal >= 15) ? 'Severe' : (gadTotal >= 10) ? 'Moderate' : (gadTotal >= 5) ? 'Mild' : 'Minimal';
-  const phqSeverity = (phqTotal >= 20) ? 'Severe' : (phqTotal >= 15) ? 'Moderately severe' : (phqTotal >= 10) ? 'Moderate' : (phqTotal >= 5) ? 'Mild' : 'None-Minimal';
-
-  return {
-    answers, gadTotal, phqTotal, gadSeverity, phqSeverity,
-    timestamp: new Date().toISOString(),
-    user_id: window.__USER_ID || 'user-unknown'   // optional: set this on page if you have login
-  };
-}
-
-/* POST to /api/submit, then show charts & save */
-async function submitAnswers(){
-  const payload = computePayload();
-
-  // warn if no answers completed
-  const answered = answers.filter(a => a !== null).length;
-  if (answered < questions.length) {
-    if (!confirm('You have unanswered items. Submit anyway?')) return;
-  }
-
-// safe fetch + robust JSON handling
-try {
-  const res = await fetch('/api/submit', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  });
-
-  // read plain text first (never throws)
-  const text = await res.text();
-
-  // try to parse JSON, otherwise show the raw text for debugging
-  let body = null;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch (parseErr) {
-    console.error('Response text (non-JSON):', text);
-    // show user-friendly message + server raw text for debugging
-    alert('Submission error: server returned invalid JSON.\nStatus: ' + res.status + '\nResponse: ' + (text || '[empty]'));
-    return;
-  }
-
-  if (!res.ok) {
-    // server sent JSON error details -> show them; otherwise show status
-    const errMsg = (body && body.error) ? body.error : ('HTTP ' + res.status);
-    alert('Submission error: ' + errMsg);
-    return;
-  }
-
-  // success path: body should be JSON
-    // success path: body should be JSON
-  console.log('Server response:', body);
-
-  // Show summary in the UI (use computed payload we sent)
-  const resultPayload = payload; // computed above in submitAnswers()
-
-  currentScoresArea.style.display = 'block';
-  gadTotalEl.textContent = resultPayload.gadTotal;
-  phqTotalEl.textContent = resultPayload.phqTotal;
-  gadSeverityEl.textContent = resultPayload.gadSeverity;
-  phqSeverityEl.textContent = resultPayload.phqSeverity;
-  lastUpdate.textContent = (new Date(resultPayload.timestamp)).toLocaleString();
-
-  // Safety note if PHQ-9 item 9 > 0
-  if (answers[15] && answers[15] > 0) {
-    safetyText.textContent = 'Question 9 of PHQ-9 indicates some degree of suicidal ideation. Please advise the user to contact emergency services, a crisis line, or a mental health professional immediately.';
-    safetyCard.style.display = 'block';
-  } else {
-    safetyCard.style.display = 'none';
-  }
-
-  // fetch history and draw charts (this will also show the chartCard)
-  await fetchHistoryAndDraw();
-
-  // scroll to charts
-  document.getElementById('chartCard').scrollIntoView({behavior:'smooth'});
-
-  // continue the success flow...
-} catch (networkErr) {
-  alert('Network error: ' + networkErr.message);
-  console.error(networkErr);
-}
-
-}
-
-/* fetch historical records for this user and draw charts */
-let barChart = null, lineChart = null;
-async function fetchHistoryAndDraw(){
-  // Pass user id if available
-  const uidParam = window.__USER_ID ? `?user_id=${encodeURIComponent(window.__USER_ID)}` : '';
-  const res = await fetch('/api/scores' + uidParam);
-  if (!res.ok) {
-    console.error('Failed to fetch scores');
-    return;
-  }
-  const data = await res.json(); // expected: array of {timestamp,gadTotal,phqTotal}
-  if (!Array.isArray(data)) return;
-
-  // Build bar chart data from the latest item if exists
-  const last = data.length ? data[data.length-1] : computePayload();
-  const gadTotal = last?.gadTotal || 0;
-  const phqTotal = last?.phqTotal || 0;
-
-  // Show chart card
-  chartCard.style.display = 'flex';
-
-  // Bar chart: show two bars or small summary buckets (we'll show totals)
-  if (barChart) barChart.destroy();
-  barChart = new Chart(chartBarCanvas.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['GAD-7','PHQ-9'],
-      datasets: [{
-        label: 'Score total',
-        data: [gadTotal, phqTotal],
-        backgroundColor: ['rgba(59,130,246,0.8)','rgba(240,71,110,0.8)'],
-      }]
-    },
-    options: {
-      responsive:true,
-      plugins: { legend:{display:false} },
-      scales: { y:{ beginAtZero:true, suggestedMax: Math.max(15, phqTotal, gadTotal) } }
-    }
-  });
-
-  // Line chart: past trend
-  // Sort by timestamp asc
-  const sorted = data.slice().sort((a,b)=> new Date(a.timestamp) - new Date(b.timestamp));
-  const labels = sorted.map(s => (new Date(s.timestamp)).toLocaleDateString());
-  const gadSeries = sorted.map(s => s.gadTotal);
-  const phqSeries = sorted.map(s => s.phqTotal);
-
-  if (lineChart) lineChart.destroy();
-  lineChart = new Chart(chartLineCanvas.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'GAD-7 total', data: gadSeries, fill:false, tension:0.2, borderWidth:2, borderColor:'rgba(59,130,246,0.9)' },
-        { label: 'PHQ-9 total', data: phqSeries, fill:false, tension:0.2, borderWidth:2, borderColor:'rgba(240,71,110,0.9)' }
-      ]
-    },
-    options: { responsive:true, plugins:{legend:{position:'bottom'}}, scales:{ y:{ beginAtZero:true } } }
-  });
-}
-
-/* init */
-(function init(){
-  renderQuestions();
-  // If you have server-side username or user id, set it on the page:
-  // window.__USER_ID = 'student-123'; document.getElementById('uname').textContent = 'Shreshtha';
-})();
+// Make toggleUserPopup globally accessible
+window.toggleUserPopup = function(){
+  const popup = document.getElementById('user-popup');
+  popup.style.display = (popup.style.display==='block') ? 'none':'block';
+};
 </script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>

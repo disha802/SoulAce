@@ -4,7 +4,22 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SoulAce — Therapist & Proctor booking</title>
+<link rel="icon" href="..\static\header-logo.png" type="image/png">
 <style>
+  body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
+    .header-left { display:flex; align-items:center; gap:15px; }
+    .header-text { display:flex; flex-direction:column; }
+    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+    header h1 { margin:0; font-size:1.8rem; color:#fff; }
+    .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
+    .header-right { display:flex; align-items:center; gap:10px; position:relative; }
+    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
+    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
+    .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
+
+  footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
+
   /* --- overall --- */
   body{margin:0;font-family:'Segoe UI',sans-serif;background:#F5F7F2;color:#333}
   .container{max-width:1300px;margin:2rem auto;padding:0 1rem}
@@ -72,6 +87,32 @@
 </style>
 </head>
 <body>
+  <header>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
+      </div>
+      <div class="header-text">
+        <h1>SoulAce</h1>
+        <h3>Wellness begins here.</h3>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-icon-container">
+        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+        <div id="user-popup" class="user-popup">
+          <!-- Google Translate -->
+          <div id="google_translate_element" style="margin-bottom:10px;"></div>
+          <hr>
+          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+            <button type="submit" class="popup-btn">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+
   <div class="container">
     <div class="columns">
       <!-- MAIN: Booking card + bookings lists -->
@@ -170,6 +211,10 @@
       </aside>
     </div>
   </div>
+  
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
 
 <script>
 const currentUser = {
