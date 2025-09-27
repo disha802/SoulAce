@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoulAce - Welcome</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+      color: #4a4a4a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Navigation */
+    header {
+      font-family: 'Zain', sans-serif;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #eee0d1;
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1000;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 22px;
+      color: #6b4e3d;
+    }
+
+    .logo img {
+      height: 40px;
+      width: auto;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+
+    /* Google Translate Styling */
+    .translate-container {
+      position: relative;
+      z-index: 1001;
+    }
+
+    .translate-btn {
+      background: #f5f2f0;
+      border: 1px solid #c17b6b;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #6b4e3d;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .translate-btn:hover {
+      background: #eee0d1;
+    }
+
+    #google_translate_element {
+      display: none;
+    }
+
+    /* Show translate element when active */
+    .translate-container.active #google_translate_element {
+      display: block !important;
+      position: fixed !important;
+      top: 70px !important;
+      right: 40px !important;
+      z-index: 999999 !important;
+      background: white !important;
+      border: 2px solid #c17b6b !important;
+      border-radius: 12px !important;
+      padding: 15px !important;
+      margin-top: 0 !important;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+      min-width: 220px !important;
+    }
+
+    .translate-container.active #google_translate_element .goog-te-gadget {
+      font-family: inherit !important;
+    }
+
+    .translate-container.active #google_translate_element .goog-te-combo {
+      padding: 5px !important;
+      border: 1px solid #c17b6b !important;
+      border-radius: 5px !important;
+      font-size: 12px !important;
+      width: 100% !important;
+    }
+
+    #google_translate_element select {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      color: #6b4e3d;
+      cursor: pointer;
+      outline: none;
+      padding: 5px;
+    }
+
+    /* Dark Mode Toggle */
+    .theme-toggle {
+      background: #f5f2f0;
+      border: 1px solid #c17b6b;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 16px;
+      color: #6b4e3d;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .theme-toggle:hover {
+      background: #c17b6b;
+      color: white;
+    }
+
+    /* Get Started Button */
+    .get-started-btn {
+      background: #c17b6b;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .get-started-btn:hover {
+      background: #a85d52;
+      transform: translateY(-1px);
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background: linear-gradient(135deg, #2a2a2a 20%, #1a1a1a 100%);
+      color: #e0e0e0;
+    }
+
+    body.dark-mode header {
+      background: #333;
+    }
+
+    body.dark-mode .logo {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .theme-toggle {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn:hover {
+      background: #555;
+    }
+
+    body.dark-mode .translate-container.active #google_translate_element {
+      background: #333 !important;
+      border-color: #666 !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+    }
+
+    body.dark-mode #google_translate_element select {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .welcome-title {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .right-section {
+      background: linear-gradient(135deg, #4a5e54 0%, #3a4e44 100%);
+    }
+
+    body.dark-mode .welcome-text {
+      color: #b0c0b0;
+    }
+
+    body.dark-mode .cta-button {
+      border-color: #b0c0b0;
+      color: #b0c0b0;
+    }
+
+    body.dark-mode .cta-button:hover {
+      background: #b0c0b0;
+      color: #2a2a2a;
+    }
+
+    body.dark-mode .classes-section {
+      background: #2a2a2a;
+    }
+
+    body.dark-mode .classes-title,
+    body.dark-mode .classes-description {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .features-section {
+      background: #1a2a26;
+    }
+
+    body.dark-mode .feature-card {
+      background: #333;
+    }
+
+    body.dark-mode .feature-card h3 {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .feature-card p {
+      color: #b0b0b0;
+    }
+
+    body.dark-mode .feature-icon {
+      background-color: #8a6b5c;
+    }
+
+    body.dark-mode footer {
+      background: #333;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode footer a {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode footer a:hover {
+      color: #c17b6b;
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      min-height: 60vh; /* decreased height */
+    }
+
+    .left-section {
+      flex: 1;
+      padding: 40px 30px; /* reduced padding */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .welcome-title {
+      font-size: 42px; /* slightly smaller */
+      font-weight: normal;
+      line-height: 1.2;
+      margin-bottom: 30px;
+      color: #6b4e3d;
+    }
+
+    .animated-quote {
+      font-size: 18px;
+      font-style: italic;
+      color: #8a6b5c;
+      margin-bottom: 20px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+    }
+
+    .decorative-circle {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: #c17b6b;
+      border-radius: 50%;
+      top: 70%;
+      right: 15%;
+      transform: translateY(-50%);
+      opacity: 0.8;
+      z-index: 10;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(-50%); }
+      50% { transform: translateY(-65%); }
+    }
+
+    /* Dark mode styles for animated quote */
+    body.dark-mode .animated-quote {
+      color: #b8a898;
+    }
+
+    .right-section {
+      flex: 1;
+      background: linear-gradient(135deg, #a8c4b8 0%, #9bb8a8 100%);
+      padding: 40px 30px; /* reduced padding */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .welcome-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #2d4a3a;
+      margin-bottom: 30px;
+      max-width: 400px;
+    }
+
+    .cta-button {
+      background: transparent;
+      border: 2px solid #2d4a3a;
+      padding: 10px 24px;
+      border-radius: 25px;
+      color: #2d4a3a;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      align-self: flex-start;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .cta-button:hover {
+      background: #2d4a3a;
+      color: white;
+    }
+
+    /* Classes Section */
+    .classes-section {
+      padding: 60px 40px;
+      background: #f5f2f0;
+    }
+
+    .classes-header {
+      text-align: left;
+      margin-bottom: 30px;
+    }
+
+    .classes-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #8a8a8a;
+      margin-bottom: 15px;
+    }
+
+    .classes-title {
+      font-size: 32px;
+      font-weight: normal;
+      color: #6b4e3d;
+      margin-bottom: 20px;
+    }
+
+    .classes-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #6b4e3d;
+      max-width: 500px;
+    }
+
+    .features-section {
+      background: #CADBD7;
+      padding: 80px 40px;
+    }
+
+    .features-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #f5f2f0; /* matches your site's neutral cream */
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+    }
+
+    .feature-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 20px auto;
+      /* background-color: #ffffff; */
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      padding: 10px;
+    }
+
+    .feature-icon img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      color: #6b4e3d; /* earthy brown */
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #4a4a4a; /* dark grey */
+      line-height: 1.5;
+    }
+   
+    /* FAQ Section */
+.faq-section {
+  padding: 60px 40px;
+  background: #f5f2f0;
+  text-align: center;
+}
+
+.faq-title {
+  font-size: 28px;
+  color: #6b4e3d;
+  margin-bottom: 30px;
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.faq-item {
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-4px);
+}
+
+.faq-item h4 {
+  color: #6b4e3d;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.faq-item p {
+  color: #4a4a4a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Developer Slider Section */
+.dev-slider-section {
+  padding: 60px 40px;
+  background: transparent; /* same as main bg */
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.dev-title {
+  font-size: 28px;
+  color: #6b4e3d;
+  margin-bottom: 30px;
+}
+
+.dev-slider {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+
+.dev-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 25px 30px;
+}
+
+.dev-message {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px 30px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4a4a4a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.dev-signature {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #6b4e3d;
+}
+
+/* Decorative lines */
+.dev-slider-section::before,
+.dev-slider-section::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: #c17b6b;
+  width: 80%;
+  margin: 20px auto;
+  opacity: 0.6;
+}
+
+/* Slider controls */
+.slider-buttons {
+  margin-top: 20px;
+}
+
+.slider-buttons button {
+  background: #c17b6b;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  margin: 0 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.slider-buttons button:hover {
+  background: #a85d52;
+}
+
+    /* Footer */
+    footer {
+      font-family: 'Zain', sans-serif;
+      background: #eee0d1;
+      color: #6b4e3d;
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+    }
+
+    footer p {
+      font-size: 14px;
+      margin: 5px 0;
+    }
+
+    footer a {
+      color: #6b4e3d;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 14px;
+    }
+
+    footer a:hover {
+      color: #c17b6b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="SoulAce Logo">
+      <span>SoulAce</span>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Google Translate -->
+      <div class="translate-container" id="translateContainer">
+        <button class="translate-btn" onclick="toggleTranslate()">
+          Translate
+        </button>
+        <div id="google_translate_element"></div>
+      </div>
+      
+      <!-- Dark/Light Mode Toggle -->
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌸</span>
+      </button>
+
+      
+      <!-- Get Started Button -->
+      <a href="/login" class="get-started-btn">Get Started</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <section class="left-section">
+      <h1 class="welcome-title">Welcome to<br>SoulAce</h1>
+      <div class="animated-quote" id="animatedQuote"></div>
+      <div class="decorative-circle"></div>
+    </section>
+
+    <section class="right-section">
+      <p class="welcome-text">
+        At SoulAce, we believe that caring for your mind is just as important as caring for your body. This is your safe space to pause, breathe, and reconnect with yourself. Here, you'll find tools, reflections, and gentle guidance to support your mental well-being and inner balance. Take it one step at a time—your journey to healing and growth begins here.
+      </p>
+      <a href="/login" class="cta-button">Begin your Journey</a>
+    </section>
+  </main>
+
+  <section id="classes" class="classes-section">
+    <div class="classes-header">
+      <h2 class="classes-title">Why choose SoulAce?</h2>
+      <p class="classes-description">
+        SoulAce is more than just a platform—it's a safe and supportive space designed for your mental and emotional well-being. With interactive tools like mood tracking, guided reflections, and a caring community, we make wellness accessible and personalized. Our goal is to help you build balance, resilience, and self-awareness—one step at a time.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="features-container">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='ai-companion.png') }}" alt="AI Companion">
+        </div>
+        <h3>AI Companion (24/7)</h3>
+        <p>Your digital friend that understands your emotions and provides support is available 24/7 just for you.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='therapist.png') }}" alt="Licensed Professionals">
+        </div>
+        <h3>Licensed Professionals</h3>
+        <p>Connect with qualified therapists who understand you.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='privacy.png') }}" alt="Complete Privacy">
+        </div>
+        <h3>Complete Privacy</h3>
+        <p>Your identity stays protected. Get help without family or social judgment in our secure, anonymous platform.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='multilingual.png') }}" alt="Multilingual Support">
+        </div>
+        <h3>Multilingual Support</h3>
+        <p>Express yourself comfortably in your preferred language with culturally aware responses and understanding.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='reflection.png') }}" alt="Personal Reflection">
+        </div>
+        <h3>Personal Reflection</h3>
+        <p>Track your emotional journey with intelligent prompts that respect your beliefs and values.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='community.png') }}" alt="Community Support">
+        </div>
+        <h3>Community Support</h3>
+        <p>Connect with others who share similar experiences in moderated peer forums.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ✅ FAQ Section (New) -->
+  <section class="faq-section">
+    <h2 class="faq-title">Frequently Asked Questions</h2>
+    <div class="faq-container">
+      <div class="faq-item">
+        <h4>Is SoulAce completely free?</h4>
+        <p>Yes! All the core features are free for everyone.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Will my data be safe?</h4>
+        <p>Absolutely. We prioritize confidentiality and security of your information.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Do I need prior knowledge of psychology?</h4>
+        <p>No, SoulAce is designed for everyone — simple, fun, and beginner-friendly.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Developer Slider Section -->
+<section class="dev-slider-section">
+  <h2 class="dev-title">Words from the Developers</h2>
+  <div class="dev-slider" id="devSlider">
+    <div class="dev-slide">
+      <p class="dev-message">SoulAce was created with love and purpose — to bring mental health support closer to you.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">We believe wellness should be stigma-free and accessible to everyone, everywhere.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">Every feature is thoughtfully designed to help you pause, heal, and grow.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">Our goal is to make psychological support as natural as checking your messages.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">We built SoulAce for Gen Z, keeping it fun, relatable, and safe.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">This is just the beginning — SoulAce will keep evolving with you.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+  </div>
+  <div class="slider-buttons">
+    <button onclick="prevSlide()">&#10094; </button>
+    <button onclick="nextSlide()"> &#10095;</button>
+  </div>
+</section>
+
+
+  <!-- Footer -->
+<footer>
+  <p>&copy; 2025 SoulAce. All rights reserved.</p>
+  <p>
+    <a href="#terms">Terms of Service</a>
+  </p>
+</footer>
+
+
+  <script>
+    // Array of quotes for animation
+    const quotes = [
+      "Self-care isn't selfish, it's a power move.",
+      "Take a deep breath—you deserve this moment.",
+      "Your thoughts are louder than notifications; choose wisely.",
+      "Progress, not perfection. Every step counts.",
+      "Anxiety is temporary, but your coffee can be permanent.",
+      "Feelings are like visitors; let them come, don't unpack.",
+      "Be gentle with yourself—you're doing better than you think.",
+      "Your mind deserves a playlist, not a warzone.",
+      "Small changes lead to big transformations. Start today.",
+      "Hustle for your goals, not for someone else's approval.",
+      "Even the darkest nights teach us the beauty of stars.",
+      "Mental health days are the new flex days.",
+      "Take naps like a boss—it's science.",
+      "Reset your mind, no Wi-Fi required.",
+      "Your vibe attracts your tribe, choose wisely.",
+      "Celebrate small wins—they're secretly huge.",
+      "Comparison is the thief of chill.",
+      "Positive thoughts only… yes, even on Mondays.",
+      "Your brain needs breaks like your phone needs charging.",
+      "Breathe in peace, exhale chaos.",
+      "You don't have to be okay all the time—hello, human.",
+      "Inner peace > Wi-Fi signal strength.",
+      "Check in with yourself before checking your notifications.",
+      "Wellness is a journey, not a viral challenge.",
+      "Laugh at your mistakes—they're just plot twists.",
+      "Your thoughts are powerful—make them kind.",
+      "Be the CEO of your own mood.",
+      "It's okay to be a work in progress.",
+      "Happiness isn't found, it's practiced daily.",
+      "You're allowed to cancel plans… even with yourself."
+    ];
+
+    let currentQuoteIndex = 0;
+    let currentText = "";
+    let isTyping = true;
+    let isDeleting = false;
+
+    function animateQuotes() {
+      const quoteElement = document.getElementById('animatedQuote');
+      const currentQuote = quotes[currentQuoteIndex];
+      
+      if (isTyping && !isDeleting) {
+        // Typing effect
+        if (currentText.length < currentQuote.length) {
+          currentText = currentQuote.substring(0, currentText.length + 1);
+          quoteElement.textContent = currentText;
+          setTimeout(animateQuotes, 100); // Typing speed
+        } else {
+          // Pause before deleting
+          isTyping = false;
+          setTimeout(animateQuotes, 2000); // Pause duration
+        }
+      } else if (!isTyping && !isDeleting) {
+        // Start deleting
+        isDeleting = true;
+        setTimeout(animateQuotes, 50);
+      } else if (isDeleting) {
+        // Deleting effect (backspace)
+        if (currentText.length > 0) {
+          currentText = currentText.substring(0, currentText.length - 1);
+          quoteElement.textContent = currentText;
+          setTimeout(animateQuotes, 50); // Deleting speed (faster)
+        } else {
+          // Move to next quote
+          isDeleting = false;
+          isTyping = true;
+          currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+          setTimeout(animateQuotes, 500); // Pause before next quote
+        }
+      }
+    }
+
+    // Toggle translate dropdown visibility
+    function toggleTranslate() {
+      const container = document.getElementById('translateContainer');
+      container.classList.toggle('active');
+    }
+
+    // Close translate dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const container = document.getElementById('translateContainer');
+      if (!container.contains(event.target)) {
+        container.classList.remove('active');
+      }
+    });
+
+
+    // Theme toggle functionality with aesthetic emojis
+    function toggleTheme() {
+      const body = document.body;
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        themeIcon.textContent = '☀️'; // Light pink flower for light mode
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.classList.add('dark-mode');
+        themeIcon.textContent = '🌙'; // Crescent moon for dark mode
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+
+    // Load saved theme and start quote animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '☀️';
+      }
+
+      // Start quote animation after a delay
+      setTimeout(animateQuotes, 1000);
+    });
+
+    function beginJourney() {
+      window.location.href = '/login';
+    }
+
+    // Slider functions for developer section
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.dev-slide');
+    const totalSlides = slides.length;
+    const slider = document.getElementById('devSlider');
+
+    function showSlide(index) {
+      if (index < 0) currentSlide = totalSlides - 1;
+      else if (index >= totalSlides) currentSlide = 0;
+      else currentSlide = index;
+
+      if (slider) {
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+      }
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    // Auto-slide every 5s
+    setInterval(nextSlide, 5000);
+
+    // Google Translate initialization
+    window.googleTranslateElementInit = function() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,ur',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+
+  </script>
+  <!-- Google Translate Script -->
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

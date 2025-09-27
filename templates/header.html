@@ -1,0 +1,402 @@
+<!-- Common Header Styles -->
+<style>
+    :root {
+        --bg: #f4f6f4;
+        --panel: #ffffff;
+        --muted: #6f7e79;
+        --text: #6b4e3d; /* Header text color */
+        --accent-green: #2f7a60;
+        --light-green: #dff3ea;
+        --card-border: #e6eee9;
+        --danger: #b00020;
+        --slot-border: #d6e9df;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: 'Zain', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .common-header {
+        font-family: 'Zain', sans-serif;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 40px;
+        background: #eee0d1;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        color: #6b4e3d; /* Header text color */
+        font-size: 18px; /* Increase header text size */
+        font-weight: normal; /* Remove bold */
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #6b4e3d;
+        font-weight: normal; /* Remove bold */
+    }
+
+    .header-logo img {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px; /* Increase border radius */
+    }
+
+    .header-logo span {
+        font-size: 1.3rem; /* Increase text size */
+        font-weight: normal; /* Remove bold */
+        color: #6b4e3d;
+    }
+
+    .header-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: #6b4e3d;
+        font-weight: normal; /* Remove bold */
+        padding: 10px 18px;
+        border-radius: 12px; /* Increase border radius */
+        transition: all 0.2s ease;
+        position: relative;
+        font-size: 1rem; /* Increase text size */
+    }
+
+    .nav-link:hover {
+        color: #6b4e3d;
+        background: rgba(47, 122, 96, 0.1);
+    }
+
+    .nav-link.active {
+        color: #6b4e3d;
+        background: var(--light-green);
+        font-weight: normal;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .translate-container {
+        position: relative;
+    }
+
+    .translate-btn {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: #6b4e3d;
+        padding: 10px 16px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-size: 1rem; /* Increase text size */
+        transition: all 0.2s ease;
+    }
+
+    .translate-btn:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+        color: #6b4e3d;
+    }
+
+    .theme-toggle {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: #6b4e3d;
+        padding: 10px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-size: 1.2rem; /* Increase size */
+        transition: all 0.2s ease;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-toggle:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+        color: #6b4e3d;
+    }
+
+    .logout-btn {
+        background: #c17b6b; /* Updated background */
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-weight: normal; /* Remove bold */
+        font-size: 1rem; /* Increase text size */
+        transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+        background: #a85d52;
+    }
+
+    #google_translate_element {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 5px;
+        display: none;
+        color: #6b4e3d;
+    }
+
+    /* Dark theme CSS */
+    .dark-theme {
+        --bg: #1a1a1a;
+        --panel: #2d2d2d;
+        --muted: #888888;
+        --text: #ffffff;
+        --accent-green: #4ade80;
+        --light-green: #374151;
+        --card-border: #374151;
+    }
+
+    .dark-theme .common-header {
+        background: #2d2d2d;
+        color: var(--text);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .common-header {
+            padding: 12px 20px;
+            font-size: 16px; /* Reduce slightly on smaller screens */
+        }
+
+        .header-nav {
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 8px 12px;
+            font-size: 0.95rem;
+        }
+
+        .header-right {
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .header-nav {
+            display: none;
+        }
+
+        .header-left {
+            gap: 15px;
+        }
+    }
+</style>
+
+<!-- Header HTML -->
+<header class="common-header">
+    <div class="header-left">
+        <a href="{{ url_for('dashboard') }}" class="header-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="SoulAce Logo">
+            <span>SoulAce</span>
+        </a>
+
+        <nav class="header-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('chatbot_page') }}" class="nav-link {% if request.endpoint == 'chatbot_page' %}active{% endif %}">Chatbot</a>
+            <a href="{{ url_for('peer') }}" class="nav-link {% if request.endpoint == 'peer' %}active{% endif %}">Peer Support</a>
+            <a href="{{ url_for('assessment') }}" class="nav-link {% if request.endpoint == 'assessment' %}active{% endif %}">Assessment</a>
+            <a href="{{ url_for('resources') }}" class="nav-link {% if request.endpoint == 'resources' %}active{% endif %}">Resources</a>
+            <a href="{{ url_for('journal') }}" class="nav-link {% if request.endpoint == 'journal' %}active{% endif %}">Journal</a>
+            <a href="{{ url_for('appointment') }}" class="nav-link {% if request.endpoint == 'appointment' %}active{% endif %}">Booking</a>
+        </nav>
+    </div>
+
+    <div class="header-right">
+        <!-- Translate -->
+        <div class="translate-container" id="translateContainer">
+            <button class="translate-btn" type="button" onclick="toggleTranslate()">Translate</button>
+            <div id="google_translate_element"></div>
+        </div>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle" type="button" onclick="toggleTheme()">
+            <span id="theme-icon">☀️</span>
+        </button>
+
+        <!-- Logout -->
+        <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+<!-- Notification Container -->
+<div class="notification-container" id="notificationContainer"></div>
+
+<!-- Header JavaScript -->
+<script>
+// Translation toggle function
+function toggleTranslate() {
+    const element = document.getElementById('google_translate_element');
+    if (element.style.display === 'none' || element.style.display === '') {
+        element.style.display = 'block';
+        // Initialize Google Translate if not already done
+        if (!window.googleTranslateLoaded) {
+            loadGoogleTranslate();
+        }
+    } else {
+        element.style.display = 'none';
+    }
+}
+
+// Theme toggle function
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        themeIcon.textContent = '🌸';
+        localStorage.setItem('theme', 'light');
+    } else {
+        body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// Load saved theme
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+    }
+});
+
+// Google Translate initialization
+function loadGoogleTranslate() {
+    if (!window.googleTranslateLoaded) {
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        document.head.appendChild(script);
+        window.googleTranslateLoaded = true;
+    }
+}
+
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,bn,te,ta,gu,mr,ur,pa,ml,kn,or,as',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+}
+
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 7000) {
+    const container = document.getElementById('notificationContainer');
+    if (!container) return;
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+
+    // Get appropriate icon based on type
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${icons[type] || icons.info}</span>
+            <span class="notification-text">${message}</span>
+        </div>
+        <button class="notification-close" onclick="closeNotification(this)">×</button>
+    `;
+
+    // Add to container
+    container.appendChild(notification);
+
+    // Trigger animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+
+    // Auto remove after duration
+    setTimeout(() => {
+        removeNotification(notification);
+    }, duration);
+
+    return notification;
+}
+
+function closeNotification(button) {
+    const notification = button.closest('.notification');
+    removeNotification(notification);
+}
+
+function removeNotification(notification) {
+    if (!notification) return;
+
+    notification.classList.remove('show');
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 300);
+}
+
+// Override default alert function
+window.alert = function(message) {
+    showNotification(message, 'info');
+};
+
+// Add convenience functions
+window.showSuccess = function(message, duration) {
+    showNotification(message, 'success', duration);
+};
+
+window.showError = function(message, duration) {
+    showNotification(message, 'error', duration);
+};
+
+window.showWarning = function(message, duration) {
+    showNotification(message, 'warning', duration);
+};
+
+window.showInfo = function(message, duration) {
+    showNotification(message, 'info', duration);
+};
+</script>
+</header>   

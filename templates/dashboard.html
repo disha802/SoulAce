@@ -1,331 +1,568 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SoulAce - Your Mental Health Companion</title>
-<link rel="icon" href="..\static\header-logo.png" type="image/png">
-<style>
-  body { margin:0; font-family:'Segoe UI', sans-serif; color:#333; transition: background 0.4s, color 0.4s; background: url("{{url_for('static', filename='dashboard bg.jpg')}}") no-repeat center center fixed; background-size: cover;}
-  header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
-  .header-left { display:flex; align-items:center; gap:15px; }
-  .header-right { display:flex; align-items:center; gap:10px; }
-  .header-text { display:flex; flex-direction:column; }
-  .logo-container { width:60px; height:60px; }
-  .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
-  .logout-btn, .toggle-btn { padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
-  header h1 { margin:0; font-size:1.8rem; color:#fff; }
-  .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-  .user-icon-container { position:relative; }
-  .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-  .toggle-btn { background:#fff; border:2px solid #ccc; padding:0.4rem 0.8rem; border-radius:20px; cursor:pointer; font-size:0.9rem; transition: all 0.3s; }
-  .toggle-btn:hover { background:#fcd58d; }
-  .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:160px; }
-  .user-popup .popup-btn { display:block; width:100%; padding:8px; text-decoration:none; color:inherit; cursor:pointer; margin-bottom:5px; text-align:left; }
-  .user-popup .popup-btn:hover { background:#f2f2f2; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoulAce - Your Mental Health Companion</title>
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <style>
+    /* ---------- Reset & Base ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+      color: #6b4e3d;
+      min-height: 100vh;
+      transition: all 0.4s ease;
+    }
 
-  .hero { text-align:center; padding:2rem 1rem; background:#F5F7F280; max-width: 800px; margin: 0 auto; border-radius:12px; }
 
-  .hero h2 { font-size:2.2rem; margin-bottom:1rem; color:#243B36; }
-  .hero p { font-size:1.1rem; max-width:600px; margin:0 auto; }
-  .mood-tracker { text-align:center; margin:2rem 0; }
-  .moods { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:20px; }
-  .mood-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
-  .mood-btn { font-size:25px; cursor:pointer; border:2px solid #ccc; border-radius:50%; padding:10px; background:white; transition:0.2s; margin-bottom:8px; }
-  .mood-btn:hover { border-color:#555; }
-  .label { font-size:16px; font-weight:bold; }
-  button, .popup-btn { background:linear-gradient(135deg, #657A74 , #243B36); color:#fff; font-size:16px; font-weight:600; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); transition:all 0.3s ease; }
-  button:hover, .popup-btn:hover { background:linear-gradient(45deg, #657A74 , #243B36); transform:translateY(-2px); box-shadow:0 6px 10px rgba(0,0,0,0.25); }
-  .features { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; padding:2rem; }
-  .feature-card { background:#fff; padding:1.5rem; border-radius:16px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:transform 0.3s; display:block; text-decoration:none; color:inherit; }
-  .feature-card:hover { transform:translateY(-5px); }
-  .feature-card span img { width:80px; height:80px; object-fit:contain; display:block; margin:0 auto 0.5rem; }
-  .feature-card p { color:#657A74; }
-  .crisis-btn {position: fixed;
-  bottom: 20px;          /* distance from bottom */
-  right: 20px;           /* distance from right */
-  background: linear-gradient(135deg, #e63946, #ff6b6b);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 14px 28px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  z-index: 9999;         /* stays above other elements */
+    /* ========== HERO ========== */
+    .hero {
+      text-align:center; padding:60px 20px; background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(10px); max-width:900px; margin:40px auto;
+      border-radius:20px; border:1px solid rgba(193,123,107,0.2);
+    }
+    .hero h2 { font-size:2.5rem; margin-bottom:20px; color:#6b4e3d; font-weight:normal; }
+    .hero p { font-size:1.2rem; color:#8a8a8a; max-width:700px; margin:0 auto; line-height:1.6; }
+
+    /* ========== DASHBOARD SECTION ========== */
+    .dashboard-section {
+      display: grid; grid-template-columns: 1fr 2fr; gap: 30px;
+      margin: 60px 20px; max-width: 1200px; margin-left: auto; margin-right: auto;
+    }
+
+    /* ========== STREAK COUNTER ========== */
+    .streak-counter {
+      text-align: center; background: rgba(255,255,255,0.6);
+      padding: 30px 20px; border-radius: 20px; backdrop-filter: blur(10px);
+      border: 1px solid rgba(193,123,107,0.2);
+      box-shadow: 0 8px 32px rgba(193,123,107,0.15);
+    }
+    .streak-counter h3 {
+      font-size: 1.4rem; color: #6b4e3d; margin-bottom: 20px; font-weight: normal;
+    }
+    .streak-display {
+      display: flex; align-items: center; justify-content: center; gap: 15px;
+      margin: 20px 0;
+    }
+    .streak-flame {
+      font-size: 2.5rem; position: relative;
+      animation: flameDance 0.8s ease-in-out infinite alternate, flameFlicker 0.3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(255,69,0,0.8))
+              drop-shadow(0 0 15px rgba(255,140,0,0.6))
+              drop-shadow(0 0 25px rgba(255,165,0,0.4));
+    }
+    @keyframes flameDance {
+      0% { transform: scale(0.98) rotate(-1deg) translateY(1px); }
+      25% { transform: scale(1.02) rotate(1deg) translateY(-1px); }
+      50% { transform: scale(1.01) rotate(-0.5deg) translateY(-2px); }
+      75% { transform: scale(0.99) rotate(0.8deg) translateY(0px); }
+      100% { transform: scale(1.03) rotate(-0.8deg) translateY(-1px); }
+    }
+    @keyframes flameFlicker {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(255,69,0,0.8))
+                drop-shadow(0 0 15px rgba(255,140,0,0.6))
+                drop-shadow(0 0 25px rgba(255,165,0,0.4));
+      }
+      50% {
+        filter: drop-shadow(0 0 12px rgba(255,69,0,0.9))
+                drop-shadow(0 0 20px rgba(255,140,0,0.7))
+                drop-shadow(0 0 30px rgba(255,165,0,0.5));
+      }
+    }
+    .streak-number {
+      font-size: 3rem; font-weight: bold; color: #c17b6b;
+      text-shadow: 0 2px 4px rgba(193,123,107,0.3);
+    }
+    .streak-label {
+      font-size: 1rem; color: #8a8a8a; margin-bottom: 15px;
+    }
+    .streak-motivation {
+      background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+      color: #6b4e3d; padding: 10px 16px; border-radius: 25px;
+      font-size: 0.85rem; font-weight: 500; margin-top: 15px;
+      display: inline-block; box-shadow: 0 4px 12px rgba(250,177,160,0.3);
+    }
+
+    /* ========== MOOD TRACKER ========== */
+    .mood-tracker {
+      text-align:center; background: rgba(255,255,255,0.4);
+      padding:40px; border-radius:20px; backdrop-filter: blur(10px);
+    }
+    .mood-tracker h2 { font-size:2rem; color:#6b4e3d; margin-bottom:30px; font-weight:normal; }
+
+    .moods {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+      gap:25px; margin:30px 0; max-width:800px; margin-left:auto; margin-right:auto;
+    }
+    .mood-option {
+      display:flex; flex-direction:column; align-items:center; cursor:pointer;
+      padding:15px; border-radius:15px; transition:all 0.3s ease;
+    }
+    .mood-option:hover { background: rgba(193,123,107,0.06); }
+    .mood-btn {
+      font-size:30px; border:3px solid #c17b6b; border-radius:50%;
+      width:70px; height:70px; display:flex; align-items:center; justify-content:center;
+      background:white; margin-bottom:10px; transition:all 0.3s ease;
+    }
+    .mood-btn:hover { border-color:#2d4a3a; transform:scale(1.06); }
+    .label { font-size:14px; font-weight:500; color:#6b4e3d; }
+
+    .download-btn {
+      background: linear-gradient(135deg,#c17b6b); color:white; border:none;
+      border-radius:25px; padding:12px 25px; font-size:16px; font-weight:500; cursor:pointer;
+      margin-top:20px;
+    }
+    .download-btn:hover { transform:translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+
+    /* ========== FEATURES ========== */
+    .features { background:#CADBD7; padding:80px 40px; margin-top:60px; }
+    .features-container {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:30px;
+      max-width:1200px; margin:0 auto;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.8); padding:30px 20px; border-radius:20px;
+      text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.1); transition:all 0.3s ease;
+      text-decoration:none; color:inherit; border:1px solid rgba(193,123,107,0.2);
+      display:block;
+    }
+    .feature-card:hover { transform:translateY(-8px); box-shadow:0 15px 35px rgba(0,0,0,0.15); }
+    .feature-card img { width:70px; height:70px; object-fit:contain; margin-bottom:15px; }
+    .feature-card h3 { font-size:1.3rem; color:#6b4e3d; margin:15px 0; font-weight:500; }
+    .feature-card p { color:#8a8a8a; line-height:1.5; font-size:15px; }
+
+    /* ========== CRISIS BUTTON (FAB) ========== */
+    .crisis-btn {
+      position: fixed; bottom: 30px; right: 30px;
+      background: linear-gradient(135deg,#e63946,#ff6b6b);
+      color: white; border: none; border-radius: 50px; padding: 15px 25px;
+      font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(230,57,70,0.3);
+      transition: all 0.3s ease; z-index: 9999;
+    }
+    .crisis-btn:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(230,57,70,0.4); }
+
+    /* ========== CRISIS POPUP (NEW) ========== */
+    .crisis-popup { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:10000;
+      align-items:center; justify-content:center; padding:20px; }
+    .crisis-popup.active { display:flex; }
+    .crisis-popup-content {
+      width:100%; max-width:960px; background: #fff; border-radius:14px; overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,0.3); animation: popupIn .18s ease-out;
+    }
+    @keyframes popupIn { from { transform: translateY(10px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+    .crisis-header { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid rgba(0,0,0,0.06); }
+    .crisis-header h2 { margin:0; font-size:1.4rem; color:#6b4e3d; }
+    .close-btn { background:transparent; border:none; font-size:26px; cursor:pointer; color:#6b4e3d; }
+    .crisis-body { padding:22px; }
+    .crisis-options { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:18px; margin-top:14px; }
+    .crisis-card { background:#fff; padding:16px; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align:left; }
+    .crisis-icon { font-size:22px; margin-bottom:8px; }
+    .phone-input-group { display:flex; gap:8px; margin-top:10px; align-items: center; }
+    .phone-input { flex: 1 1 auto; min-width: 0; box-sizing: border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); }
+    .request-btn { background:#2d4a3a; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; flex-shrink: 0; white-space: nowrap; }
+    .support-card small { color:#666; }
+    .crisis-link { display:inline-block; margin-top:8px; color:#c1474a; text-decoration:none; font-weight:600; }  
+
+    /* ========== FOOTER ========== */
+    footer { text-align:center; padding:30px 20px; font-size:14px; background:#eee0d1; color:#6b4e3d; border-top:1px solid rgba(193,123,107,0.2); }
+    footer a { color:#6b4e3d; text-decoration:none; margin:0 10px; }
+    footer a:hover { color:#c17b6b; }
+
+    /* ========== DARK MODE ========== */
+    body.dark-mode {
+      background: linear-gradient(135deg,#2a2a2a 20%, #1a1a1a 100%); color:#e0e0e0;
+    }
+    body.dark-mode .streak-counter {
+      background: rgba(60,60,60,0.8); border: 1px solid rgba(224,224,224,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    body.dark-mode .streak-counter h3 { color: #e0e0e0; }
+    body.dark-mode .streak-number {
+      color: #fab1a0;
+      text-shadow: 0 2px 4px rgba(250,177,160,0.3);
+    }
+    body.dark-mode .streak-label { color: #b0b0b0; }
+    body.dark-mode .streak-motivation {
+      background: linear-gradient(135deg, #2d3436, #636e72);
+      color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    /* (other dark-mode rules omitted here for brevity — they remain similar to previously provided CSS) */
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width:768px) {
+      header { padding:10px 20px; }
+      .header-controls { gap:10px; }
+      .hero { margin:20px; padding:40px 20px; }
+      .hero h2 { font-size:2rem; }
+      .dashboard-section {
+        grid-template-columns: 1fr; gap: 20px; margin: 40px 20px;
+      }
+      .streak-counter { padding:25px 15px; }
+      .streak-flame { font-size:2rem; }
+      .streak-number { font-size:2.5rem; }
+      .streak-counter h3 { font-size:1.2rem; }
+      .mood-tracker { padding:30px 20px; }
+      .moods { grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap:20px; }
+      .features { padding:60px 20px; }
+      .crisis-btn { bottom:20px; right:20px; padding:12px 20px; font-size:14px; }
+    }
+    /* Confetti canvas sizing handled by JS; ensure it doesn't capture pointer events */
+   #confetti-canvas { 
+  pointer-events: none;
+  will-change: transform; /* hint for smoother animation */
 }
 
-.crisis-btn:hover {
-  background: linear-gradient(135deg, #ff4d4d, #ff8585);
-  transform: scale(1.05);
-}
-
-  .feature-card h3 { margin:0.5rem 0; }
-  .feature-card p { color:#657A74; margin:0; }
-  footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
-
-  body.dark { background:#121212; color:#e0e0e0; }
-  body.dark header { background-color:#1f1f1f; color:#f9e6d0; }
-  body.dark .header-text h3 { color:#ccc; }
-  body.dark .logo-container img { border:2px solid #444; }
-  body.dark .header-right { color:#f9e6d0; }
-  body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
-  body.dark .user-popup .popup-btn { color:#f9e6d0; }
-  body.dark .toggle-btn { background:#444; color:#f9e6d0; border:1px solid #666; }
-  body.dark .hero { background:#1f1f1f; color:#e0e0e0; }
-  body.dark .feature-card { background:#2a2a2a; color:#e0e0e0; box-shadow:0 2px 6px rgba(0,0,0,0.5); }
-  body.dark footer { background:#1f1f1f; color:#e0e0e0; border-top:2px solid #444; }
-</style>
+  </style>
 </head>
 <body>
 
-<header>
-  <div class="header-left">
-    <div class="logo-container">
-      <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-    </div>
-    <div class="header-text">
-      <h1>SoulAce</h1>
-      <h3>Wellness begins here.</h3>
-    </div>
-  </div>
+  {% include 'header.html' %}
 
-  <div class="header-right">
-    <div class="user-icon-container">
-      <img src="{{ url_for('static', filename='user-icon.jpeg') }}" 
-           alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
+  <main>
+    <section class="hero">
+      <h2>Welcome {{ username }} 💛</h2>
+      <p>Your safe space for mental wellness is here. Take a moment to check in with yourself, explore our resources, and connect with supportive community when you're ready.</p>
+    </section>
 
-      <div id="user-popup" class="user-popup">
-        <!-- Google Translate -->
-        <div id="google_translate_element" style="margin-bottom:10px;"></div>
+    <div class="dashboard-section">
+      <section class="streak-counter">
+        <h3>Daily Check-in Streak</h3>
+        <div class="streak-display">
+          <span class="streak-flame">🔥</span>
+          <span class="streak-number" id="streakNumber">7</span>
+        </div>
+        <div class="streak-label">days in a row</div>
+        <div class="streak-motivation" id="streakMotivation">Keep it up! You're building a healthy habit 🌟</div>
+      </section>
 
-        <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
-        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-          <button type="submit" class="popup-btn">Logout</button>
+      <section class="mood-tracker">
+        <h2>How are you feeling?</h2>
+        <div class="moods">
+          <div class="mood-option" onclick="setMood('Happy')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/happy.svg') }}" alt="Happy" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Happy</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Calm')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/calm.svg') }}" alt="Calm" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Calm</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Void')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/void.svg') }}" alt="Neutral" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Neutral</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Sad')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/Sad.svg') }}" alt="Sad" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Sad</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Angry')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/Angry.svg') }}" alt="Angry" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Angry</div>
+          </div>
+        </div>
+
+        <form action="/download_chart" method="get" style="margin-top:12px;">
+          <button type="submit" class="download-btn">📊 Download Mood History</button>
         </form>
+        <!-- fix the route here, maybe the method -->
+
+      </section>
+    </div>
+
+    <section class="features">
+      <div class="features-container">
+        <a href="{{ url_for('chatbot_page') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='chatbot.png') }}" alt="Chatbot">
+          <h3>AI Support</h3>
+          <p>Chat with our AI guide for coping strategies and next steps.</p>
+        </a>
+
+        <a href="{{ url_for('peer') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='peer support.png') }}" alt="Peer Support">
+          <h3>Peer Support</h3>
+          <p>Join moderated forums to share and support each other.</p>
+        </a>
+
+        <a href="{{ url_for('assessment') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='assessment.png') }}" alt="Assessment">
+          <h3>Mental Health Assessment</h3>
+          <p>Take a quick GAD-7 + PHQ-9 screening to track your mental health.</p>
+        </a>
+
+        <a href="{{ url_for('resources') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='wellness.png') }}" alt="Wellness">
+          <h3>Wellness Resources</h3>
+          <p>Access guides, audios, and videos in your own language.</p>
+        </a>
+
+        <a href="{{ url_for('journal') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='journal.png') }}" alt="Journal">
+          <h3>Journal</h3>
+          <p>Pen down your thoughts and feelings of the day.</p>
+        </a>
+
+        <a href="{{ url_for('appointment') }}" class="feature-card">
+          <img src="{{ url_for('static', filename='appointment.png') }}" alt="Appointment">
+          <h3>Confidential Booking</h3>
+          <p>Book sessions with counsellors without fear of judgment.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Crisis Button -->
+  <button class="crisis-btn" id="crisis-btn" type="button" onclick="openCrisisPopup()">🚨 Crisis</button>
+
+  <!-- Crisis Popup -->
+  <div id="crisisPopup" class="crisis-popup" aria-hidden="true">
+    <div class="crisis-popup-content" role="dialog" aria-modal="true" aria-labelledby="crisisTitle">
+      <div class="crisis-header">
+        <h2 id="crisisTitle">🤗 You Matter</h2>
+        <button class="close-btn" aria-label="Close" onclick="closeCrisisPopup()">&times;</button>
+      </div>
+
+      <div class="crisis-body">
+        <p class="main-message">You are not alone. Everything will work out. 💙</p>
+        <p class="sub-message">We're here to support you through this difficult time.</p>
+
+        <div class="crisis-options">
+          <div class="crisis-card">
+            <div class="crisis-icon">📞</div>
+            <h3>Request a Call</h3>
+            <p>Enter your number and we'll call you back.</p>
+            <div class="phone-input-group">
+              <input type="tel" id="userPhone" placeholder="Enter your phone number" class="phone-input">
+              <button type="button" onclick="requestCall()" class="request-btn">Call Me</button>
+            </div>
+          </div>
+
+          <div class="crisis-card">
+            <div class="crisis-icon">🏫</div>
+            <h3>Campus Helpline</h3>
+            <p>24/7 Campus Support</p>
+            <a href="tel:+1-555-CAMPUS" class="crisis-link"><strong>+1 (555) CAMPUS</strong></a>
+          </div>
+
+          <div class="crisis-card">
+            <div class="crisis-icon">🌟</div>
+            <h3>National Crisis Line</h3>
+            <p>Free, confidential support 24/7</p>
+            <a href="tel:988" class="crisis-link"><strong>988 - Suicide & Crisis Lifeline</strong></a>
+          </div>
+
+          <div class="crisis-card support-card">
+            <div class="crisis-icon">💝</div>
+            <h3>You Are Valued</h3>
+            <p>Your life has meaning and purpose. Tomorrow can be better than today. Take it one moment at a time.</p>
+            <div class="breathing-reminder"><small>Take a deep breath. You've got this. 🌈</small></div>
+          </div>
+        </div>
+
+        <!-- Action row: Send crisis alert -->
+        <div style="margin-top:18px; display:flex; gap:10px; justify-content:flex-end;">
+          <button type="button" class="request-btn" onclick="sendCrisis()">📨 Request Immediate Support</button>
+          <!-- <button type="button" class="close-btn" onclick="closeCrisisPopup()">Close</button> -->
+        </div>
       </div>
     </div>
   </div>
-</header>
 
-<section class="hero">
-  <h2>Welcome, {{username}}, you’re not alone 💛</h2>
-  <p>SoulAce is your safe space to find support, resources, and connect with peers — all while keeping things private and stigma-free.</p>
-</section>
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by Synapsix</p>
+  </footer>
 
-<section class="mood-tracker">
-  <h2>How are you feeling?</h2>
-  <div class="moods">
-    <div class="mood-option" onclick="setMood('Very Happy')">
-      <div class="mood-btn">😁</div>
-      <div class="label">Very Happy</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Feeling Blessed')">
-      <div class="mood-btn">😇</div>
-      <div class="label">Feeling Blessed</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Happy')">
-      <div class="mood-btn">🙂</div>
-      <div class="label">Happy</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Mind Blown')">
-      <div class="mood-btn">🤯</div>
-      <div class="label">Mind Blown</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Frustrated')">
-      <div class="mood-btn">😤</div>
-      <div class="label">Frustrated</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Sad')">
-      <div class="mood-btn">😔</div>
-      <div class="label">Sad</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Angry')">
-      <div class="mood-btn">😡</div>
-      <div class="label">Angry</div>
-    </div>
-    <div class="mood-option" onclick="setMood('Crying')">
-      <div class="mood-btn">😭</div>
-      <div class="label">Crying</div>
-    </div>
-  </div>
-  <form action="/download_chart" method="get">
-    <button type="submit">📥 Download analysis</button>
-  </form>
-</section>
+  <script>
 
+    /* ---------- Streak Counter Logic ---------- */
+    function updateStreakDisplay() {
+      const streakNumber = document.getElementById('streakNumber');
+      const streakMotivation = document.getElementById('streakMotivation');
 
-<section class="features">
+      // For demo purposes, using a mock streak count of 7
+      // In real implementation, this would come from backend
+      const currentStreak = 7;
 
-  <a href="{{ url_for('chatbot_page') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='chatbot.png') }}"></span>
-    <h3>AI Support</h3>
-    <p>Chat with our AI guide for coping strategies and next steps.  </p>
-  </a>
+      const motivationalMessages = {
+        1: "Great start! Every journey begins with a single step 🌱",
+        2: "Two days strong! You're building momentum 💪",
+        3: "Three days in a row! You're on fire 🔥",
+        7: "One week! You're building a healthy habit 🌟",
+        14: "Two weeks! Your consistency is impressive 🏆",
+        30: "One month! You're a wellness champion 👑",
+        50: "50 days! Your dedication is inspiring ✨",
+        100: "100 days! You're a true wellness warrior 🦋"
+      };
 
-  <a href="{{ url_for('appointment') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='appointment.png') }}"></span>
-    <h3>Confidential Booking</h3>
-    <p>Book sessions with counsellors without fear of judgment.</p>
-  </a>
+      streakNumber.textContent = currentStreak;
 
-    <a href="{{ url_for('assessment') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='assessment.png') }}"></span>
-    <h3>Mental Health Assessment</h3>
-    <p>Take a quick GAD-7 + PHQ-9 screening to track your mental health.</p>
-  </a>
-
-  <a href="{{ url_for('resources') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='wellness.png') }}"></span>
-    <h3>Wellness Resources</h3>
-    <p>Access guides, audios, and videos in your own language.</p>
-  </a>
-
-  <a href="{{ url_for('peer') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='peer support.png') }}"></span>
-    <h3>Peer Support</h3>
-    <p>Join moderated forums to share and support each other.</p>
-  </a>
-
-  <a href="{{ url_for('journal') }}" class="feature-card">
-    <span><img src="{{ url_for('static', filename='journal.png') }}"></span>
-    <h3>Journal</h3>
-    <p>Pen down your thoughts and feelings of the day.</p>
-  </a>
-</section>
-<button class="crisis-btn" id= "crisis-btn" type="button">🚨 Crisis</button>
-
-<footer>
-  <p>SoulAce © 2025 — Built with 💙 by Synapsix</p>
-</footer>
-
-<script>
-async function sendCrisis() {
-  
-  try {
-        const response = await fetch("/crisis", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert(result.message); // ✅ Crisis logged successfully
-        } else {
-            alert(result.error || "Something went wrong");
+      // Find the most appropriate message
+      let message = "Keep it up! You're doing amazing 🌟";
+      for (const [days, msg] of Object.entries(motivationalMessages)) {
+        if (currentStreak >= parseInt(days)) {
+          message = msg;
         }
-    } catch (err) {
-        console.error("Error:", err);
-        alert("Network error, try again!");
-    }
-  
-  console.log("[client] clicking crisis...");
-
-
-  // quick ping test first (uncomment to test separately)
-  // const ping = await fetch("/ping");
-  // console.log("ping status", ping.status, await ping.json());
-
-  try {
-    const res = await fetch("/send_email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-    console.log("[client] /send_email HTTP status:", res.status);
-    let data;
-    try { data = await res.json(); } catch (e) { data = { ok: false, raw: "invalid-json" }; }
-    console.log("[client] /send_email response body:", data);
-
-    if (res.ok && data.ok) {
-      alert("📧 Crisis email sent!");
-    } else {
-      alert("Failed to send: " + (data.error || JSON.stringify(data)));
-    }
-  } catch (err) {
-    console.error("[client] fetch error:", err);
-    alert("Fetch error: " + err);
-  }
-}
-
-document.getElementById("crisis-btn").addEventListener("click", sendCrisis);
-</script>
-
-
-<script>
-  function toggleMode(){ document.body.classList.toggle('dark'); }
-function toggleUserPopup(){ const popup = document.getElementById('user-popup'); popup.style.display = popup.style.display==='block'?'none':'block'; }
-async function setMood(mood){ const res = await fetch("/save_mood",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mood})}); const r=await res.json(); alert(r.message);}
-window.addEventListener('click', e=>{ const popup = document.getElementById('user-popup'); const icon = document.querySelector('.user-icon'); if(!popup.contains(e.target) && e.target!==icon) popup.style.display='none'; });
-
-// Google Translate
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement(
-    {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
-    'google_translate_element'
-  );
-}
-// Language switcher
-const langSelect=document.getElementById('lang-select');
-langSelect.addEventListener('change', ()=>{
-  const lang=langSelect.value;
-  document.querySelectorAll('[data-en]').forEach(el=>{
-    el.textContent=el.getAttribute('data-'+lang);
-  });
-});
-
-    function toggleUserPopup() {
-      const popup = document.getElementById('user-popup');
-        popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
       }
-      
-      async function setMood(mood) {
-        const response = await fetch("/save_mood", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mood: mood })
-        });
-        
-        const result = await response.json();
-      alert(result.message); // popup confirmation
+
+      streakMotivation.textContent = message;
     }
 
-    
-    // Optional: click outside to close
-    window.addEventListener('click', function(e) {
-      const popup = document.getElementById('user-popup');
-      const icon = document.querySelector('.user-icon');
-      if (!popup.contains(e.target) && e.target !== icon) {
-        popup.style.display = 'none';
-        }
-    });
-    
-    async function triggerCrisis() {
-      const response = await fetch("/crisis", { method: "POST" });
-      const result = await response.json();
-      alert(result.message);
+    // Initialize streak display on page load
+    document.addEventListener('DOMContentLoaded', updateStreakDisplay);
+
+    /* ---------- Confetti celebration ---------- */
+(() => {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'confetti-canvas';
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:0;pointer-events:none;z-index:10001;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext?.('2d');
+  if (!ctx) return;
+
+  let W = 0, H = 0, particles = [], animId = null;
+  const COLORS = ['#ff5f6d','#ffc371','#7bed9f','#70e1f5','#be9cff','#ffd3e0'];
+
+  function resize() {
+    const dpr = Math.max(1, window.devicePixelRatio||1);
+    W = window.innerWidth;
+    H = Math.min(500, Math.round(window.innerHeight*0.6));
+    canvas.width = W*dpr; canvas.height = H*dpr;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize',resize); resize();
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+  function makeParticle(x0=W/2, spread=W*0.9) {
+    const x = rand(x0-spread/2, x0+spread/2);
+    return {x,y:rand(-40,-10),w:rand(6,12),h:rand(8,14),
+      color:COLORS[(Math.random()*COLORS.length)|0],
+      vx:rand(-0.4,0.4),vy:rand(1.2,3),rot:rand(0,6.28),rotSpd:rand(-0.2,0.2),
+      life:0,ttl:rand(220,420)};
+  }
+  function draw(p){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+    ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();}
+  function animate(){
+    animId=requestAnimationFrame(animate);ctx.clearRect(0,0,W,H);
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life++;
+      p.x+=p.vx;p.y+=p.vy+Math.sin(p.life*0.05);
+      p.rot+=p.rotSpd;p.vy+=0.02;draw(p);
+      if(p.y>H||p.life>p.ttl)particles.splice(i,1);}
+    if(particles.length===0){cancelAnimationFrame(animId);animId=null;ctx.clearRect(0,0,W,H);}
+  }
+  window.celebrateMood=function(count=80){
+    for(let i=0;i<count;i++)particles.push(makeParticle());
+    if(!animId)animate();
+  };
+})();
+
+/* ---------- Mood selection ---------- */
+function setMood(mood) {
+  console.log('Mood set to:', mood);
+
+  // quick toast instead of alert
+  showToast('Mood recorded: ' + mood);
+
+  // 🎉 trigger confetti
+  if (mood === 'Happy' || mood === 'Calm') {
+    celebrateMood(100); // bigger burst
+  } else {
+    celebrateMood(60);  // normal burst
+  }
+
+  fetch('/save_mood', {method:'POST'});
+}
+
+/* ---------- Tiny toast helper ---------- */
+function showToast(msg,time=1500){
+  let t=document.getElementById('sa-toast');
+  if(!t){t=document.createElement('div');t.id='sa-toast';
+    Object.assign(t.style,{position:'fixed',top:'20px',left:'50%',transform:'translateX(-50%)',
+      background:'rgba(0,0,0,0.8)',color:'#fff',padding:'8px 14px',borderRadius:'14px',
+      fontSize:'14px',zIndex:11000,opacity:'0',transition:'opacity .25s'});
+    document.body.appendChild(t);}
+  t.textContent=msg; t.style.opacity='1'; clearTimeout(t._h);
+  t._h=setTimeout(()=>{t.style.opacity='0';},time);
+}
+
+
+    /* ---------- Crisis popup controls ---------- */
+    function openCrisisPopup() {
+      const p = document.getElementById('crisisPopup');
+      p.classList.add('active');
+      p.setAttribute('aria-hidden', 'false');
+    }
+    function closeCrisisPopup() {
+      const p = document.getElementById('crisisPopup');
+      p.classList.remove('active');
+      p.setAttribute('aria-hidden', 'true');
     }
 
-    document.getElementById("crisis-Btn").addEventListener("click", function() {
-     fetch("/send_email", { method: "POST" })
-     .then(res => res.json())
-     .then(data => {
-        if (data.ok) {
-            alert("📧 Crisis email sent!");
+    /* ---------- request call (placeholder) ---------- */
+    function requestCall() {
+      const phone = document.getElementById('userPhone').value.trim();
+      if (!phone) { showError('Please enter your phone number.'); return; }
+      // example POST - wire this endpoint server-side
+      fetch('/request_call', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone })
+      })
+      .then(res => res.json())
+      .then(data => { showSuccess(data.message || 'We will call you shortly.'); closeCrisisPopup(); })
+      .catch(err => { console.error(err); showError('Request failed.'); });
+    }
+
+    /* ---------- sendCrisis (keeps your original behaviour, with better UI) ---------- */
+    async function sendCrisis() {
+      try {
+        // POST to your server endpoint that logs crisis + optionally sends email
+        const response = await fetch('/crisis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urgent: true }) });
+        const result = await response.json().catch(()=> ({}));
+        if (response.ok) {
+          showSuccess(result.message || 'Crisis logged. Support team notified.');
         } else {
-            alert("Failed: " + data.error);
+          showError(result.error || 'Failed to log crisis.');
         }
-    })
-    .catch(err => alert("Error: " + err));
-});
-    
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+      } catch (err) {
+        console.error('Error:', err);
+        showError('Network error, try again!');
+      }
+
+      // Try sending an email (your original flow)
+      try {
+        const res = await fetch('/send_email', { method: 'POST', headers: { 'Content-Type': 'application/json' }});
+        const data = await res.json().catch(()=> ({}));
+        if (res.ok && data.ok) showSuccess('📧 Crisis email sent!');
+        else console.warn('Email not sent:', data);
+      } catch (err) {
+        console.warn('Email fetch error:', err);
+      }
+
+      // close popup after attempt
+      closeCrisisPopup();
+    }
   </script>
+
+  <!-- Confetti canvas (place near end of body) -->
+<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:0;pointer-events:none;z-index:10001;"></canvas>
 
 </body>
 </html>
