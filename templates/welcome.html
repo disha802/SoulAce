@@ -1,1099 +1,940 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SoulAce - Your Mental Health Companion</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-
-        :root {
-            --dark-green: #243B36;
-            --sage-green: #7B9B8B;
-            --cream: #f9e6d0;
-            --light-cream: #F5F7F2;
-            --warm-yellow: #fcd58d;
-            --soft-white: #FFF7E4;
-            --kashmir-blue: #2E86AB;
-            --saffron: #F18F01;
-            --mountain-gray: #6B705C;
-            --snow-white: #FEFEFE;
-            --font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
-            --serif-family: 'Playfair Display', serif;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background: linear-gradient(135deg, var(--light-cream) 0%, #E8F5E8 50%, var(--cream) 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background 0.4s ease, color 0.4s ease;
-            color: #333;
-        }
-
-        /* Cultural Background Pattern */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(46, 134, 171, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(241, 143, 1, 0.05) 0%, transparent 50%);
-            background-size: 400px 400px;
-            animation: float 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(1deg); }
-        }
-
-        /* Header - exactly matching dashboard.html */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #7B9B8B;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-container {
-            width: 60px;
-            height: 60px;
-        }
-
-        .logo-container img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .logout-btn, .toggle-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #fff;
-        }
-
-        .header-text h3 {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: normal;
-            color: #FFF7E4;
-        }
-
-        .toggle-btn, .login-btn {
-            background: linear-gradient(135deg, #657A74, #243B36);
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .toggle-btn:hover, .login-btn:hover {
-            background: linear-gradient(45deg, #657A74, #243B36);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0,0,0,0.25);
-        }
-
-        /* Main Content */
-        main {
-            position: relative;
-            z-index: 5;
-            padding: 0 20px;
-        }
-
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 60px 20px 50px;
-            max-width: 1000px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .cultural-accent {
-            display: inline-block;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            animation: gentle-sway 4s ease-in-out infinite;
-        }
-
-        @keyframes gentle-sway {
-            0%, 100% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
-        }
-
-        .hero-title {
-            font-family: var(--serif-family);
-            font-size: clamp(2.2rem, 4vw, 3.2rem);
-            font-weight: 600;
-            color: var(--dark-green);
-            margin-bottom: 15px;
-            line-height: 1.3;
-            animation: fadeInUp 1s ease-out;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-            color: var(--kashmir-blue);
-            margin-bottom: 25px;
-            animation: fadeInUp 1s ease-out 0.3s both;
-            font-weight: 500;
-        }
-
-        .hero-description {
-            font-size: clamp(1rem, 2vw, 1.15rem);
-            color: var(--mountain-gray);
-            max-width: 650px;
-            margin: 0 auto 35px;
-            line-height: 1.7;
-            animation: fadeInUp 1s ease-out 0.6s both;
-        }
-
-        .cultural-quote {
-            font-style: italic;
-            color: var(--sage-green);
-            font-size: 1.1rem;
-            margin-top: 20px;
-            opacity: 0.8;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Features Grid */
-        .features-section {
-            padding: 50px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .features-title {
-            text-align: center;
-            font-family: var(--serif-family);
-            font-size: 2.2rem;
-            color: var(--dark-green);
-            margin-bottom: 45px;
-            font-weight: 600;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-
-        .feature-card {
-            background: linear-gradient(135deg, white 0%, #f8fffe 100%);
-            padding: 35px 25px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s ease;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
-            border-radius: 20px 20px 0 0;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-            border-color: rgba(46, 134, 171, 0.2);
-        }
-
-        .feature-icon {
-            font-size: 2.8rem;
-            margin-bottom: 20px;
-            display: block;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .feature-card h3 {
-            color: var(--dark-green);
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .feature-card p {
-            color: var(--mountain-gray);
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        /* Testimonials Section */
-        .testimonials-section {
-            padding: 60px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .testimonials-section::before {
-            content: '';
-            position: absolute;
-            top: 100px;
-            left: 20px;
-            right: 20px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
-            z-index: 1;
-        }
-
-        .testimonials-section::after {
-            content: '';
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            height: 2px;
-            background: #000;
-            z-index: 1;
-        }
-
-        .testimonials-container {
-            text-align: center;
-        }
-
-        .testimonials-title {
-            font-family: var(--serif-family);
-            font-size: 2.2rem;
-            color: var(--dark-green);
-            margin-bottom: 15px;
-            font-weight: 600;
-            position: relative;
-            z-index: 2;
-        }
-
-        .testimonials-subtitle {
-            color: var(--mountain-gray);
-            font-size: 1.1rem;
-            margin-bottom: 50px;
-            opacity: 0.8;
-            position: relative;
-            z-index: 2;
-        }
-
-        .testimonials-slider-container {
-            position: relative;
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            z-index: 2;
-        }
-
-        .testimonials-slider {
-            position: relative;
-            overflow: hidden;
-            margin: 40px 80px;
-            padding: 40px 0;
-        }
-
-        .testimonials-track {
-            display: flex;
-            transition: transform 0.5s ease-in-out;
-            width: 500%;
-        }
-
-        .testimonial-item {
-            flex: 0 0 20%;
-            text-align: center;
-            padding: 30px 40px;
-        }
-
-        .testimonial-stars {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: #ffc107;
-        }
-
-        .testimonial-text {
-            font-style: italic;
-            font-size: 1.1rem;
-            line-height: 1.7;
-            color: var(--dark-green);
-            margin-bottom: 25px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            font-weight: 500;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .testimonial-author {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .author-name {
-            font-weight: 600;
-            color: var(--kashmir-blue);
-            font-size: 1rem;
-        }
-
-        .author-role {
-            font-size: 0.9rem;
-            color: var(--sage-green);
-            opacity: 0.8;
-        }
-
-        /* Navigation Buttons - NOW PROPERLY ADDED */
-        .slider-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, var(--sage-green), var(--kashmir-blue));
-            border: none;
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-
-        .slider-nav:hover {
-            transform: translateY(-50%) scale(1.1);
-            background: linear-gradient(135deg, var(--saffron), #e67e00);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .slider-nav:active {
-            transform: translateY(-50%) scale(0.95);
-        }
-
-        .slider-nav.prev {
-            left: 10px;
-        }
-
-        .slider-nav.next {
-            right: 10px;
-        }
-
-        /* Dots Indicator */
-        .slider-dots {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 30px;
-            z-index: 2;
-            position: relative;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: rgba(123, 155, 139, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            background: var(--sage-green);
-            transform: scale(1.3);
-            box-shadow: 0 2px 8px rgba(123, 155, 139, 0.4);
-        }
-
-        .dot:hover {
-            background: var(--kashmir-blue);
-            transform: scale(1.1);
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .testimonials-section {
-                padding: 40px 15px;
-            }
-            
-            .testimonials-slider {
-                margin: 30px 60px;
-            }
-            
-            .slider-nav {
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-            
-            .slider-nav.prev {
-                left: 5px;
-            }
-            
-            .slider-nav.next {
-                right: 5px;
-            }
-
-            .testimonials-section::before,
-            .testimonials-section::after {
-                left: 15px;
-                right: 15px;
-            }
-
-            .testimonial-item {
-                padding: 20px 30px;
-            }
-
-            .testimonial-text {
-                font-size: 1rem;
-                min-height: 100px;
-            }
-        }
-        .faq-section {
-            padding: 60px 20px;
-            max-width: 900px;
-            margin: 40px auto;
-            position: relative;
-        }
-
-        .faq-container {
-            background: linear-gradient(135deg, white 0%, #fafcff 100%);
-            border-radius: 25px;
-            padding: 50px 40px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(46, 134, 171, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .faq-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, var(--saffron), var(--kashmir-blue), var(--sage-green));
-        }
-
-        .faq-title {
-            text-align: center;
-            font-family: var(--serif-family);
-            font-size: 2.3rem;
-            color: var(--dark-green);
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .faq-subtitle {
-            text-align: center;
-            color: var(--mountain-gray);
-            font-size: 1.1rem;
-            margin-bottom: 40px;
-            opacity: 0.8;
-        }
-
-        .faq-item {
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(123, 155, 139, 0.1);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .faq-item:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .faq-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .faq-question {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, #fdfdfd 0%, #f9f9f9 100%);
-        }
-
-        .faq-question:hover {
-            background: linear-gradient(135deg, #f5f8ff 0%, #e8f4f8 100%);
-        }
-
-        .faq-question h3 {
-            color: var(--dark-green);
-            font-size: 1.15rem;
-            font-weight: 600;
-            margin: 0;
-            flex: 1;
-            line-height: 1.4;
-        }
-
-        .faq-icon {
-            width: 35px;
-            height: 35px;
-            background: linear-gradient(135deg, var(--sage-green), var(--kashmir-blue));
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            transition: all 0.4s ease;
-            margin-left: 20px;
-            box-shadow: 0 4px 10px rgba(123, 155, 139, 0.3);
-        }
-
-        .faq-item.active .faq-icon {
-            transform: rotate(45deg);
-            background: linear-gradient(135deg, var(--saffron), #e67e00);
-        }
-
-        .faq-answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.4s ease;
-            background: white;
-        }
-
-        .faq-item.active .faq-answer {
-            max-height: 250px;
-        }
-
-        .faq-answer-content {
-            padding: 0 30px 25px 30px;
-            color: var(--mountain-gray);
-            line-height: 1.7;
-            font-size: 1rem;
-            border-top: 1px solid rgba(123, 155, 139, 0.1);
-            padding-top: 20px;
-        }
-
-        /* Call to Action */
-        .cta-section {
-            background: linear-gradient(135deg, var(--kashmir-blue) 0%, var(--sage-green) 50%, var(--dark-green) 100%);
-            padding: 70px 20px;
-            text-align: center;
-            margin-top: 50px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
-                radial-gradient(circle, rgba(241,143,1,0.1) 1px, transparent 1px);
-            background-size: 50px 50px, 100px 100px;
-            animation: moveBackground 25s linear infinite;
-        }
-
-        @keyframes moveBackground {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-50px, -50px) rotate(360deg); }
-        }
-
-        .cta-content {
-            position: relative;
-            z-index: 2;
-            max-width: 650px;
-            margin: 0 auto;
-        }
-
-        .cta-title {
-            font-family: var(--serif-family);
-            font-size: 2.3rem;
-            color: white;
-            margin-bottom: 20px;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .cta-text {
-            font-size: 1.15rem;
-            color: var(--soft-white);
-            margin-bottom: 35px;
-            opacity: 0.95;
-            line-height: 1.6;
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, var(--saffron), #e67e00);
-            color: white;
-            padding: 18px 45px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(241, 143, 1, 0.4);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .cta-button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 40px rgba(241, 143, 1, 0.6);
-        }
-
-        /* Footer - matching dashboard.html */
-        footer {
-            text-align: center;
-            padding: 1rem;
-            font-size: 0.9rem;
-            background: #ffeecf;
-            border-top: 2px solid #fcd58d;
-            margin-top: 2rem;
-        }
-
-        /* Dark Mode Styles */
-        body.dark {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            color: #e0e0e0;
-        }
-
-        body.dark::before {
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(46, 134, 171, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(241, 143, 1, 0.08) 0%, transparent 50%);
-        }
-
-        body.dark header {
-            background-color: #1f1f1f;
-            color: #f9e6d0;
-        }
-
-        body.dark .header-text h3 {
-            color: #ccc;
-        }
-
-        body.dark .toggle-btn, body.dark .login-btn {
-            background: #444;
-            color: #f9e6d0;
-            border: 1px solid #666;
-        }
-
-        body.dark .feature-card {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-            border-color: rgba(123, 155, 139, 0.2);
-        }
-
-        body.dark .feature-card h3,
-        body.dark .hero-title,
-        body.dark .features-title {
-            color: #f9e6d0;
-        }
-
-        body.dark .faq-container {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-        }
-
-        body.dark .faq-item {
-            background: #333;
-            border-color: rgba(123, 155, 139, 0.2);
-        }
-
-        body.dark .faq-question {
-            background: linear-gradient(135deg, #3a3a3a 0%, #2f2f2f 100%);
-        }
-
-        body.dark .faq-question:hover {
-            background: linear-gradient(135deg, #404040 0%, #353535 100%);
-        }
-
-        body.dark .faq-question h3,
-        body.dark .faq-title {
-            color: #f9e6d0;
-        }
-
-        body.dark .faq-answer {
-            background: #333;
-        }
-
-        body.dark .faq-answer-content {
-            color: #e0e0e0;
-            border-top-color: rgba(123, 155, 139, 0.2);
-        }
-
-        body.dark footer {
-            background: #1f1f1f;
-            color: #e0e0e0;
-            border-top: 2px solid #444;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            header { padding: 15px 20px; }
-            .header-text h1 { font-size: 1.6rem; }
-            .hero { padding: 50px 20px 40px; }
-            .features-grid { grid-template-columns: 1fr; gap: 20px; }
-            .faq-container { padding: 35px 25px; }
-            .faq-question { padding: 20px 25px; }
-            .faq-answer-content { padding: 0 25px 20px 25px; }
-            .cta-title { font-size: 2rem; }
-            .header-right { gap: 10px; }
-            .toggle-btn { padding: 8px 12px; font-size: 0.85rem; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoulAce - Welcome</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+      color: #4a4a4a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Navigation */
+    header {
+      font-family: 'Zain', sans-serif;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #eee0d1;
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1000;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 22px;
+      color: #6b4e3d;
+    }
+
+    .logo img {
+      height: 40px;
+      width: auto;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+
+    /* Google Translate Styling */
+    .translate-container {
+      position: relative;
+      z-index: 1001;
+    }
+
+    .translate-btn {
+      background: #f5f2f0;
+      border: 1px solid #c17b6b;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #6b4e3d;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .translate-btn:hover {
+      background: #eee0d1;
+    }
+
+    #google_translate_element {
+      display: none;
+    }
+
+    /* Show translate element when active */
+    .translate-container.active #google_translate_element {
+      display: block !important;
+      position: fixed !important;
+      top: 70px !important;
+      right: 40px !important;
+      z-index: 999999 !important;
+      background: white !important;
+      border: 2px solid #c17b6b !important;
+      border-radius: 12px !important;
+      padding: 15px !important;
+      margin-top: 0 !important;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+      min-width: 220px !important;
+    }
+
+    .translate-container.active #google_translate_element .goog-te-gadget {
+      font-family: inherit !important;
+    }
+
+    .translate-container.active #google_translate_element .goog-te-combo {
+      padding: 5px !important;
+      border: 1px solid #c17b6b !important;
+      border-radius: 5px !important;
+      font-size: 12px !important;
+      width: 100% !important;
+    }
+
+    #google_translate_element select {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      color: #6b4e3d;
+      cursor: pointer;
+      outline: none;
+      padding: 5px;
+    }
+
+    /* Dark Mode Toggle */
+    .theme-toggle {
+      background: #f5f2f0;
+      border: 1px solid #c17b6b;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 16px;
+      color: #6b4e3d;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .theme-toggle:hover {
+      background: #c17b6b;
+      color: white;
+    }
+
+    /* Get Started Button */
+    .get-started-btn {
+      background: #c17b6b;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .get-started-btn:hover {
+      background: #a85d52;
+      transform: translateY(-1px);
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background: linear-gradient(135deg, #2a2a2a 20%, #1a1a1a 100%);
+      color: #e0e0e0;
+    }
+
+    body.dark-mode header {
+      background: #333;
+    }
+
+    body.dark-mode .logo {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .theme-toggle {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn:hover {
+      background: #555;
+    }
+
+    body.dark-mode .translate-container.active #google_translate_element {
+      background: #333 !important;
+      border-color: #666 !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+    }
+
+    body.dark-mode #google_translate_element select {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .welcome-title {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .right-section {
+      background: linear-gradient(135deg, #4a5e54 0%, #3a4e44 100%);
+    }
+
+    body.dark-mode .welcome-text {
+      color: #b0c0b0;
+    }
+
+    body.dark-mode .cta-button {
+      border-color: #b0c0b0;
+      color: #b0c0b0;
+    }
+
+    body.dark-mode .cta-button:hover {
+      background: #b0c0b0;
+      color: #2a2a2a;
+    }
+
+    body.dark-mode .classes-section {
+      background: #2a2a2a;
+    }
+
+    body.dark-mode .classes-title,
+    body.dark-mode .classes-description {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .features-section {
+      background: #1a2a26;
+    }
+
+    body.dark-mode .feature-card {
+      background: #333;
+    }
+
+    body.dark-mode .feature-card h3 {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .feature-card p {
+      color: #b0b0b0;
+    }
+
+    body.dark-mode .feature-icon {
+      background-color: #8a6b5c;
+    }
+
+    body.dark-mode footer {
+      background: #333;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode footer a {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode footer a:hover {
+      color: #c17b6b;
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      min-height: 60vh; /* decreased height */
+    }
+
+    .left-section {
+      flex: 1;
+      padding: 40px 30px; /* reduced padding */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .welcome-title {
+      font-size: 42px; /* slightly smaller */
+      font-weight: normal;
+      line-height: 1.2;
+      margin-bottom: 30px;
+      color: #6b4e3d;
+    }
+
+    .animated-quote {
+      font-size: 18px;
+      font-style: italic;
+      color: #8a6b5c;
+      margin-bottom: 20px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+    }
+
+    .decorative-circle {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: #c17b6b;
+      border-radius: 50%;
+      top: 70%;
+      right: 15%;
+      transform: translateY(-50%);
+      opacity: 0.8;
+      z-index: 10;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(-50%); }
+      50% { transform: translateY(-65%); }
+    }
+
+    /* Dark mode styles for animated quote */
+    body.dark-mode .animated-quote {
+      color: #b8a898;
+    }
+
+    .right-section {
+      flex: 1;
+      background: linear-gradient(135deg, #a8c4b8 0%, #9bb8a8 100%);
+      padding: 40px 30px; /* reduced padding */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .welcome-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #2d4a3a;
+      margin-bottom: 30px;
+      max-width: 400px;
+    }
+
+    .cta-button {
+      background: transparent;
+      border: 2px solid #2d4a3a;
+      padding: 10px 24px;
+      border-radius: 25px;
+      color: #2d4a3a;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      align-self: flex-start;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .cta-button:hover {
+      background: #2d4a3a;
+      color: white;
+    }
+
+    /* Classes Section */
+    .classes-section {
+      padding: 60px 40px;
+      background: #f5f2f0;
+    }
+
+    .classes-header {
+      text-align: left;
+      margin-bottom: 30px;
+    }
+
+    .classes-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #8a8a8a;
+      margin-bottom: 15px;
+    }
+
+    .classes-title {
+      font-size: 32px;
+      font-weight: normal;
+      color: #6b4e3d;
+      margin-bottom: 20px;
+    }
+
+    .classes-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #6b4e3d;
+      max-width: 500px;
+    }
+
+    .features-section {
+      background: #CADBD7;
+      padding: 80px 40px;
+    }
+
+    .features-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #f5f2f0; /* matches your site's neutral cream */
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+    }
+
+    .feature-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 20px auto;
+      /* background-color: #ffffff; */
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      padding: 10px;
+    }
+
+    .feature-icon img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      color: #6b4e3d; /* earthy brown */
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #4a4a4a; /* dark grey */
+      line-height: 1.5;
+    }
+   
+    /* FAQ Section */
+.faq-section {
+  padding: 60px 40px;
+  background: #f5f2f0;
+  text-align: center;
+}
+
+.faq-title {
+  font-size: 28px;
+  color: #6b4e3d;
+  margin-bottom: 30px;
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.faq-item {
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-4px);
+}
+
+.faq-item h4 {
+  color: #6b4e3d;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.faq-item p {
+  color: #4a4a4a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Developer Slider Section */
+.dev-slider-section {
+  padding: 60px 40px;
+  background: transparent; /* same as main bg */
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.dev-title {
+  font-size: 28px;
+  color: #6b4e3d;
+  margin-bottom: 30px;
+}
+
+.dev-slider {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+
+.dev-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 25px 30px;
+}
+
+.dev-message {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px 30px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4a4a4a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.dev-signature {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #6b4e3d;
+}
+
+/* Decorative lines */
+.dev-slider-section::before,
+.dev-slider-section::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: #c17b6b;
+  width: 80%;
+  margin: 20px auto;
+  opacity: 0.6;
+}
+
+/* Slider controls */
+.slider-buttons {
+  margin-top: 20px;
+}
+
+.slider-buttons button {
+  background: #c17b6b;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  margin: 0 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.slider-buttons button:hover {
+  background: #a85d52;
+}
+
+    /* Footer */
+    footer {
+      font-family: 'Zain', sans-serif;
+      background: #eee0d1;
+      color: #6b4e3d;
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+    }
+
+    footer p {
+      font-size: 14px;
+      margin: 5px 0;
+    }
+
+    footer a {
+      color: #6b4e3d;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 14px;
+    }
+
+    footer a:hover {
+      color: #c17b6b;
+    }
+  </style>
 </head>
 <body>
-    <!-- Header - matching dashboard.html -->
-    <header>
-        <div class="header-left">
-            <div class="logo-container">
-                <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-            </div>
-            <div class="header-text">
-                <h1>SoulAce</h1>
-                <h3>Wellness begins here.</h3>
-            </div>
-        </div>
+  <header>
+    <div class="logo">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="SoulAce Logo">
+      <span>SoulAce</span>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Google Translate -->
+      <div class="translate-container" id="translateContainer">
+        <button class="translate-btn" onclick="toggleTranslate()">
+          Translate
+        </button>
+        <div id="google_translate_element"></div>
+      </div>
+      
+      <!-- Dark/Light Mode Toggle -->
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌸</span>
+      </button>
 
-        <div class="header-right">
-            <button onclick="toggleMode()" class="toggle-btn">🌞🌙</button>
-            <a href="/login" class="login-btn">Login</a>
-        </div>
-    </header>
+      
+      <!-- Get Started Button -->
+      <a href="/login" class="get-started-btn">Get Started</a>
+    </div>
+  </header>
 
-    <!-- Main Content -->
-    <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <h1 class="hero-title">Tiny steps towards a lighter, brighter you...</h1>
-            <h2 class="hero-subtitle">Anonymous • Safe • Friendly</h2>
-            <p class="hero-description">
-                Take a moment to breathe and find your calm. With caring therapists and gentle AI support by your side, you can begin your journey of healing in a space that truly understands you.
-            </p>
-            <div class="cultural-quote">
-                "Your mind is your home--lets make it feel cozy"
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section class="features-section">
-            <h2 class="features-title">Why Choose SoulAce for Your Mental Wellness?</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🤖</span>
-                    <h3>AI Companion (24/7)</h3>
-                    <p>Your digital friend that understand your emotions and provides support is available 24/7 just for you.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">👩‍⚕️</span>
-                    <h3>Licensed Professionals</h3>
-                    <p>Connect with qualified therapists who understand you.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">🔒</span>
-                    <h3>Complete Privacy</h3>
-                    <p>Your identity stays protected. Get help without family or social judgment in our secure, anonymous platform.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">🗣️</span>
-                    <h3>Multilingual Support</h3>
-                    <p>Express yourself comfortably in your preferred language with culturally aware responses and understanding.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">📔</span>
-                    <h3>Personal Reflection</h3>
-                    <p>Track your emotional journey with intelligent prompts that respect your beliefs and values.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">🤝</span>
-                    <h3>Community Support</h3>
-                    <p>Connect with others who share similar experiences in moderated peer forums.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Testimonials Section -->
-    <section class="testimonials-section">
-        <div class="testimonials-container">
-            <h2 class="testimonials-title">What Our Users Say</h2>
-            <p class="testimonials-subtitle">Real stories from people who found healing through SoulAce</p>
-            
-            <div class="testimonials-grid">
-                <div class="testimonials-slider-container">
-                    <div class="testimonials-slider">
-                        <button class="slider-nav prev" onclick="changeSlide(-1)">‹</button>
-                        <div class="testimonials-track" id="testimonials-track">
-                            <div class="testimonial-item">
-                                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                                <p class="testimonial-text">"SoulAce helped me through my darkest times. The AI companion understood my emotions and the therapist sessions were life-changing. I feel hopeful again."</p>
-                                <div class="testimonial-author">
-                                    <span class="author-name">- Sarah K.</span>
-                                    <span class="author-role">College Student</span>
-                                </div>
-                            </div>
-                            
-                            <div class="testimonial-item">
-                                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                                <p class="testimonial-text">"The privacy and anonymity gave me courage to seek help. The cultural sensitivity made all the difference in my healing journey."</p>
-                                <div class="testimonial-author">
-                                    <span class="author-name">- Ahmad R.</span>
-                                    <span class="author-role">Working Professional</span>
-                                </div>
-                            </div>
-                            
-                            <div class="testimonial-item">
-                                <div class="testimonial-stars">⭐⭐⭐⭐</div>
-                                <p class="testimonial-text">"Being able to express myself in my native language while getting professional help was incredible. The peer support community is amazing too."</p>
-                                <div class="testimonial-author">
-                                    <span class="author-name">- Priya M.</span>
-                                    <span class="author-role">Graduate Student</span>
-                                </div>
-                            </div>
-                            
-                            <div class="testimonial-item">
-                                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                                <p class="testimonial-text">"The 24/7 AI support was there when I needed it most. No judgment, just understanding and practical guidance. Truly grateful."</p>
-                                <div class="testimonial-author">
-                                    <span class="author-name">- David L.</span>
-                                    <span class="author-role">Recent Graduate</span>
-                                </div>
-                            </div>
-                            
-                            <div class="testimonial-item">
-                                <div class="testimonial-stars">⭐⭐⭐</div>
-                                <p class="testimonial-text">"SoulAce gave me tools to manage anxiety while respecting my cultural values. The journaling feature helped me track my progress beautifully."</p>
-                                <div class="testimonial-author">
-                                    <span class="author-name">- Maria C.</span>
-                                    <span class="author-role">Teacher</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="slider-nav next" onclick="changeSlide(1)">›</button>
-                    </div>
-                </div>
-                
-                <div class="slider-dots" id="slider-dots">
-                    <span class="dot active" onclick="currentSlide(1)"></span>
-                    <span class="dot" onclick="currentSlide(2)"></span>
-                    <span class="dot" onclick="currentSlide(3)"></span>
-                    <span class="dot" onclick="currentSlide(4)"></span>
-                    <span class="dot" onclick="currentSlide(5)"></span>
-                </div>
-            </div>
-        </div>
+  <!-- Main Content -->
+  <main class="main-content">
+    <section class="left-section">
+      <h1 class="welcome-title">Welcome to<br>SoulAce</h1>
+      <div class="animated-quote" id="animatedQuote"></div>
+      <div class="decorative-circle"></div>
     </section>
 
-    <!-- FAQ Section -->
-    <section class="faq-section">
-        <div class="faq-container">
-            <h2 class="faq-title">Frequently Asked Questions</h2>
-            <p class="faq-subtitle">Your concerns matter to us. Here are answers to common questions.</p>
-            
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <h3>Will my family or community know I'm using this platform?</h3>
-                    <div class="faq-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <div class="faq-answer-content">
-                        Absolutely not. We understand the importance of privacy in our culture. Your identity is completely anonymous - no real names, phone numbers, or identifiable information is required. All sessions are confidential and your data is protected with end-to-end encryption. Your mental health journey remains private.
-                    </div>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <h3>How does the AI understand our cultural context and emotions?</h3>
-                    <div class="faq-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <div class="faq-answer-content">
-                        Our AI is trained with cultural sensitivity in mind, understanding the unique emotional expressions and family dynamics common in diverse communities. It responds in multiple languages, recognizing cultural phrases and providing coping strategies that align with various values while maintaining modern therapeutic approaches.
-                    </div>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <h3>Are the therapists familiar with our cultural background?</h3>
-                    <div class="faq-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <div class="faq-answer-content">
-                        Yes! Our licensed therapists are specifically chosen for their understanding of diverse cultural backgrounds, family structures, and mental health perspectives. They specialize in culturally competent care for various issues while respecting different religious and cultural values.
-                    </div>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <h3>How much does it cost to use SoulAce?</h3>
-                    <div class="faq-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <div class="faq-answer-content">
-                        We offer a freemium model with basic features available at no cost, including AI chat support and community forums. Premium features like one-on-one therapy sessions have affordable pricing options with flexible payment plans. We believe mental health support should be accessible to everyone.
-                    </div>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <h3>Is SoulAce suitable for severe mental health conditions?</h3>
-                    <div class="faq-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <div class="faq-answer-content">
-                        While SoulAce provides excellent support for anxiety, depression, stress, and everyday mental health challenges, we always recommend consulting with healthcare professionals for severe conditions. Our platform includes crisis support features and can help connect you with appropriate emergency resources when needed.
-                    </div>
-                </div>
-            </div>
-        </div>
+    <section class="right-section">
+      <p class="welcome-text">
+        At SoulAce, we believe that caring for your mind is just as important as caring for your body. This is your safe space to pause, breathe, and reconnect with yourself. Here, you'll find tools, reflections, and gentle guidance to support your mental well-being and inner balance. Take it one step at a time—your journey to healing and growth begins here.
+      </p>
+      <a href="/login" class="cta-button">Begin your Journey</a>
     </section>
+  </main>
 
-    <!-- Call to Action -->
-    <section class="cta-section">
-        <div class="cta-content">
-            <h2 class="cta-title">Ready to Find Your Inner Peace?</h2>
-            <p class="cta-text">
-                Join our community of individuals who have found healing, support, and hope through SoulAce. 
-                Your mental wellness matters, and culturally sensitive help is just one click away.
-            </p>
-            <a href="/login" class="cta-button">Start Your Journey Today</a>
+  <section id="classes" class="classes-section">
+    <div class="classes-header">
+      <h2 class="classes-title">Why choose SoulAce?</h2>
+      <p class="classes-description">
+        SoulAce is more than just a platform—it's a safe and supportive space designed for your mental and emotional well-being. With interactive tools like mood tracking, guided reflections, and a caring community, we make wellness accessible and personalized. Our goal is to help you build balance, resilience, and self-awareness—one step at a time.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="features-container">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='ai-companion.png') }}" alt="AI Companion">
         </div>
-    </section>
+        <h3>AI Companion (24/7)</h3>
+        <p>Your digital friend that understands your emotions and provides support is available 24/7 just for you.</p>
+      </div>
 
-    <!-- Footer - matching dashboard.html -->
-    <footer>
-        <p>SoulAce © 2025 – Built with 💙 by Synapsix</p>
-    </footer>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='therapist.png') }}" alt="Licensed Professionals">
+        </div>
+        <h3>Licensed Professionals</h3>
+        <p>Connect with qualified therapists who understand you.</p>
+      </div>
 
-    <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='privacy.png') }}" alt="Complete Privacy">
+        </div>
+        <h3>Complete Privacy</h3>
+        <p>Your identity stays protected. Get help without family or social judgment in our secure, anonymous platform.</p>
+      </div>
 
-        function changeSlide(direction) {
-            currentSlideIndex += direction;
-            
-            if (currentSlideIndex >= totalSlides) {
-                currentSlideIndex = 0;
-            } else if (currentSlideIndex < 0) {
-                currentSlideIndex = totalSlides - 1;
-            }
-            
-            updateSlider();
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='multilingual.png') }}" alt="Multilingual Support">
+        </div>
+        <h3>Multilingual Support</h3>
+        <p>Express yourself comfortably in your preferred language with culturally aware responses and understanding.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='reflection.png') }}" alt="Personal Reflection">
+        </div>
+        <h3>Personal Reflection</h3>
+        <p>Track your emotional journey with intelligent prompts that respect your beliefs and values.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img src="{{ url_for('static', filename='community.png') }}" alt="Community Support">
+        </div>
+        <h3>Community Support</h3>
+        <p>Connect with others who share similar experiences in moderated peer forums.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ✅ FAQ Section (New) -->
+  <section class="faq-section">
+    <h2 class="faq-title">Frequently Asked Questions</h2>
+    <div class="faq-container">
+      <div class="faq-item">
+        <h4>Is SoulAce completely free?</h4>
+        <p>Yes! All the core features are free for everyone.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Will my data be safe?</h4>
+        <p>Absolutely. We prioritize confidentiality and security of your information.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Do I need prior knowledge of psychology?</h4>
+        <p>No, SoulAce is designed for everyone — simple, fun, and beginner-friendly.</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Developer Slider Section -->
+<section class="dev-slider-section">
+  <h2 class="dev-title">Words from the Developers</h2>
+  <div class="dev-slider" id="devSlider">
+    <div class="dev-slide">
+      <p class="dev-message">SoulAce was created with love and purpose — to bring mental health support closer to you.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">We believe wellness should be stigma-free and accessible to everyone, everywhere.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">Every feature is thoughtfully designed to help you pause, heal, and grow.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">Our goal is to make psychological support as natural as checking your messages.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">We built SoulAce for Gen Z, keeping it fun, relatable, and safe.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+    <div class="dev-slide">
+      <p class="dev-message">This is just the beginning — SoulAce will keep evolving with you.</p>
+      <p class="dev-signature">— Team SoulAce</p>
+    </div>
+  </div>
+  <div class="slider-buttons">
+    <button onclick="prevSlide()">&#10094; </button>
+    <button onclick="nextSlide()"> &#10095;</button>
+  </div>
+</section>
+
+
+  <!-- Footer -->
+<footer>
+  <p>&copy; 2025 SoulAce. All rights reserved.</p>
+  <p>
+    <a href="#terms">Terms of Service</a>
+  </p>
+</footer>
+
+
+  <script>
+    // Array of quotes for animation
+    const quotes = [
+      "Self-care isn't selfish, it's a power move.",
+      "Take a deep breath—you deserve this moment.",
+      "Your thoughts are louder than notifications; choose wisely.",
+      "Progress, not perfection. Every step counts.",
+      "Anxiety is temporary, but your coffee can be permanent.",
+      "Feelings are like visitors; let them come, don't unpack.",
+      "Be gentle with yourself—you're doing better than you think.",
+      "Your mind deserves a playlist, not a warzone.",
+      "Small changes lead to big transformations. Start today.",
+      "Hustle for your goals, not for someone else's approval.",
+      "Even the darkest nights teach us the beauty of stars.",
+      "Mental health days are the new flex days.",
+      "Take naps like a boss—it's science.",
+      "Reset your mind, no Wi-Fi required.",
+      "Your vibe attracts your tribe, choose wisely.",
+      "Celebrate small wins—they're secretly huge.",
+      "Comparison is the thief of chill.",
+      "Positive thoughts only… yes, even on Mondays.",
+      "Your brain needs breaks like your phone needs charging.",
+      "Breathe in peace, exhale chaos.",
+      "You don't have to be okay all the time—hello, human.",
+      "Inner peace > Wi-Fi signal strength.",
+      "Check in with yourself before checking your notifications.",
+      "Wellness is a journey, not a viral challenge.",
+      "Laugh at your mistakes—they're just plot twists.",
+      "Your thoughts are powerful—make them kind.",
+      "Be the CEO of your own mood.",
+      "It's okay to be a work in progress.",
+      "Happiness isn't found, it's practiced daily.",
+      "You're allowed to cancel plans… even with yourself."
+    ];
+
+    let currentQuoteIndex = 0;
+    let currentText = "";
+    let isTyping = true;
+    let isDeleting = false;
+
+    function animateQuotes() {
+      const quoteElement = document.getElementById('animatedQuote');
+      const currentQuote = quotes[currentQuoteIndex];
+      
+      if (isTyping && !isDeleting) {
+        // Typing effect
+        if (currentText.length < currentQuote.length) {
+          currentText = currentQuote.substring(0, currentText.length + 1);
+          quoteElement.textContent = currentText;
+          setTimeout(animateQuotes, 100); // Typing speed
+        } else {
+          // Pause before deleting
+          isTyping = false;
+          setTimeout(animateQuotes, 2000); // Pause duration
         }
-
-        function currentSlide(slideIndex) {
-            currentSlideIndex = slideIndex - 1;
-            updateSlider();
+      } else if (!isTyping && !isDeleting) {
+        // Start deleting
+        isDeleting = true;
+        setTimeout(animateQuotes, 50);
+      } else if (isDeleting) {
+        // Deleting effect (backspace)
+        if (currentText.length > 0) {
+          currentText = currentText.substring(0, currentText.length - 1);
+          quoteElement.textContent = currentText;
+          setTimeout(animateQuotes, 50); // Deleting speed (faster)
+        } else {
+          // Move to next quote
+          isDeleting = false;
+          isTyping = true;
+          currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+          setTimeout(animateQuotes, 500); // Pause before next quote
         }
+      }
+    }
 
-        function updateSlider() {
-            const track = document.getElementById('testimonials-track');
-            const dots = document.querySelectorAll('.dot');
-            
-            // Move the slider
-            track.style.transform = `translateX(-${currentSlideIndex * 20}%)`;
-            
-            // Update dots
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlideIndex);
-            });
-        }
+    // Toggle translate dropdown visibility
+    function toggleTranslate() {
+      const container = document.getElementById('translateContainer');
+      container.classList.toggle('active');
+    }
 
-        function toggleMode() {
-            document.body.classList.toggle('dark');
-        }
+    // Close translate dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const container = document.getElementById('translateContainer');
+      if (!container.contains(event.target)) {
+        container.classList.remove('active');
+      }
+    });
 
-        function toggleFAQ(element) {
-            const faqItem = element.parentElement;
-            const isActive = faqItem.classList.contains('active');
-            
-            // Close all other FAQ items
-            document.querySelectorAll('.faq-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Toggle current item
-            if (!isActive) {
-                faqItem.classList.add('active');
-            }
-        }
-    </script>
+
+    // Theme toggle functionality with aesthetic emojis
+    function toggleTheme() {
+      const body = document.body;
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        themeIcon.textContent = '☀️'; // Light pink flower for light mode
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.classList.add('dark-mode');
+        themeIcon.textContent = '🌙'; // Crescent moon for dark mode
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+
+    // Load saved theme and start quote animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '☀️';
+      }
+
+      // Start quote animation after a delay
+      setTimeout(animateQuotes, 1000);
+    });
+
+    function beginJourney() {
+      window.location.href = '/login';
+    }
+
+    // Slider functions for developer section
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.dev-slide');
+    const totalSlides = slides.length;
+    const slider = document.getElementById('devSlider');
+
+    function showSlide(index) {
+      if (index < 0) currentSlide = totalSlides - 1;
+      else if (index >= totalSlides) currentSlide = 0;
+      else currentSlide = index;
+
+      if (slider) {
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+      }
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    // Auto-slide every 5s
+    setInterval(nextSlide, 5000);
+
+    // Google Translate initialization
+    window.googleTranslateElementInit = function() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,ur',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+
+  </script>
+  <!-- Google Translate Script -->
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

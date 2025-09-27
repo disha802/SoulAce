@@ -4,174 +4,788 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SoulAce — GAD7 + PHQ9</title>
-
+<link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
-  --page-bg: #F5F7F2;
-  --card-bg: #ffffff;
-  --muted: #657A74;
-  --accent: #3b82f6;
-  --glass: rgba(0,0,0,0.02);
+  --page-bg: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --header-bg: #eee0d1;
+  --footer-bg: #eee0d1;
+  --text-primary: #000000;
+  --text-heading: #6b4e3d;
+  --text-secondary: #8a8a8a;
+  --accent-primary: #9bafd9;
+  --accent-secondary: #9bafd9;
+  --features-bg: #CADBD7;
   --max-width: 1100px;
 }
 
-html, body { height:100%; margin:0; font-family:'Segoe UI', Roboto, system-ui, -apple-system, Arial; }
-body { display:flex; flex-direction:column; min-height:100vh; margin:0; background:var(--page-bg); color:#333; transition:0.4s; }
-
-header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; z-index:1000; }
-.header-left { display:flex; align-items:center; gap:15px; }
-.header-text { display:flex; flex-direction:column; }
-.logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
-header h1 { margin:0; font-size:1.8rem; color:#fff; }
-.header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-.header-right { display:flex; align-items:center; gap:10px; position:relative; }
-.user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-
-/* User popup updated */
-.user-popup {
-  display:none;
-  position:absolute;
-  top:50px;
-  right:0;
-  background:#fff;
-  border-radius:12px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.2);
-  padding:10px;
-  z-index:100;
-  min-width:160px;
-}
-
-.user-popup .popup-btn {
-  display:block;
-  width:100%;
-  margin-bottom:8px;
-  background:#fff;
-  color:#243B36;
-  font-weight:600;
-  padding:5px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  box-shadow:0 4px 6px rgba(0,0,0,0.2);
-  text-align:left;
-}
-
-.user-popup .popup-btn:hover {
-  background:#f2f2f2;
-}
-
-#google_translate_element {
-  margin-bottom: 8px;
-}
-
-/* Google Translate Styling */
-.goog-te-banner-frame.skiptranslate { 
-  display: none !important; 
+html, body { 
+  height: 100%; 
+  margin: 0; 
+  font-family: 'Georgia', serif; 
+  font-size: 16px; /* Base font size increased from default */
 }
 
 body { 
-  top: 0px !important; 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 100vh; 
+  margin: 0; 
+  background: var(--page-bg);
+  color: var(--text-primary); 
+  transition: 0.4s; 
 }
 
-.goog-te-gadget-icon { 
-  display: none !important; 
+/* ================= HEADER ================= */
+header { 
+  font-family: 'Zain', sans-serif;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 12px 40px; 
+  background: var(--header-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
-#google_translate_element select {
-  background: #fff;
-  border-radius: 8px;
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  font-size: 12px;
+.header-left { 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+}
+
+.header-text { 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.logo-container img { 
+  width: 60px; 
+  height: 60px; 
+  border-radius: 50%; 
+  object-fit: cover; 
+}
+
+header h1 { 
+  margin: 0; 
+  font-size: 2rem; 
+  color: var(--text-heading); 
+}
+
+.header-text h3 { 
+  margin: 0; 
+  font-size: 1.1rem; 
+  font-weight: normal; 
+  color: var(--text-secondary); 
+}
+
+.header-right { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  position: relative; 
+}
+
+.user-icon { 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 50%; 
   cursor: pointer;
-  width: 100%;
-  margin-bottom: 5px;
+  border: 2px solid var(--accent-secondary);
+  object-fit: cover;
 }
+
+/* User popup updated */
+.user-popup {
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 100;
+  min-width: 220px;
+  border: 1px solid rgba(193, 123, 107, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-popup .popup-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: var(--accent-primary);
+  color: #fff;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.user-popup .popup-btn:hover {
+  background: var(--accent-secondary);
+}
+
 
 /* Container and layout */
-.container { flex:1 0 auto; display:grid; grid-template-columns:1fr 380px; gap:18px; max-width: var(--max-width); width:100%; margin:0 auto; padding:28px 12px; }
-@media (max-width:980px){ .container{grid-template-columns:1fr} }
+.container { 
+  flex: 1 0 auto; 
+  display: grid; 
+  grid-template-columns: 1fr 380px; 
+  gap: 18px; 
+  max-width: var(--max-width); 
+  width: 100%; 
+  margin: 0 auto; 
+  padding: 28px 12px; 
+  transition: margin-left 0.3s ease;
+}
 
-footer { width:100%; flex-shrink:0; text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:auto; }
+.container.with-sidebar {
+  margin-left: 320px;
+}
 
-.card{background:var(--card-bg);padding:20px;border-radius:12px;box-shadow:0 6px 22px rgba(30,40,40,0.06);border:1px solid rgba(0,0,0,0.03)}
-.question-area { display:flex;flex-direction:column;gap:16px; }
-.q-card{background:linear-gradient(180deg, #fff, #fbfcfb);padding:18px;border-radius:12px;border:1px solid rgba(0,0,0,0.03); }
-.q-top{display:flex;justify-content:space-between;align-items:center}
-.q-title{font-size:18px;font-weight:700}
-.q-sub{color:var(--muted);font-size:13px}
-.question-text{font-size:20px;margin:12px 0 8px 0;color:#102023}
-.options{display:flex;gap:12px;flex-wrap:wrap}
-.option{flex:1 1 45%;min-width:160px;padding:12px 14px;border-radius:10px;border:1px solid #e6e6e6;background:#fff;cursor:pointer;user-select:none}
-.option .lab{font-weight:700;font-size:15px}
-.option.selected{outline:3px solid rgba(59,130,246,0.12);box-shadow:0 8px 18px rgba(59,130,246,0.06)}
-.controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-.btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-.btn.secondary{background:#f1f1f1;color:#243B36}
-.btn.primary{background:var(--accent);color:#fff}
-.progress{height:10px;background:#f0f2f1;border-radius:999px;overflow:hidden;margin-top:8px}
-.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent), #60a5fa);transition:width .25s ease}
+@media (max-width:980px){ 
+  .container{
+    grid-template-columns: 1fr;
+    padding: 20px 12px;
+  } 
+}
 
-.summary-col{display:flex;flex-direction:column;gap:14px}
-.score-summary{padding:14px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfcfb);border:1px solid rgba(0,0,0,0.03)}
-.score-row{display:flex;justify-content:space-between;align-items:center}
-.score-big{font-size:22px;font-weight:800}
-.sev{font-weight:700;color:#3b3b3b}
-.warn{color:#b45309;font-weight:800}
-canvas{background:transparent;border-radius:8px}
-.note{font-size:13px;color:var(--muted)}
+/* ================= FOOTER ================= */
+footer { 
+  width: 100%; 
+  flex-shrink: 0; 
+  text-align: center; 
+  padding: 30px 20px; 
+  font-size: 16px; 
+  background: var(--footer-bg);
+  color: var(--text-heading);
+  border-top: 1px solid rgba(193, 123, 107, 0.2);
+  margin-top: auto; 
+}
 
-body.dark-mode { background:#1f2937; color:#f3f4f6; }
-body.dark-mode header { background:#374151; }
-body.dark-mode .card { background:#111827; color:#f3f4f6; }
-body.dark-mode .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
-body.dark-mode .btn.primary { background:#2563eb; color:#fff; }
-body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
+.card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border: 1px solid rgba(193, 123, 107, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.question-area { 
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+}
+
+.q-card {
+  background: var(--features-bg);
+  padding: 18px;
+  border-radius: 15px;
+  border: 1px solid rgba(193, 123, 107, 0.2);
+}
+
+.q-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.q-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.q-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.question-text {
+  font-size: 22px;
+  margin: 12px 0 8px 0;
+  color: var(--text-heading);
+  line-height: 1.4;
+}
+
+.options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.option {
+  flex: 1 1 45%;
+  min-width: 160px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--accent-secondary);
+  background: #f6f3f0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.option:hover {
+  background: #eee0d1;
+}
+
+.option .lab {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.option.selected {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 18px rgba(45, 74, 58, 0.15);
+}
+
+.option.selected .lab {
+  color: white;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.btn {
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 17px;
+}
+
+.btn.secondary {
+  background: #f6f3f0;
+  color: var(--text-heading);
+  border: 1px solid var(--accent-secondary);
+}
+
+.btn.secondary:hover {
+  background: #eee0d1;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff;
+}
+
+.btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.progress {
+  height: 10px;
+  background: #eee0d1;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transition: width .25s ease;
+}
+
+.summary-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.score-summary {
+  padding: 20px;
+  border-radius: 15px;
+  background: var(--features-bg);
+  border: 1px solid rgba(193, 123, 107, 0.2);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-big {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.sev {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.warn {
+  color: #b45309;
+  font-weight: 800;
+}
+
+canvas {
+  background: transparent;
+  border-radius: 8px;
+}
+
+/* Chart Legend Styles */
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 15px;
+  background: var(--features-bg);
+  border: 1px solid rgba(193, 123, 107, 0.2);
+  font-size: 13px;
+  color: var(--text-heading);
+}
+
+.chart-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.chart-legend-item.gad { background: rgba(155, 175, 217, 0.1); }
+.chart-legend-item.phq { background: rgba(193, 123, 107, 0.1); }
+.chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
+
+.note {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.lead {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+/* ================= DARK MODE ================= */
+body.dark-mode { 
+  background: linear-gradient(135deg, #2a2a2a 20%, #1a1a1a 100%);
+  color: #e0e0e0; 
+}
+
+body.dark-mode header { 
+  background: #333;
+}
+
+body.dark-mode header h1,
+body.dark-mode .header-text h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .card { 
+  background: rgba(42, 42, 42, 0.8);
+  border-color: rgba(224, 224, 224, 0.1);
+  color: #e0e0e0; 
+}
+
+body.dark-mode .q-card {
+  background: rgba(68, 68, 68, 0.5);
+  border-color: rgba(224, 224, 224, 0.1);
+}
+
+body.dark-mode .score-summary {
+  background: rgba(68, 68, 68, 0.5);
+  border-color: rgba(224, 224, 224, 0.1);
+}
+
+body.dark-mode .option {
+  background: #444;
+  border-color: #666;
+  color: #e0e0e0;
+}
+
+body.dark-mode .option:hover {
+  background: #555;
+}
+
+body.dark-mode .option .lab {
+  color: #e0e0e0;
+}
+
+body.dark-mode .user-popup { 
+  background: #2a2a2a;
+  border-color: rgba(224, 224, 224, 0.1);
+  color: #e0e0e0; 
+}
+
+body.dark-mode .user-popup .popup-btn {
+  background: #444;
+  border-color: #666;
+  color: #e0e0e0;
+}
+
+body.dark-mode .user-popup .popup-btn:hover {
+  background: #666;
+}
+
+body.dark-mode .btn.primary { 
+  background: linear-gradient(135deg, #5a7a6a, #8db3a0);
+}
+
+body.dark-mode .btn.secondary { 
+  background: #444; 
+  color: #e0e0e0;
+  border-color: #666;
+}
+
+body.dark-mode .btn.secondary:hover {
+  background: #555;
+}
+
+body.dark-mode .progress {
+  background: #444;
+}
+
+body.dark-mode .q-title,
+body.dark-mode .question-text,
+body.dark-mode .score-big {
+  color: #e0e0e0;
+}
+
+body.dark-mode .note,
+body.dark-mode .q-sub,
+body.dark-mode .lead {
+  color: #b0b0b0;
+}
+
+body.dark-mode footer { 
+  background: #333;
+  border-color: rgba(224, 224, 224, 0.1);
+  color: #e0e0e0; 
+}
+
+/* ================= TEST SELECTOR ================= */
+.test-selector {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 320px;
+  height: 100vh;
+  background: var(--card-bg);
+  border-right: 1px solid rgba(193, 123, 107, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 1200;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.test-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(193, 123, 107, 0.2);
+}
+
+.test-selector-title {
+  font-weight: 700;
+  color: var(--text-heading);
+  font-size: 20px;
+}
+
+.test-selector-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.test-selector-close:hover {
+  background: rgba(193, 123, 107, 0.1);
+  color: var(--text-heading);
+}
+
+.test-selector-instructions {
+  background: rgba(155, 175, 217, 0.1);
+  border: 1px solid rgba(155, 175, 217, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+.test-selector-instructions h4 {
+  color: var(--text-heading);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.test-selector-instructions h4::before {
+  content: "⚠️";
+  font-size: 17px;
+}
+
+.test-selector-instructions p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.test-selector-instructions ul {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 8px 0 0 0;
+  padding-left: 16px;
+}
+
+.test-selector-instructions li {
+  margin-bottom: 4px;
+}
+
+.test-card {
+  background: var(--features-bg);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(193, 123, 107, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.test-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.test-card .title {
+  font-weight: 700;
+  color: var(--text-heading);
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.test-card .desc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.test-card .btn {
+  width: 100%;
+  font-size: 15px;
+  padding: 10px 16px;
+}
+
+/* Dark mode for test selector */
+body.dark-mode .test-selector {
+  background: rgba(42, 42, 42, 0.9);
+  border-color: rgba(224, 224, 224, 0.1);
+}
+
+body.dark-mode .test-card {
+  background: rgba(68, 68, 68, 0.5);
+  border-color: rgba(224, 224, 224, 0.1);
+}
+
+body.dark-mode .test-card .title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .test-card .desc {
+  color: #b0b0b0;
+}
+
+body.dark-mode .test-selector-instructions {
+  background: rgba(90, 122, 106, 0.1);
+  border-color: rgba(90, 122, 106, 0.3);
+}
+
+body.dark-mode .test-selector-instructions h4 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .test-selector-instructions p,
+body.dark-mode .test-selector-instructions ul {
+  color: #b0b0b0;
+}
+
+body.dark-mode .chart-legend-item {
+  background: rgba(68, 68, 68, 0.5);
+  border-color: rgba(224, 224, 224, 0.1);
+  color: #e0e0e0;
+}
+
+body.dark-mode .chart-legend-item.gad { background: rgba(90, 122, 106, 0.1); }
+body.dark-mode .chart-legend-item.phq { background: rgba(193, 123, 107, 0.1); }
+body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  header {
+    padding: 10px 20px;
+  }
+  
+  .container {
+    padding: 15px 10px;
+  }
+  
+  .options {
+    flex-direction: column;
+  }
+  
+  .option {
+    flex: none;
+    min-width: auto;
+  }
+  
+  .controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+  
+  .score-row {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .test-selector {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1300;
+  }
+  
+  .container.with-sidebar {
+    margin-left: 0;
+  }
+  
+  .chart-legend-item {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .chart-legend-color {
+    width: 10px;
+    height: 10px;
+  }
+}
 </style>
 
 </head>
 <body>
+{% include 'header.html' %}
 
-<header>
-  <div class="header-left">
-    <div class="logo-container">
-      <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-    </div>
-    <div class="header-text">
-      <h1>SoulAce</h1>
-      <h3>Wellness begins here.</h3>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="user-icon-container">
-      <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-      <div id="user-popup" class="user-popup">
-        <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
-        <!-- Google Translate Dropdown inside profile -->
-        <div id="google_translate_element"></div>
-        <button onclick="window.location='/dashboard'" class="popup-btn">🏠 Home</button>
-        <button onclick="toggleDarkMode()" class="popup-btn">🌙 Change Mode</button>
-        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-          <button type="submit" class="popup-btn">🚪 Logout</button>
-        </form>
+<!-- Welcome Screen -->
+<div id="welcomeScreen" class="container" style="display: block;">
+  <div class="card" style="max-width: 800px; margin: 40px auto; text-align: center; padding: 40px;">
+    <h1 style="color: var(--text-heading); font-size: 2.7rem; margin-bottom: 20px;">Mental Health Assessment</h1>
+    <p class="lead" style="font-size: 1.3rem; margin-bottom: 40px; color: var(--text-secondary);">
+      Take control of your mental wellbeing with our comprehensive screening tools
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px;">
+      <!-- Take Tests Option -->
+      <div class="assessment-option" onclick="startNewAssessment()" style="cursor: pointer; padding: 30px; border: 2px solid var(--card-border); border-radius: 15px; transition: all 0.3s ease;">
+        <div style="font-size: 3rem; margin-bottom: 15px;"><img src="{{ url_for('static', filename='assessment.png') }}" alt="Assessment logo" style="width: 60px; height: 60px; object-fit: contain;"></div>
+        <h3 style="color: var(--text-heading); margin-bottom: 15px;">Take Assessment</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+          Complete GAD-7, PHQ-9, and GHQ-12 screening questionnaires to assess your current mental health status
+        </p>
+        <div class="btn primary">Start New Assessment</div>
+      </div>
+
+      <!-- View History Option -->
+      <div class="assessment-option" onclick="viewHistory()" style="cursor: pointer; padding: 30px; border: 2px solid var(--card-border); border-radius: 15px; transition: all 0.3s ease;">
+        <div style="font-size: 3rem; margin-bottom: 15px;"><img src="{{ url_for('static', filename='history.png') }}" alt="History logo" style="width: 60px; height: 60px; object-fit: contain;"></div>
+        <h3 style="color: var(--text-heading); margin-bottom: 15px;">View History</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+          Review your past assessment results, track progress over time, and download detailed reports
+        </p>
+        <div class="btn primary">View & Download</div>
       </div>
     </div>
-  </div>
-</header>
 
-<div class="container">
+    <div style="margin-top: 30px; padding: 20px; background: var(--features-bg); border-radius: 10px;">
+      <p style="font-size: 14px; color: var(--text-secondary);">
+        <strong>Privacy Notice:</strong> All assessments are confidential and stored securely.
+        These are screening tools only — not diagnostic. For urgent concerns, please contact emergency services.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Assessment Screen (Hidden Initially) -->
+<div id="assessmentScreen" class="container" style="display: none;">
   <!-- LEFT: questions -->
   <main class="card question-area" role="main">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <h1>Quick Mental Health Screen</h1>
+        <h1 style="color: var(--text-heading); font-size: 2.2rem; margin-bottom: 10px;">Mental Health Screening</h1>
         <p class="lead">GAD-7 + PHQ-9 + GHQ-12 — How often in the last 2 weeks have you been bothered by these problems?</p>
       </div>
       <div style="text-align:right">
         <div class="note">Signed in as <strong id="uname">You</strong></div>
+        <button onclick="backToWelcome()" class="btn secondary" style="margin-top: 10px; font-size: 13px;">← Back to Options</button>
       </div>
     </div>
     <div id="questionContainer"></div>
@@ -183,22 +797,22 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
         <button id="nextBtn" class="btn primary">Next →</button>
       </div>
     </div>
-    <footer class="small">This is a screening tool only — not a diagnostic. If PHQ-9 item 9 indicates suicidal ideation, please show crisis contacts immediately.</footer>
+    <footer class="small" style="margin-top: 20px; padding: 15px; background: var(--features-bg); border-radius: 10px; font-size: 14px;">This is a screening tool only — not a diagnostic. If PHQ-9 item 9 indicates suicidal ideation, please show crisis contacts immediately.</footer>
   </main>
 
-  <!-- RIGHT: summary + charts -->
+  <!-- RIGHT: summary + charts
   <aside class="summary-col">
     <div class="card score-summary">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <!-- <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-weight:800">Your Latest Scores</div>
+          <!-- <div style="font-weight:800; color: var(--text-heading); font-size: 1.1rem;">Your Latest Scores</div>
           <div class="note" id="scoresNote">Loading previous scores...</div>
-        </div>
+        </div> 
         <div style="text-align:right">
           <div id="lastUpdate" class="note">—</div>
-          <div style="font-size:12px;color:var(--muted)">Local</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Local</div>
         </div>
-      </div>
+      </div> 
       <div id="currentScoresArea" style="margin-top:12px;display:none">
         <div class="score-row">
           <div>
@@ -220,16 +834,16 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
         <div style="margin-top:12px">
           <div class="note">GHQ-12 Bimodal: <strong id="ghqBimodal">0</strong></div>
         </div>
-        <div style="margin-top:10px">
+        <!-- <div style="margin-top:15px; display: flex; gap: 10px;">
           <button id="downloadBtn" class="btn secondary">Download results</button>
           <button id="viewHistoryBtn" class="btn primary">View history</button>
-        </div>
+        </div> 
       </div>
-    </div>
+    </div> -->
     
     <!-- Chart Area -->
     <div class="card" id="chartArea" style="display:none;">
-      <h3 style="margin-top:0;">Score Trends</h3>
+      <h3 style="margin-top:0; color: var(--text-heading);">Score Trends</h3>
       <div style="position: relative; height: 200px; width: 100%;">
         <canvas id="scoresChart"></canvas>
       </div>
@@ -237,590 +851,754 @@ body.dark-mode .btn.secondary { background:#6b7280; color:#fff; }
   </aside>
 </div>
 
+<!-- History Screen (Hidden Initially) -->
+<div id="historyScreen" class="container" style="display: none;">
+  <div class="card" style="max-width: 1000px; margin: 40px auto; padding: 40px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+      <h1 style="color: var(--text-heading); font-size: 2.2rem;">Assessment History</h1>
+      <button onclick="backToWelcome()" class="btn secondary">← Back to Options</button>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <button onclick="downloadLatestReport()" class="btn primary">📄 Download Latest Report</button>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="card" style="margin-bottom: 30px;">
+      <h3 style="margin-top:0; color: var(--text-heading); margin-bottom: 20px;">Score Trends Over Time</h3>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="historyChart"></canvas>
+      </div>
+      <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;" id="chartLegend">
+        <!-- Legend will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <div id="historyContent">
+      <p style="text-align: center; color: var(--text-secondary); margin: 40px 0;">Loading your assessment history...</p>
+    </div>
+  </div>
+</div>
+
 <footer>
-  <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  <p>&copy; 2025 SoulAce. All rights reserved.</p>
 </footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // USER DATA
-  window.__USER_ID = "{{ session.get('user_id','') }}";
-  const __USERNAME_FROM_SERVER = "{{ session.get('username','You')|e }}";
-  document.getElementById('uname').textContent = __USERNAME_FROM_SERVER;
+// --- Basic runtime globals ---
+    window.__USER_ID = window.__USER_ID || "anon_user"; // replace server-side if available
+    const qCon = document.getElementById('questionContainer');
+    const progressFill = document.getElementById('progressFill');
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-  // Load previous scores on page load
-  loadPreviousScores();
+    // --- Question bank ---
+    // We'll use a single array: first 7 GAD, next 9 PHQ, last 12 GHQ
+    const questions = [
+      // GAD-7 (7)
+      { scale:'GAD', text:'Feeling nervous, anxious or on edge?', orientation:'pos' },
+      { scale:'GAD', text:'Not being able to stop or control worrying?', orientation:'pos' },
+      { scale:'GAD', text:'Worrying too much about different things?', orientation:'pos' },
+      { scale:'GAD', text:'Trouble relaxing?', orientation:'pos' },
+      { scale:'GAD', text:'Being so restless it is hard to sit still?', orientation:'pos' },
+      { scale:'GAD', text:'Becoming easily annoyed or irritable?', orientation:'pos' },
+      { scale:'GAD', text:'Feeling afraid as if something awful might happen?', orientation:'pos' },
 
-  // Debug: Check if Google Translate element exists
-  const translateEl = document.getElementById('google_translate_element');
-  console.log("Google Translate element found:", translateEl);
-  if (!translateEl) {
-    console.error("google_translate_element not found in DOM");
-  }
+      // PHQ-9 (9)
+      { scale:'PHQ', text:'Little interest or pleasure in doing things?' },
+      { scale:'PHQ', text:'Feeling down, depressed, or hopeless?' },
+      { scale:'PHQ', text:'Trouble falling or staying asleep, or sleeping too much?' },
+      { scale:'PHQ', text:'Feeling tired or having little energy?' },
+      { scale:'PHQ', text:'Poor appetite or overeating?' },
+      { scale:'PHQ', text:'Feeling bad about yourself — or that you are a failure?' },
+      { scale:'PHQ', text:'Trouble concentrating on things, such as reading or watching TV?' },
+      { scale:'PHQ', text:'Moving or speaking so slowly that others could have noticed? Or the opposite — being fidgety?' },
+      { scale:'PHQ', text:'Thoughts that you would be better off dead, or hurting yourself?' },
 
-  // USER POPUP - Make this global and simple
-  window.toggleUserPopup = function(){
-    const popup = document.getElementById('user-popup');
-    if(popup.style.display === 'block') {
-      popup.style.display = 'none';
-    } else {
-      popup.style.display = 'block';
-    }
-  };
-  
-  // Close popup when clicking outside
-  document.addEventListener('click', function(e){
-    const popup = document.getElementById('user-popup');
-    const icon = document.querySelector('.user-icon');
-    if(!popup.contains(e.target) && e.target !== icon){
-      popup.style.display = 'none';
-    }
-  });
+      // GHQ-12 (12) - use binary/likert variants depending on mapping
+      { scale:'GHQ', text:'Been able to concentrate on whatever you’re doing?', orientation:'pos' },
+      { scale:'GHQ', text:'Lost much sleep over worry?', orientation:'neg' },
+      { scale:'GHQ', text:'Felt that you are playing a useful part in things?', orientation:'pos' },
+      { scale:'GHQ', text:'Felt capable of making decisions about things?', orientation:'pos' },
+      { scale:'GHQ', text:'Felt constantly under strain?', orientation:'neg' },
+      { scale:'GHQ', text:'Felt you couldn’t overcome your difficulties?', orientation:'neg' },
+      { scale:'GHQ', text:'Been able to enjoy your normal day-to-day activities?', orientation:'pos' },
+      { scale:'GHQ', text:'Been able to face up to problems?', orientation:'pos' },
+      { scale:'GHQ', text:'Been feeling unhappy or depressed?', orientation:'neg' },
+      { scale:'GHQ', text:'Been losing confidence in yourself?', orientation:'neg' },
+      { scale:'GHQ', text:'Been thinking of yourself as a worthless person?', orientation:'neg' },
+      { scale:'GHQ', text:'Been feeling reasonably happy, all things considered?', orientation:'pos' }
+    ];
 
-  // DARK MODE
-  window.toggleDarkMode = function(){
-    document.body.classList.toggle('dark-mode');
-  }
+    // Options for PHQ/GAD (0-3)
+    const options = [
+      { label:'Not at all', score:0 },
+      { label:'Several days', score:1 },
+      { label:'More than half the days', score:2 },
+      { label:'Nearly every day', score:3 }
+    ];
+    // GHQ options: Likert scoring 0-3, but positive orientation reversed for bimodal
+    const ghq_likert = [
+      { label:'Better than usual', score:0 },
+      { label:'Same as usual', score:1 },
+      { label:'Less than usual', score:2 },
+      { label:'Much less than usual', score:3 }
+    ];
+    const ghq_likert_neg = [
+      { label:'Not at all', score:0 },
+      { label:'No more than usual', score:1 },
+      { label:'Rather more than usual', score:2 },
+      { label:'Much more than usual', score:3 }
+    ];
+    // For bimodal GHQ scoring (0/1)
+    // For pos items: (Better than usual/Same as usual)=0 ; (Less than usual / Much less)=1
+    // For neg items: (Not at all/No more than usual)=0 ; (Rather more / Much more)=1
 
-  // GOOGLE TRANSLATE - Debug version
-  window.googleTranslateElementInit = function() {
-    console.log("Google Translate init called");
-    try {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,hi,ur,es,fr,de',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        autoDisplay: false
-      }, 'google_translate_element');
-      console.log("Google Translate element created successfully");
-    } catch(error) {
-      console.error("Google Translate error:", error);
-    }
-  };
+    // state
+    let answers = new Array(questions.length).fill(null);
+    let curIndex = 0;
+    window.questionsSubset = null; // if set, contains a subset of questions to render
 
-  /* QUESTIONS: GAD-7 (7), PHQ-9 (9), then GHQ-12 (12) */
-  /* GHQ-12 items include orientation: 'pos' for positively worded items (higher = better) and 'neg' for negatively worded */
-  const questions = [
-    /* GAD-7 */
-    {id:'gad1', text:'Feeling nervous, anxious, or on edge.' , scale:'GAD'},
-    {id:'gad2', text:'Not being able to stop or control worrying.' , scale:'GAD'},
-    {id:'gad3', text:'Worrying too much about different things.' , scale:'GAD'},
-    {id:'gad4', text:'Trouble relaxing.' , scale:'GAD'},
-    {id:'gad5', text:'Being so restless that it is hard to sit still.' , scale:'GAD'},
-    {id:'gad6', text:'Becoming easily annoyed or irritable.' , scale:'GAD'},
-    {id:'gad7', text:'Feeling afraid as if something awful might happen.' , scale:'GAD'},
-
-    /* PHQ-9 */
-    {id:'phq1', text:'Little interest or pleasure in doing things.' , scale:'PHQ'},
-    {id:'phq2', text:'Feeling down, depressed, or hopeless.' , scale:'PHQ'},
-    {id:'phq3', text:'Trouble falling or staying asleep, or sleeping too much.' , scale:'PHQ'},
-    {id:'phq4', text:'Feeling tired or having little energy.' , scale:'PHQ'},
-    {id:'phq5', text:'Poor appetite or overeating.' , scale:'PHQ'},
-    {id:'phq6', text:'Feeling bad about yourself — or that you are a failure or have let yourself or your family down.' , scale:'PHQ'},
-    {id:'phq7', text:'Trouble concentrating on things, such as reading the newspaper or watching television.' , scale:'PHQ'},
-    {id:'phq8', text:'Moving or speaking slowly OR being fidgety/restless.' , scale:'PHQ'},
-    {id:'phq9', text:'Thoughts that you would be better off dead, or of hurting yourself in some way.' , scale:'PHQ'},
-
-    /* GHQ-12 */
-    {id:'ghq1',  text:"Have you recently been able to concentrate on whatever you're doing?", orientation:'pos', scale:'GHQ'},
-    {id:'ghq2',  text:"Have you recently lost much sleep over worry?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq3',  text:"Have you recently felt that you were playing a useful part in things?", orientation:'pos', scale:'GHQ'},
-    {id:'ghq4',  text:"Have you recently felt capable of making decisions about things?", orientation:'pos', scale:'GHQ'},
-    {id:'ghq5',  text:"Have you recently felt constantly under strain?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq6',  text:"Have you recently felt you couldn't overcome your difficulties?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq7',  text:"Have you recently been able to enjoy your normal day-to-day activities?", orientation:'pos', scale:'GHQ'},
-    {id:'ghq8',  text:"Have you recently been able to face up to problems?", orientation:'pos', scale:'GHQ'},
-    {id:'ghq9',  text:"Have you recently been feeling unhappy or depressed?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq10', text:"Have you recently been losing confidence in yourself?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq11', text:"Have you recently been thinking of yourself as a worthless person?", orientation:'neg', scale:'GHQ'},
-    {id:'ghq12', text:"Have you recently been feeling reasonably happy, all things considered?", orientation:'pos', scale:'GHQ'}
-  ];
-
-  const options = [
-    {label:'Not at all', score:0},
-    {label:'Several days', score:1},
-    {label:'More than half the days', score:2},
-    {label:'Nearly every day', score:3}
-  ];
-
-  const ghq_options = {
-    pos: [
-      {label:'More so than usual', score:0},
-      {label:'Same as usual', score:1},
-      {label:'Less than usual', score:2},
-      {label:'Much less than usual', score:3}
-    ],
-    neg: [
-      {label:'Not at all', score:0},
-      {label:'No more than usual', score:1},
-      {label:'Rather more than usual', score:2},
-      {label:'Much more than usual', score:3}
-    ]
-  };
-
-  let answers = new Array(questions.length).fill(null);
-  let curIndex = 0;
-  const qCon = document.getElementById('questionContainer');
-  const progressFill = document.getElementById('progressFill');
-  const backBtn = document.getElementById('backBtn');
-  const nextBtn = document.getElementById('nextBtn');
-
-  function renderQuestions(){
-    qCon.innerHTML = '';
-    questions.forEach((q, idx)=>{
-      const el = document.createElement('div');
-      el.className='q-card';
-      el.style.display=(idx===curIndex?'block':'none');
-      el.dataset.index=idx;
-      
-      // Determine which scale label to show
-      let scaleLabel = q.scale === 'GAD' ? 'GAD-7' : q.scale === 'PHQ' ? 'PHQ-9' : 'GHQ-12';
-      
-      el.innerHTML=`
-        <div class="q-top">
-          <div>
-            <div class="q-title">Question ${idx+1} of ${questions.length}</div>
-            <div class="q-sub">${scaleLabel}</div>
-          </div>
-          <div class="q-sub">${q.scale}</div>
-        </div>
-        <div class="question-text">${q.text}</div>
-        <div class="options"></div>
-      `;
-      const optsWrap=el.querySelector('.options');
-
-      // FIXED: Use the correct options based on scale
-      let optsToUse = options;
-      if (q.scale === 'GHQ') {
-        optsToUse = q.orientation === 'pos' ? ghq_options.pos : ghq_options.neg;
+    // --- Utility: show/hide screens ---
+    function backToWelcome(){
+      document.getElementById('assessmentScreen').style.display = 'none';
+      document.getElementById('historyScreen').style.display = 'none';
+      document.getElementById('welcomeScreen').style.display = 'block';
+      // Remove sidebar class from container
+      const container = document.querySelector('.container');
+      if(container) container.classList.remove('with-sidebar');
+      // Hide test selector if visible and reset buttons
+      const selector = document.getElementById('testSelector');
+      if(selector) {
+        selector.style.display = 'none';
+        resetTestSelectorButtons();
       }
+      window.questionsSubset = null;
+      answers = new Array(questions.length).fill(null);
+      curIndex = 0;
+      renderQuestions();
+      updateView();
+      document.getElementById('currentScoresArea').style.display = 'none';
+    }
+
+    function viewHistory(){
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('assessmentScreen').style.display = 'none';
+      document.getElementById('historyScreen').style.display = 'block';
+      const container = document.getElementById('historyContent');
+      container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin:40px 0;">Loading history…</p>';
       
-      // FIXED: Use optsToUse instead of options
-      optsToUse.forEach(op=>{
-        const btn=document.createElement('div');
-        btn.className='option';
-        btn.innerHTML=`<div class="lab">${op.label}</div>`;
-        btn.addEventListener('click', ()=>{
-          answers[idx]=op.score;
-          optsWrap.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
-          btn.classList.add('selected');
-          
-          // Update the submit button text if we're on the last question
-          if(idx === questions.length - 1) {
-            nextBtn.textContent = 'Submit';
-            nextBtn.style.background = '#059669'; // Green color to indicate ready to submit
+      fetch("/api/scores?user_id=" + encodeURIComponent(window.__USER_ID))
+        .then(r => r.json())
+        .then(data => {
+          if(!Array.isArray(data) || data.length === 0){
+            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin:40px 0;">No history found.</p>';
+            // Hide chart if no data
+            document.getElementById('historyChart').style.display = 'none';
+            return;
           }
           
-          setTimeout(()=>{ 
-            if(curIndex<questions.length-1){ 
-              curIndex++; 
-              updateView(); 
-            }
-          }, 220);
+          // Render chart first
+          renderHistoryChart(data);
+          
+          // Then render the history list
+          const html = data.map((a, i) => {
+            const d = new Date(a.timestamp||Date.now()).toLocaleString();
+            const gad = typeof a.gadTotal !== 'undefined' ? a.gadTotal : '—';
+            const phq = typeof a.phqTotal !== 'undefined' ? a.phqTotal : '—';
+            const ghq = typeof a.ghqLikertTotal !== 'undefined' ? a.ghqLikertTotal : '—';
+            const testType = a.test_type || 'COMBINED';
+            return `<div style="border:1px solid var(--accent-secondary);padding:12px;margin-bottom:10px;border-radius:10px;background:var(--features-bg);">
+                      <div style="display:flex;justify-content:space-between"><strong>Assessment #${i+1} (${testType})</strong><span class="small muted">${d}</span></div>
+                      <div style="margin-top:8px">GAD-7: ${gad} &nbsp; • &nbsp; PHQ-9: ${phq} &nbsp; • &nbsp; GHQ: ${ghq}</div>
+                      <div style="margin-top:8px"><button class="btn secondary" onclick="downloadReport('${a.id}')">Download</button></div>
+                    </div>`;
+          }).join('');
+          container.innerHTML = `<div>${html}</div>`;
+        })
+        .catch(err => {
+          console.error(err);
+          container.innerHTML = '<p style="text-align:center;color:red;margin:40px 0;">Unable to load history.</p>';
         });
-        optsWrap.appendChild(btn);
+    }
+
+    // --- Chart Functions ---
+    function renderHistoryChart(data) {
+      const ctx = document.getElementById('historyChart');
+      if (!ctx) return;
+      
+      // Show chart
+      ctx.style.display = 'block';
+      
+      // Process data for chart
+      const chartData = processChartData(data);
+      
+      // Destroy existing chart if it exists
+      if (window.historyChartInstance) {
+        window.historyChartInstance.destroy();
+      }
+      
+      // Create new chart
+      window.historyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartData.labels,
+          datasets: chartData.datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false // We'll use custom legend
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                title: function(context) {
+                  return 'Assessment #' + (context[0].dataIndex + 1);
+                },
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Assessment Date'
+              },
+              ticks: {
+                maxTicksLimit: 8
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Score'
+              },
+              beginAtZero: true,
+              max: 30 // Adjust based on max possible scores
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
       });
-
-      qCon.appendChild(el);
-    });
-    updateView();
-  }
-
-  function updateView(){
-    document.querySelectorAll('.q-card').forEach(card=>{
-      const i=Number(card.dataset.index);
-      card.style.display=(i===curIndex)?'block':'none';
-    });
+      
+      // Create custom legend
+      createChartLegend(chartData.datasets);
+    }
     
-    backBtn.disabled = curIndex === 0;
-    backBtn.style.opacity = curIndex === 0 ? '0.5' : '1';
+    function processChartData(data) {
+      // Sort data by timestamp (oldest first)
+      const sortedData = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      const labels = sortedData.map((item, index) => {
+        const date = new Date(item.timestamp);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      
+      // Define colors for different test types
+      const colors = {
+        gad: '#9bafd9',
+        phq: '#c17b6b', 
+        ghq: '#cadbd7'
+      };
+      
+      const datasets = [];
+      
+      // Process GAD scores
+      const gadScores = sortedData.map(item => item.gadTotal || null);
+      if (gadScores.some(score => score !== null)) {
+        datasets.push({
+          label: 'GAD-7 (Anxiety)',
+          data: gadScores,
+          borderColor: colors.gad,
+          backgroundColor: colors.gad + '20',
+          borderWidth: 3,
+          pointBackgroundColor: colors.gad,
+          pointBorderColor: colors.gad,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.2,
+          fill: false
+        });
+      }
+      
+      // Process PHQ scores
+      const phqScores = sortedData.map(item => item.phqTotal || null);
+      if (phqScores.some(score => score !== null)) {
+        datasets.push({
+          label: 'PHQ-9 (Depression)',
+          data: phqScores,
+          borderColor: colors.phq,
+          backgroundColor: colors.phq + '20',
+          borderWidth: 3,
+          pointBackgroundColor: colors.phq,
+          pointBorderColor: colors.phq,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.2,
+          fill: false
+        });
+      }
+      
+      // Process GHQ scores
+      const ghqScores = sortedData.map(item => item.ghqLikertTotal || null);
+      if (ghqScores.some(score => score !== null)) {
+        datasets.push({
+          label: 'GHQ-12 (General Health)',
+          data: ghqScores,
+          borderColor: colors.ghq,
+          backgroundColor: colors.ghq + '20',
+          borderWidth: 3,
+          pointBackgroundColor: colors.ghq,
+          pointBorderColor: colors.ghq,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.2,
+          fill: false
+        });
+      }
+      
+      return { labels, datasets };
+    }
     
-    nextBtn.textContent = (curIndex === questions.length - 1) ? 'Submit' : 'Next →';
-    
-    // Fixed progress calculation - shows current question progress
-    const currentProgress = Math.round(((curIndex + 1) / questions.length) * 100);
-    progressFill.style.width = currentProgress + '%';
-  }
+    function createChartLegend(datasets) {
+      const legendContainer = document.getElementById('chartLegend');
+      if (!legendContainer) return;
+      
+      legendContainer.innerHTML = '';
+      
+      datasets.forEach(dataset => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'chart-legend-item';
+        
+        // Determine test type for styling
+        let testType = '';
+        if (dataset.label.includes('GAD')) testType = 'gad';
+        else if (dataset.label.includes('PHQ')) testType = 'phq';
+        else if (dataset.label.includes('GHQ')) testType = 'ghq';
+        
+        legendItem.innerHTML = `
+          <div class="chart-legend-color" style="background-color: ${dataset.borderColor}"></div>
+          <span>${dataset.label}</span>
+        `;
+        
+        if (testType) {
+          legendItem.classList.add(testType);
+        }
+        
+        legendContainer.appendChild(legendItem);
+      });
+    }
 
-  backBtn.addEventListener('click', ()=>{ if(curIndex>0) curIndex--; updateView(); });
-  
-  // Fixed submit handler
-  nextBtn.addEventListener('click', ()=>{
-    if(curIndex === questions.length - 1){
-      // Check if all questions are answered (including current one)
-      const unanswered = answers.some(a => a === null);
-      if(unanswered) {
-        // Find which question number is unanswered for better error message
-        const firstUnanswered = answers.findIndex(a => a === null) + 1;
-        alert(`Please answer question ${firstUnanswered} before submitting.`);
+    // --- Download Functions ---
+    function downloadReport(assessmentId){
+      if(!assessmentId){
+        alert('Assessment ID not found');
         return;
       }
       
-      // Submit to API
-      fetch("/api/submit", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ user_id: window.__USER_ID, answers })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if(data.ok){
-          // Update the display with all scores
-          document.getElementById("gadTotal").textContent = data.gadTotal;
-          document.getElementById("phqTotal").textContent = data.phqTotal;
-          document.getElementById("gadSeverity").textContent = data.gadSeverity;
-          document.getElementById("phqSeverity").textContent = data.phqSeverity;
-          document.getElementById("ghqLikert").textContent = data.ghqLikertTotal;
-          document.getElementById("ghqBimodal").textContent = data.ghqBimodalTotal;
-          document.getElementById("ghqSeverity").textContent = data.ghqSeverity;
+      fetch(`/api/download_report?assessment_id=${encodeURIComponent(assessmentId)}&user_id=${encodeURIComponent(window.__USER_ID)}`)
+        .then(response => {
+          if(!response.ok){
+            throw new Error('Failed to download report');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Create and download JSON file
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `assessment_report_${data._id || 'unknown'}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+          console.error('Download error:', error);
+          alert('Failed to download report: ' + error.message);
+        });
+    }
+
+    function downloadLatestReport(){
+      fetch(`/api/latest_scores?user_id=${encodeURIComponent(window.__USER_ID)}`)
+        .then(response => {
+          if(!response.ok){
+            throw new Error('No assessments found');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Create and download JSON file
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `latest_assessment_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+          console.error('Download error:', error);
+          alert('Failed to download latest report: ' + error.message);
+        });
+    }
+
+    // --- Close test selector function ---
+    function closeTestSelector(){
+      const selector = document.getElementById('testSelector');
+      if(selector){
+        selector.style.display = 'none';
+        // Remove sidebar class from container
+        const container = document.querySelector('.container');
+        if(container) container.classList.remove('with-sidebar');
+        // Reset all buttons to their original state
+        resetTestSelectorButtons();
+      }
+    }
+
+    // --- Reset test selector buttons ---
+    function resetTestSelectorButtons(){
+      const selector = document.getElementById('testSelector');
+      if(selector){
+        const buttons = selector.querySelectorAll('.test-card button');
+        buttons.forEach(btn => {
+          btn.textContent = 'Start';
+          btn.disabled = false;
+        });
+      }
+    }
+
+    // --- Test selector (opens small left panel) ---
+    function startNewAssessment(){
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('assessmentScreen').style.display = 'block';
+      document.getElementById('historyScreen').style.display = 'none';
+
+      // Add sidebar class to container
+      const container = document.querySelector('.container');
+      if(container) container.classList.add('with-sidebar');
+
+      // If selector already created, show it again
+      if(document.getElementById('testSelector')){
+        document.getElementById('testSelector').style.display = 'flex';
+        // Reset buttons when showing selector again
+        resetTestSelectorButtons();
+        return;
+      }
+      
+      const selector = document.createElement('div');
+      selector.id = 'testSelector';
+      selector.className = 'test-selector';
+      
+      // Show loading state initially
+      selector.innerHTML = '<div style="text-align:center;padding:20px;"><div style="color:var(--text-secondary);">Loading assessment options...</div></div>';
+      document.body.appendChild(selector);
+      
+      // Load test options after a brief delay
+      setTimeout(() => {
+        const tests = [
+          { key:'phq', title:'PHQ-9 (Depression)', desc:'9 items checking mood, sleep, and energy. Screens for depressive symptoms.' },
+          { key:'gad', title:'GAD-7 (Anxiety)', desc:'7 short questions about worry and tension. Fast anxiety screening.' },
+          { key:'ghq', title:'GHQ-12 (General Health)', desc:'12 items measuring general distress and wellbeing over recent weeks.' },
+          { key:'combined', title:'All combined', desc:'Run GAD-7 + PHQ-9 + GHQ-12 together for the full picture.' }
+        ];
+        
+        selector.innerHTML = `
+          <div class="test-selector-header">
+            <div class="test-selector-title">Choose Assessment</div>
+            <button class="test-selector-close" onclick="closeTestSelector()">×</button>
+          </div>
+          <div class="test-selector-instructions">
+            <h4>Important Instructions</h4>
+            <p>Please read these guidelines before starting your assessment:</p>
+            <ul>
+              <li>Answer honestly and truthfully</li>
+              <li>Do not provide false information</li>
+              <li>Remain calm and take your time</li>
+              <li>Choose the option that best describes your experience</li>
+              <li>There are no right or wrong answers</li>
+            </ul>
+          </div>
+        `;
+        tests.forEach((t, index) => {
+          const card = document.createElement('div');
+          card.className = 'test-card';
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px)';
+          card.style.transition = 'all 0.3s ease';
+          card.innerHTML = `<div class="title">${t.title}</div><div class="desc">${t.desc}</div><div style="margin-top:8px"><button class="btn primary">Start</button></div>`;
           
-          // Show the scores area and update timestamp
-          document.getElementById("currentScoresArea").style.display = "block";
-          document.getElementById("lastUpdate").textContent = new Date().toLocaleString();
-          document.getElementById('scoresNote').textContent = "Latest assessment completed";
+          card.querySelector('button').addEventListener('click', () => {
+            // Show loading state
+            card.querySelector('button').textContent = 'Starting...';
+            card.querySelector('button').disabled = true;
+            
+            setTimeout(() => {
+              if(t.key === 'combined'){ window.questionsSubset = null; }
+              else if(t.key === 'gad'){ window.questionsSubset = questions.slice(0,7); }
+              else if(t.key === 'phq'){ window.questionsSubset = questions.slice(7,16); }
+              else if(t.key === 'ghq'){ window.questionsSubset = questions.slice(16); }
+              answers = new Array((window.questionsSubset||questions).length).fill(null);
+              curIndex = 0;
+              selector.style.display = 'none';
+              // Remove sidebar class from container
+              const container = document.querySelector('.container');
+              if(container) container.classList.remove('with-sidebar');
+              renderQuestions();
+              updateView();
+              // Update the main title and subtitle in the assessment screen
+              const mainTitle = document.querySelector('#assessmentScreen h1');
+              const mainSubtitle = document.querySelector('#assessmentScreen .lead');
+              if(mainTitle) mainTitle.textContent = t.title;
+              if(mainSubtitle) mainSubtitle.textContent = t.desc;
+            }, 500);
+          });
           
-          // Refresh the chart with new data
+          selector.appendChild(card);
+          
+          // Animate in with stagger
           setTimeout(() => {
-            fetch("/api/scores?user_id=" + window.__USER_ID)
-              .then(r => r.json())
-              .then(chartData => {
-                if(chartData.length > 1) {
-                  // Destroy existing chart if it exists
-                  if(window.scoresChart) {
-                    window.scoresChart.destroy();
-                  }
-                  createScoreChart(chartData);
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, index * 100);
+        });
+        
+        // Close selector when clicking outside
+        setTimeout(() => {
+          document.addEventListener('click', function _closeSel(e){
+            if(!selector.contains(e.target) && !e.target.closest('.test-card')){
+              selector.style.display = 'none';
+              document.removeEventListener('click', _closeSel);
+            }
+          });
+        }, 50);
+      }, 200);
+    }
+
+    // --- Rendering questions respecting subset ---
+    function renderQuestions(){
+      const qlist = window.questionsSubset || questions;
+      
+      // Show loading state
+      qCon.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:19px;color:var(--text-secondary);">Loading questions...</div></div>';
+      
+      // Small delay to show loading state
+      setTimeout(() => {
+        qCon.innerHTML = '';
+        qlist.forEach((q, localIdx) => {
+          const el = document.createElement('div');
+          el.className = 'q-card';
+          el.dataset.index = localIdx;
+          el.style.display = (localIdx === curIndex) ? 'block' : 'none';
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(20px)';
+          el.style.transition = 'all 0.3s ease';
+          
+          const scaleLabel = q.scale === 'GAD' ? 'GAD-7' : q.scale === 'PHQ' ? 'PHQ-9' : 'GHQ-12';
+          el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+                            <div>
+                              <div class="q-title">Question ${localIdx+1} of ${qlist.length}</div>
+                              <div class="q-sub">${scaleLabel}</div>
+                            </div>
+                          </div>
+                          <div class="question-text">${q.text}</div>
+                          <div class="options"></div>`;
+          const optsWrap = el.querySelector('.options');
+
+          let optsToUse = options;
+          if(q.scale === 'GHQ'){
+            // GHQ likert depends on pos/neg
+            optsToUse = q.orientation === 'pos' ? ghq_likert : ghq_likert_neg;
+          }
+
+          optsToUse.forEach(op => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.innerHTML = `<div class="lab">${op.label}</div>`;
+            btn.addEventListener('click', () => {
+              answers[localIdx] = op.score;
+              optsWrap.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+              btn.classList.add('selected');
+              // if last question, change label
+              if(localIdx === qlist.length - 1) nextBtn.textContent = 'Submit';
+              setTimeout(() => {
+                if(curIndex < qlist.length - 1){
+                  curIndex++;
+                  updateView();
                 }
-              })
-              .catch(err => console.error("Error refreshing chart:", err));
-          }, 500);
+              }, 160);
+            });
+            optsWrap.appendChild(btn);
+          });
+
+          qCon.appendChild(el);
           
-          // Hide the question area and show completion message
-          document.querySelector("main.question-area").innerHTML = `
-            <div style="text-align:center; padding:40px;">
-              <h2 style="color: #3b82f6; margin-bottom: 20px;">✅ Assessment Complete!</h2>
-              <p style="font-size: 18px; margin-bottom: 30px;">Your results have been saved and are displayed in the summary panel.</p>
-              <div style="display: flex; gap: 10px; justify-content: center;">
-                <button onclick="window.location.reload()" class="btn secondary">Take Again</button>
-                <button onclick="window.location='/dashboard'" class="btn primary">Return to Dashboard</button>
+          // Animate in
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }, 50);
+        });
+        updateView();
+      }, 300);
+    }
+
+    function updateView(){
+      const qlist = window.questionsSubset || questions;
+      document.querySelectorAll('.q-card').forEach(card => {
+        const i = Number(card.dataset.index);
+        card.style.display = i === curIndex ? 'block' : 'none';
+      });
+      backBtn.disabled = (curIndex === 0);
+      backBtn.style.opacity = backBtn.disabled ? '0.5' : '1';
+      nextBtn.textContent = (curIndex === qlist.length - 1) ? 'Submit' : 'Next →';
+      const progress = Math.round(((curIndex + 1) / qlist.length) * 100);
+      progressFill.style.width = progress + '%';
+    }
+
+    // initial render
+    renderQuestions();
+
+    // navigation handlers (use dataset length)
+    backBtn.addEventListener('click', () => {
+      if(curIndex > 0){ curIndex--; updateView(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      const qlist = window.questionsSubset || questions;
+      if(curIndex === qlist.length - 1){
+        // final submit
+        const unanswered = answers.some(a => a === null);
+        if(unanswered){
+          const firstUn = answers.findIndex(a => a === null) + 1;
+          alert('Please answer question ' + firstUn + ' before submitting.');
+          return;
+        }
+
+        // Prepare payload; server expects answers and user_id. We add testType so backend can store correctly.
+        let testType = 'COMBINED';
+        if (window.questionsSubset) {
+          const firstQuestion = window.questionsSubset[0];
+          if (firstQuestion && firstQuestion.scale) {
+            testType = firstQuestion.scale;
+          }
+        }
+        
+        // Ensure user_id is set
+        const userId = window.__USER_ID || 'anon_user';
+        
+        const payload = {
+          user_id: userId,
+          answers: answers,
+          testType: testType
+        };
+
+        console.log('Submitting assessment:', payload); // Debug log
+
+        // Show loading state
+        const originalText = nextBtn.textContent;
+        nextBtn.textContent = 'Submitting...';
+        nextBtn.disabled = true;
+
+        fetch('/api/submit', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        })
+        .then(response => {
+          console.log('Response status:', response.status); // Debug log
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json().catch(err => {
+            console.error('JSON parsing error:', err);
+            throw new Error('Invalid JSON response from server');
+          });
+        })
+        .then(data => {
+          console.log('Response data:', data); // Debug log
+          if(!data || data.ok !== true){
+            // Reset button state
+            nextBtn.textContent = originalText;
+            nextBtn.disabled = false;
+            alert('Error saving assessment: ' + (data && data.error ? data.error : 'Server returned invalid response'));
+            return;
+          }
+          // show returned values if any
+          if(typeof data.gadTotal !== 'undefined') document.getElementById('gadTotal').textContent = data.gadTotal;
+          if(typeof data.phqTotal !== 'undefined') document.getElementById('phqTotal').textContent = data.phqTotal;
+          if(typeof data.gadSeverity !== 'undefined') document.getElementById('gadSeverity').textContent = data.gadSeverity;
+          if(typeof data.phqSeverity !== 'undefined') document.getElementById('phqSeverity').textContent = data.phqSeverity;
+          if(typeof data.ghqLikertTotal !== 'undefined') document.getElementById('ghqLikert').textContent = data.ghqLikertTotal;
+          if(typeof data.ghqSeverity !== 'undefined') document.getElementById('ghqSeverity').textContent = data.ghqSeverity;
+
+          document.getElementById('currentScoresArea').style.display = 'block';
+          document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+
+          // show completion message in question area
+          document.querySelector('.question-area').innerHTML = `
+            <div style="text-align:center;padding:40px;">
+              <h2 style="color:var(--accent-primary);margin-bottom:10px">✅ Assessment Complete</h2>
+              <div class="small muted">Results saved to history.</div>
+              <div style="height:14px"></div>
+              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+                <button class="btn secondary" onclick="startNewAssessment()">Take Again</button>
+                <button class="btn primary" onclick="downloadLatestReport()">📄 Download Report</button>
               </div>
-            </div>
-          `;
-          
-          console.log("Assessment completed successfully:", data);
-        } else {
-          alert("Error: " + (data.error || "Unknown error occurred"));
-          console.error("Submission error:", data);
-        }
-      })
-      .catch(err => {
-        console.error("Network error:", err);
-        alert("Network error: Unable to submit assessment. Please check your connection and try again.");
-      });
-      return;
-    }
-    
-    // Move to next question
-    if(curIndex < questions.length - 1) {
-      curIndex++;
-      updateView();
-    }
-  });
-
-  // Download results functionality
-  document.getElementById("downloadBtn").addEventListener("click", function() {
-    const gadTotal = document.getElementById("gadTotal").textContent;
-    const phqTotal = document.getElementById("phqTotal").textContent;
-    const gadSeverity = document.getElementById("gadSeverity").textContent;
-    const phqSeverity = document.getElementById("phqSeverity").textContent;
-    const ghqLikert = document.getElementById("ghqLikert").textContent;
-    const ghqBimodal = document.getElementById("ghqBimodal").textContent;
-    const ghqSeverity = document.getElementById("ghqSeverity").textContent;
-    const timestamp = document.getElementById("lastUpdate").textContent;
-    
-    const results = `Mental Health Assessment Results
-Date: ${timestamp}
-Username: ${__USERNAME_FROM_SERVER}
-
-=== SCORES ===
-GAD-7 (Anxiety): ${gadTotal}/21 - ${gadSeverity}
-PHQ-9 (Depression): ${phqTotal}/27 - ${phqSeverity}
-GHQ-12 (General Health): ${ghqLikert}/36 - ${ghqSeverity}
-GHQ-12 Bimodal: ${ghqBimodal}/12
-
-=== ASSESSMENT INFORMATION ===
-GAD-7: Generalized Anxiety Disorder 7-item scale
-- Minimal: 0-4
-- Mild: 5-9
-- Moderate: 10-14
-- Severe: 15-21
-
-PHQ-9: Patient Health Questionnaire 9-item scale
-- None-Minimal: 0-4
-- Mild: 5-9
-- Moderate: 10-14
-- Moderately Severe: 15-19
-- Severe: 20-27
-
-GHQ-12: General Health Questionnaire 12-item scale
-- Normal: 0-11
-- Moderate distress: 12-19
-- Severe distress: 20-36
-
-Note: This is a screening tool, not a diagnostic assessment.
-Please consult with a healthcare professional for proper evaluation.
-`;
-
-    // Create and download the file
-    const blob = new Blob([results], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Mental_Health_Assessment_${__USERNAME_FROM_SERVER}_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  });
-
-  // View history functionality
-  document.getElementById("viewHistoryBtn").addEventListener("click", function() {
-    fetch("/api/scores?user_id=" + window.__USER_ID)
-      .then(r => r.json())
-      .then(data => {
-        if(data.length === 0) {
-          alert("No previous assessments found.");
-          return;
-        }
-        
-        let historyHtml = "<h3>Assessment History</h3><div style='max-height:300px;overflow-y:auto;'>";
-        data.forEach((assessment, index) => {
-          const date = new Date(assessment.timestamp).toLocaleDateString();
-          historyHtml += `
-            <div style="border:1px solid #ddd;padding:10px;margin:5px 0;border-radius:5px;">
-              <strong>Assessment ${index + 1}</strong> - ${date}<br>
-              GAD-7: ${assessment.gadTotal} (${assessment.gadSeverity})<br>
-              PHQ-9: ${assessment.phqTotal} (${assessment.phqSeverity})<br>
-              GHQ-12: ${assessment.ghqLikertTotal || 0} (${assessment.ghqSeverity || 'Normal'})
-            </div>
-          `;
+            </div>`;
+        })
+        .catch(err => {
+          console.error('Submission error:', err);
+          // Reset button state
+          nextBtn.textContent = originalText;
+          nextBtn.disabled = false;
+          alert('Network error submitting assessment: ' + err.message);
         });
-        historyHtml += "</div>";
-        
-        // Create a modal-like display
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position:fixed;top:0;left:0;width:100%;height:100%;
-          background:rgba(0,0,0,0.5);z-index:1000;display:flex;
-          align-items:center;justify-content:center;
-        `;
-        
-        const content = document.createElement('div');
-        content.style.cssText = `
-          background:white;padding:20px;border-radius:10px;
-          max-width:500px;width:90%;max-height:80%;overflow-y:auto;
-        `;
-        content.innerHTML = historyHtml + `
-          <button onclick="this.closest('div').remove()" 
-                  style="margin-top:15px;padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:5px;cursor:pointer;">
-            Close
-          </button>
-        `;
-        
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', function(e) {
-          if(e.target === modal) {
-            modal.remove();
-          }
-        });
-      })
-      .catch(err => {
-        console.error("Error fetching history:", err);
-        alert("Unable to load assessment history.");
-      });
-  });
 
-  renderQuestions();
+        return;
+      }
 
-  // Function to load previous scores on page load
-  function loadPreviousScores() {
-    if (!window.__USER_ID) {
-      document.getElementById('scoresNote').textContent = "Please log in to see previous scores.";
-      return;
-    }
-
-    fetch("/api/scores?user_id=" + window.__USER_ID)
-      .then(r => r.json())
-      .then(data => {
-        if(data.length === 0) {
-          document.getElementById('scoresNote').textContent = "No previous assessments found.";
-          return;
-        }
-        
-        // Show latest scores
-        const latest = data[0];
-        document.getElementById("gadTotal").textContent = latest.gadTotal;
-        document.getElementById("phqTotal").textContent = latest.phqTotal;
-        document.getElementById("gadSeverity").textContent = latest.gadSeverity;
-        document.getElementById("phqSeverity").textContent = latest.phqSeverity;
-        document.getElementById("ghqLikert").textContent = latest.ghqLikertTotal || 0;
-        document.getElementById("ghqBimodal").textContent = latest.ghqBimodalTotal || 0;
-        document.getElementById("ghqSeverity").textContent = latest.ghqSeverity || "Normal";
-        
-        const lastDate = new Date(latest.timestamp).toLocaleDateString();
-        document.getElementById("lastUpdate").textContent = lastDate;
-        document.getElementById('scoresNote').textContent = `Latest assessment from ${lastDate}`;
-        
-        // Show the scores area
-        document.getElementById("currentScoresArea").style.display = "block";
-        
-        // Create charts if we have multiple assessments
-        if(data.length > 1) {
-          createScoreChart(data);
-        }
-      })
-      .catch(err => {
-        console.error("Error loading previous scores:", err);
-        document.getElementById('scoresNote').textContent = "Unable to load previous scores.";
-      });
-  }
-
-  // Function to create score trend chart
-  function createScoreChart(assessments) {
-    const ctx = document.getElementById('scoresChart').getContext('2d');
-    
-    // Sort by date (oldest first)
-    const sortedData = assessments.reverse();
-    
-    const labels = sortedData.map(a => new Date(a.timestamp).toLocaleDateString());
-    const gadScores = sortedData.map(a => a.gadTotal);
-    const phqScores = sortedData.map(a => a.phqTotal);
-    const ghqScores = sortedData.map(a => a.ghqLikertTotal || 0);
-
-    // Store chart instance globally for later destruction
-    window.scoresChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'GAD-7 (Anxiety)',
-          data: gadScores,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          tension: 0.1,
-          fill: false
-        }, {
-          label: 'PHQ-9 (Depression)',
-          data: phqScores,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.1,
-          fill: false
-        }, {
-          label: 'GHQ-12 (General Distress)',
-          data: ghqScores,
-          borderColor: '#059669',
-          backgroundColor: 'rgba(5, 150, 105, 0.1)',
-          tension: 0.1,
-          fill: false
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: {
-              padding: 15,
-              font: {
-                size: 11
-              }
-            }
-          },
-          title: {
-            display: false // Remove title to save space
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 21,
-            ticks: {
-              font: {
-                size: 10
-              },
-              stepSize: 5
-            },
-            title: {
-              display: true,
-              text: 'Score',
-              font: {
-                size: 11
-              }
-            }
-          },
-          x: {
-            ticks: {
-              font: {
-                size: 9
-              },
-              maxRotation: 45,
-              minRotation: 0
-            },
-            title: {
-              display: true,
-              text: 'Date',
-              font: {
-                size: 11
-              }
-            }
-          }
-        },
-        elements: {
-          point: {
-            radius: 3
-          },
-          line: {
-            borderWidth: 2
-          }
-        }
+      // not last: advance
+      if(curIndex < qlist.length - 1){
+        curIndex++;
+        updateView();
       }
     });
 
-    // Show the chart area
-    document.getElementById('chartArea').style.display = 'block';
-  }
-});
-
-
-</script>
-
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-<!-- Debug script to check if Google Translate loads -->
-<script>
-window.addEventListener('load', function() {
-  console.log("Page fully loaded");
-  console.log("google object available:", typeof google);
-  console.log("google.translate available:", typeof google?.translate);
-  
-  // Force initialization if it didn't happen
-  setTimeout(function() {
-    if (typeof google !== 'undefined' && google.translate) {
-      console.log("Google Translate is available, trying manual init");
-      if (typeof googleTranslateElementInit === 'function') {
-        googleTranslateElementInit();
-      }
-    } else {
-      console.error("Google Translate script failed to load");
+    // --- small helpers for scoring GHQ client-side (if server doesn't return GHQ) ---
+    function computeGHQClientSide(ansSubset){
+      // ansSubset is array of 12 likert scores for GHQ (0-3 each)
+      // Likert total is sum
+      const likertTotal = ansSubset.reduce((a,b)=>a+(b||0),0);
+      // bimodal (0/1) mapping: for pos items (orientation pos) : scores 0,1 => 0 ; 2,3 => 1
+      // for neg items (orientation neg) : scores 0,1 => 0 ; 2,3 => 1
+      const bimodal = ansSubset.reduce((sum,val,idx)=>{
+        const globalIdx = 16 + idx;
+        const orientation = questions[globalIdx].orientation;
+        const isCase = (val >= 2) ? 1 : 0;
+        return sum + isCase;
+      },0);
+      return { likertTotal, bimodal };
     }
-  }, 2000);
-});
 </script>
+
 
 </body>
 </html>

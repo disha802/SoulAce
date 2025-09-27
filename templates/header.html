@@ -1,0 +1,311 @@
+<!-- Common Header Styles -->
+<style>
+    :root {
+        --bg: #f4f6f4;
+        --panel: #ffffff;
+        --muted: #6f7e79;
+        --text: #14281f;
+        --accent-green: #2f7a60;
+        --light-green: #dff3ea;
+        --card-border: #e6eee9;
+        --danger: #b00020;
+        --slot-border: #d6e9df;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: 'Zain', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .common-header {
+        font-family: 'Zain', sans-serif;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 40px;
+        background: #eee0d1;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+    }
+
+    .header-logo img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+    }
+
+    .header-logo span {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--accent-green);
+    }
+
+    .header-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .nav-link:hover {
+        color: var(--accent-green);
+        background: rgba(47, 122, 96, 0.1);
+    }
+
+    .nav-link.active {
+        color: var(--accent-green);
+        background: var(--light-green);
+        font-weight: 600;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .translate-container {
+        position: relative;
+    }
+
+    .translate-btn {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .translate-btn:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+    }
+
+    .theme-toggle {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: all 0.2s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-toggle:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+    }
+
+    .logout-btn {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+        background: #245a4a;
+    }
+
+    #google_translate_element {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 5px;
+        display: none;
+    }
+
+    /* Dark theme CSS */
+    .dark-theme {
+        --bg: #1a1a1a;
+        --panel: #2d2d2d;
+        --muted: #888888;
+        --text: #ffffff;
+        --accent-green: #4ade80;
+        --light-green: #374151;
+        --card-border: #374151;
+    }
+
+    .dark-theme .common-header {
+        background: #2d2d2d;
+        color: var(--text);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .common-header {
+            padding: 12px 20px;
+        }
+
+        .header-nav {
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .header-right {
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .header-nav {
+            display: none;
+        }
+
+        .header-left {
+            gap: 15px;
+        }
+    }
+</style>
+
+<!-- Header HTML -->
+<header class="common-header">
+    <div class="header-left">
+        <a href="{{ url_for('dashboard') }}" class="header-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="SoulAce Logo">
+            <span>SoulAce</span>
+        </a>
+
+        <nav class="header-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('chatbot_page') }}" class="nav-link {% if request.endpoint == 'chatbot_page' %}active{% endif %}">Chatbot</a>
+            <a href="{{ url_for('appointment') }}" class="nav-link {% if request.endpoint == 'appointment' %}active{% endif %}">Booking</a>
+            <a href="{{ url_for('assessment') }}" class="nav-link {% if request.endpoint == 'assessment' %}active{% endif %}">Assessment</a>
+            <a href="{{ url_for('resources') }}" class="nav-link {% if request.endpoint == 'resources' %}active{% endif %}">Resources</a>
+            <a href="{{ url_for('journal') }}" class="nav-link {% if request.endpoint == 'journal' %}active{% endif %}">Journal</a>
+            <a href="{{ url_for('peer') }}" class="nav-link {% if request.endpoint == 'peer' %}active{% endif %}">Peer Support</a>
+        </nav>
+    </div>
+
+    <div class="header-right">
+        <!-- Translate -->
+        <div class="translate-container" id="translateContainer">
+            <button class="translate-btn" type="button" onclick="toggleTranslate()">🌐 Translate</button>
+            <div id="google_translate_element"></div>
+        </div>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle" type="button" onclick="toggleTheme()">
+            <span id="theme-icon">☀️</span>
+        </button>
+
+        <!-- Logout -->
+        <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+</header>
+
+<!-- Header JavaScript -->
+<script>
+// Translation toggle function
+function toggleTranslate() {
+    const element = document.getElementById('google_translate_element');
+    if (element.style.display === 'none' || element.style.display === '') {
+        element.style.display = 'block';
+        // Initialize Google Translate if not already done
+        if (!window.googleTranslateLoaded) {
+            loadGoogleTranslate();
+        }
+    } else {
+        element.style.display = 'none';
+    }
+}
+
+// Theme toggle function
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'light');
+    } else {
+        body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// Load saved theme
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+    }
+});
+
+// Google Translate initialization
+function loadGoogleTranslate() {
+    if (!window.googleTranslateLoaded) {
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        document.head.appendChild(script);
+        window.googleTranslateLoaded = true;
+    }
+}
+
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,bn,te,ta,gu,mr,ur,pa,ml,kn,or,as',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+}
+</script>

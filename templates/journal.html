@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>SoulAce Journal</title>
-  <link rel="icon" href="..\static\header-logo.png" type="image/png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#7B9B8B; }
-    .header-left { display:flex; align-items:center; gap:15px; }
-    .header-text h1 { margin:0; font-size:1.8rem; color:#fff; }
-    .header-text h3 { margin:0; font-size:1rem; color:#FFF7E4; }
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
     .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
@@ -30,54 +27,23 @@
     .tab { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; background:#ddd; }
     .tab.active { background:#657A74; color:white; }
     body.dark { background:#121212; color:#e0e0e0; }
-    body.dark header { background:#1f1f1f; }
     body.dark .tile { background:#2a2a2a; color:#e0e0e0; }
     body.dark #popup { background:#2a2a2a; color:#e0e0e0; }
     body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
     .prompt-card { background:#f0f8f5; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:15px; }
     .prompt-card h4 { margin-top:0; }
+    .audio-controls { display:flex; gap:10px; margin:15px 0; flex-wrap:wrap; }
+    .audio-controls button { min-width:140px; }
+    #recording-status { padding:10px; border-radius:8px; margin:10px 0; font-weight:bold; }
+    .recording { background:#ffebee; color:#c62828; }
+    .recorded { background:#e8f5e8; color:#2e7d32; }
+    .tile.audio-tile { border-left:4px solid #657A74; }
+    .audio-indicator { color:#657A74; font-weight:bold; }
 
-    /* Google Translate Styling */
-    .goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon { display:none !important; }
-    body { top:0px !important; }
-    #google_translate_element select {
-      background:#fff;
-      border-radius:8px;
-      padding:5px 10px;
-      border:1px solid #ccc;
-      font-size:14px;
-      cursor:pointer;
-      width:100%;
-    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-      </div>
-      <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="user-icon-container">
-        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-        <div id="user-popup" class="user-popup">
-          <a href="{{ url_for('dashboard') }}" class="popup-btn">🏠 Home</a>
-          <button onclick="toggleMode()" class="popup-btn">🌙 Change Mode</button>
-          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">🚪 Logout</button>
-          </form>
-          <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
-          <!-- Google Translate Dropdown inside profile -->
-          <div id="google_translate_element"></div>
-        </div>
-      </div>
-    </div>
-  </header>
+  {% include 'header.html' %}
 
   <main>
     <h2>My Journal</h2>
@@ -96,9 +62,28 @@
         {% endif %}
       </p>
 
-      <input type="text" id="title-input" placeholder="Entry title">
-      <textarea id="content" placeholder="Write your thoughts..."></textarea>
-      <button onclick="saveEntry()">Save Entry</button>
+      <div class="tab-container">
+        <button id="tab-text" class="tab active" onclick="switchEntryType('text')">Text Entry</button>
+        <button id="tab-audio" class="tab" onclick="switchEntryType('audio')">Audio Note</button>
+      </div>
+
+      <div id="text-entry">
+        <input type="text" id="title-input" placeholder="Entry title">
+        <textarea id="content" placeholder="Write your thoughts..."></textarea>
+        <button onclick="saveEntry()">Save Entry</button>
+      </div>
+
+      <div id="audio-entry" style="display:none;">
+        <input type="text" id="audio-title-input" placeholder="Audio note title">
+        <div class="audio-controls">
+          <button id="record-btn" onclick="toggleRecording()">🎤 Start Recording</button>
+          <button id="stop-btn" onclick="stopRecording()" disabled>⏹ Stop</button>
+          <button id="play-btn" onclick="playRecording()" disabled>▶ Play</button>
+        </div>
+        <div id="recording-status"></div>
+        <audio id="audio-playback" controls style="display:none; width:100%; margin:10px 0;"></audio>
+        <button id="save-audio-btn" onclick="saveAudioEntry()" disabled>Save Audio Entry</button>
+      </div>
       <h3>Your Entries</h3>
       <div class="tiles" id="entries"></div>
     </div>
@@ -147,7 +132,15 @@
 
   <div id="popup">
     <h3 id="popup-title"></h3>
-    <p id="popup-content"></p>
+    <div id="popup-content-text" style="display:none;">
+      <p id="popup-content"></p>
+    </div>
+    <div id="popup-content-audio" style="display:none;">
+      <audio controls style="width:100%; margin:10px 0;">
+        <source id="popup-audio-source" type="audio/wav">
+        Your browser does not support audio playback.
+      </audio>
+    </div>
     <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
       <button onclick="deleteEntry()" style="background:#b33a3a;">Delete</button>
       <button onclick="closePopup()">Close</button>
@@ -164,6 +157,9 @@
       };
 
     let currentEntry = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedBlob = null;
 
     function toggleUserPopup() {
       const popup = document.getElementById("user-popup");
@@ -177,6 +173,13 @@
       document.getElementById("prompts-tab").style.display = (tab==='prompts')?'block':'none';
       document.getElementById("tab-journal").classList.toggle('active', tab==='journal');
       document.getElementById("tab-prompts").classList.toggle('active', tab==='prompts');
+    }
+
+    function switchEntryType(type) {
+      document.getElementById("text-entry").style.display = (type==='text')?'block':'none';
+      document.getElementById("audio-entry").style.display = (type==='audio')?'block':'none';
+      document.getElementById("tab-text").classList.toggle('active', type==='text');
+      document.getElementById("tab-audio").classList.toggle('active', type==='audio');
     }
 
     const textarea = document.getElementById("content");
@@ -206,6 +209,87 @@
       loadEntries();
     }
 
+    async function toggleRecording() {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioURL = URL.createObjectURL(recordedBlob);
+            document.getElementById('audio-playback').src = audioURL;
+            document.getElementById('audio-playback').style.display = 'block';
+            document.getElementById('play-btn').disabled = false;
+            document.getElementById('save-audio-btn').disabled = false;
+            document.getElementById('recording-status').className = 'recorded';
+            document.getElementById('recording-status').textContent = 'Recording completed! You can now play or save it.';
+          };
+
+          mediaRecorder.start();
+          document.getElementById('record-btn').textContent = '🎙 Recording...';
+          document.getElementById('record-btn').disabled = true;
+          document.getElementById('stop-btn').disabled = false;
+          document.getElementById('recording-status').className = 'recording';
+          document.getElementById('recording-status').textContent = 'Recording in progress...';
+        } catch (error) {
+          alert('Could not access microphone. Please allow microphone access and try again.');
+        }
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        document.getElementById('record-btn').textContent = '🎤 Start Recording';
+        document.getElementById('record-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+      }
+    }
+
+    function playRecording() {
+      const audio = document.getElementById('audio-playback');
+      audio.play();
+    }
+
+    async function saveAudioEntry() {
+      const title = document.getElementById('audio-title-input').value.trim();
+      if (!title || !recordedBlob) {
+        alert('Please add a title and record audio.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('audio', recordedBlob, 'audio.wav');
+      formData.append('type', 'audio');
+
+      try {
+        await fetch('/add_journal', {
+          method: 'POST',
+          body: formData
+        });
+
+        // Reset form
+        document.getElementById('audio-title-input').value = '';
+        document.getElementById('audio-playback').style.display = 'none';
+        document.getElementById('recording-status').textContent = '';
+        document.getElementById('play-btn').disabled = true;
+        document.getElementById('save-audio-btn').disabled = true;
+        recordedBlob = null;
+
+        loadEntries();
+      } catch (error) {
+        alert('Failed to save audio entry.');
+      }
+    }
+
     async function loadEntries() {
       const res = await fetch(`/get_journals/{{ username }}`);
       const data = await res.json();
@@ -214,8 +298,14 @@
 
       data.forEach(entry => {
         const tile = document.createElement("div");
-        tile.className = "tile";
-        tile.innerHTML = `<strong>${entry.title}</strong><br>${entry.date} ${entry.time}<br>${entry.content.substring(0,60)}...`;
+        tile.className = entry.type === 'audio' ? "tile audio-tile" : "tile";
+
+        if (entry.type === 'audio') {
+          tile.innerHTML = `<span class="audio-indicator">🎵 Audio Note</span><br><strong>${entry.title}</strong><br>${entry.date} ${entry.time}`;
+        } else {
+          tile.innerHTML = `<strong>${entry.title}</strong><br>${entry.date} ${entry.time}<br>${entry.content.substring(0,60)}...`;
+        }
+
         tile.onclick = () => openPopup(entry);
         container.appendChild(tile);
       });
@@ -224,7 +314,18 @@
     function openPopup(entry) {
       currentEntry = entry;
       document.getElementById("popup-title").innerText = entry.title + " (" + entry.date + " " + entry.time + ")";
-      document.getElementById("popup-content").innerText = entry.content;
+
+      if (entry.type === 'audio') {
+        document.getElementById("popup-content-text").style.display = "none";
+        document.getElementById("popup-content-audio").style.display = "block";
+        document.getElementById("popup-audio-source").src = `/get_audio/${entry.id}`;
+        document.querySelector("#popup-content-audio audio").load();
+      } else {
+        document.getElementById("popup-content-audio").style.display = "none";
+        document.getElementById("popup-content-text").style.display = "block";
+        document.getElementById("popup-content").innerText = entry.content;
+      }
+
       document.getElementById("popup").style.display = "block";
     }
 
@@ -241,17 +342,6 @@
     loadEntries();
   </script>
 
-  <!-- Google Translate Script -->
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,hi,ur',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-      }, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <!-- Footer -->
   <footer style="text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem;">

@@ -18,10 +18,16 @@ import logging
 import smtplib
 import torch
 import uuid
+import re
 import json
 import csv
 import os
 import io
+
+import subprocess
+import tempfile
+from google.cloud import speech_v1 as speech
+
 
 # --- Load environment variables ---
 load_dotenv()
@@ -156,60 +162,60 @@ def create_default_Admin():
         users_col.insert_one(stuvol_user)
         print("✅ Default studentvol user created (username: studentvol, password: studentvol)")
 
-def seed_sample_data():
-    """Add sample counselors and resources if collections are empty"""
-    # Sample Counselors
-    if counselors_col.count_documents({}) == 0:
-        sample_counselors = [
-            {
-                "counselor_id": 1,
-                "name": "Dr. Sarah Johnson",
-                "specialization": "Anxiety & Depression",
-                "contact_info": "sarah.johnson@soulace.com"
-            },
-            {
-                "counselor_id": 2,
-                "name": "Dr. Michael Chen",
-                "specialization": "Trauma Counseling",
-                "contact_info": "michael.chen@soulace.com"
-            },
-            {
-                "counselor_id": 3,
-                "name": "Dr. Emily Rodriguez",
-                "specialization": "Family Therapy",
-                "contact_info": "emily.rodriguez@soulace.com"
-            }
-        ]
-        counselors_col.insert_many(sample_counselors)
-        print("✅ Sample counselors added")
+# def seed_sample_data():
+#     """Add sample counselors and resources if collections are empty"""
+#     # Sample Counselors
+#     if counselors_col.count_documents({}) == 0:
+#         sample_counselors = [
+#             {
+#                 "counselor_id": 1,
+#                 "name": "Dr. Sarah Johnson",
+#                 "specialization": "Anxiety & Depression",
+#                 "contact_info": "sarah.johnson@soulace.com"
+#             },
+#             {
+#                 "counselor_id": 2,
+#                 "name": "Dr. Michael Chen",
+#                 "specialization": "Trauma Counseling",
+#                 "contact_info": "michael.chen@soulace.com"
+#             },
+#             {
+#                 "counselor_id": 3,
+#                 "name": "Dr. Emily Rodriguez",
+#                 "specialization": "Family Therapy",
+#                 "contact_info": "emily.rodriguez@soulace.com"
+#             }
+#         ]
+#         counselors_col.insert_many(sample_counselors)
+#         print("✅ Sample counselors added")
 
     # Sample Resources
-    if resources_col.count_documents({}) == 0:
-        sample_resources = [
-            {
-                "resource_id": 1,
-                "title": "Managing Anxiety: A Complete Guide",
-                "type": "Guide",
-                "language": "English",
-                "url": "https://example.com/anxiety-guide"
-            },
-            {
-                "resource_id": 2,
-                "title": "Meditation for Beginners",
-                "type": "Audio",
-                "language": "English",
-                "url": "https://example.com/meditation-audio"
-            },
-            {
-                "resource_id": 3,
-                "title": "Stress Relief Techniques",
-                "type": "Video",
-                "language": "English",
-                "url": "https://example.com/stress-video"
-            }
-        ]
-        resources_col.insert_many(sample_resources)
-        print("✅ Sample resources added")
+    # if resources_col.count_documents({}) == 0:
+    #     sample_resources = [
+    #         {
+    #             "resource_id": 1,
+    #             "title": "Managing Anxiety: A Complete Guide",
+    #             "type": "Guide",
+    #             "language": "English",
+    #             "url": "https://example.com/anxiety-guide"
+    #         },
+    #         {
+    #             "resource_id": 2,
+    #             "title": "Meditation for Beginners",
+    #             "type": "Audio",
+    #             "language": "English",
+    #             "url": "https://example.com/meditation-audio"
+    #         },
+    #         {
+    #             "resource_id": 3,
+    #             "title": "Stress Relief Techniques",
+    #             "type": "Video",
+    #             "language": "English",
+    #             "url": "https://example.com/stress-video"
+    #         }
+    #     ]
+    #     resources_col.insert_many(sample_resources)
+    #     print("✅ Sample resources added")
 
 def check(content: str) -> dict:
     """
@@ -265,17 +271,22 @@ def get_crisis_logs():
                          if isinstance(log.get("timestamp"), datetime) else str(log.get("timestamp")),
             "resolved": log.get("resolved", False),
             "resolved_at": log.get("resolved_at")
-        })  
+        })
     return logs
+
+
 
 # Initialize default data
 create_default_Admin()
-seed_sample_data()
+# seed_sample_data()
 
 # --- Routes ---
 @app.route("/")
-def home():
-    #return redirect(url_for("login"))
+def welcome():
+    return render_template("welcome.html")
+
+@app.route("/welcome")
+def welcome_page():
     return render_template("welcome.html")
 
 # --- Authentication ---
@@ -304,21 +315,43 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
         
+        
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return render_template("register.html")
+        
+        # Check if username already exists
         if users_col.find_one({"username": username}):
-            flash("User already exists", "error")
-        else:
-            new_user = {
-                "user_id": get_next_id(users_col, "user_id"),
-                "username": username,
-                "password_hash": generate_password_hash(password),
-                "role": "student",
-                "date_joined": datetime.now()
-            }
-            users_col.insert_one(new_user)
-            flash("Registration successful! Please login.", "success")
-            return redirect(url_for("login"))
+            flash("Username already exists", "error")
+            return render_template("register.html")
+        
+        # Create new user
+        new_user = {
+            "user_id": get_next_id(users_col, "user_id"),
+            "username": username,
+            "password_hash": generate_password_hash(password),
+            "role": "student",
+            "date_joined": datetime.now()
+        }
+        users_col.insert_one(new_user)
+        flash("Registration successful! Please login.", "success")
+        return redirect(url_for("login"))
     return render_template("register.html")
+
+@app.route("/api/check_username", methods=["POST"])
+def check_username():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    
+    # Check if username exists in database
+    existing_user = users_col.find_one({"username": username})
+    
+    return jsonify({
+        "available": existing_user is None,
+        "username": username
+    })
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -403,20 +436,26 @@ def journal():
     if last_mood:
         mood = last_mood["mood"]
 
-        if mood in ["Sad", "Frustrated", "Angry", "Crying"]:
+        if mood in ["Sad", "Angry"]:
             journaling_prompt = (
                 "I'm sorry you're feeling this way. "
-                "What do you think was the most saddening? "
-                "Or among all the sad things, what's one thing that made you smile?"
+                "What do you think contributed to this feeling? "
+                "Would you like to write about what might help you feel better?"
             )
-        elif mood in ["Very Happy", "Happy", "Feeling Blessed"]:
+        elif mood == "Happy":
             journaling_prompt = (
                 "That's wonderful! What made you feel this way today? "
                 "Would you like to write it down so you can revisit it later?"
             )
-        elif mood == "Mind Blown":
+        elif mood == "Calm":
             journaling_prompt = (
-                "Wow, sounds intense! What surprised or amazed you the most?"
+                "It's great that you're feeling peaceful. "
+                "What helped you achieve this sense of calm today?"
+            )
+        elif mood == "Void":
+            journaling_prompt = (
+                "Sometimes feeling neutral is perfectly okay. "
+                "Would you like to explore what's on your mind right now?"
             )
 
     # ✅ Render journal template with prompt
@@ -427,28 +466,66 @@ def journal():
 def add_journal():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No JSON data provided"}), 400
-    
-    title = data.get("title", "").strip()
-    content = data.get("content", "").strip()
-    
-    if not title or not content:
-        return jsonify({"error": "Title and content are required"}), 400
 
-    entry = {
-        "journal_id": get_next_id(journals_col, "journal_id"),
-        "user_id": session["user_id"],
-        "title": title,
-        "entry": content,
-        "datetime": datetime.now(),
-        "is_edited": False,
-        "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
-        "time": data.get("time", datetime.now().strftime("%H:%M:%S"))
-    }
-    
+    # Handle both JSON and form data (for audio uploads)
+    if request.content_type and request.content_type.startswith('multipart/form-data'):
+        # Audio entry
+        title = request.form.get("title", "").strip()
+        entry_type = request.form.get("type", "text")
+        audio_file = request.files.get("audio")
+
+        if not title or not audio_file:
+            return jsonify({"error": "Title and audio file are required"}), 400
+
+        now = datetime.now()
+        date = now.strftime("%Y-%m-%d")
+        time = now.strftime("%H:%M:%S")
+
+        # Create audio directory if it doesn't exist
+        audio_dir = os.path.join("static", "audio")
+        os.makedirs(audio_dir, exist_ok=True)
+
+        # Save audio file with unique name
+        journal_id = get_next_id(journals_col, "journal_id")
+        filename = f"audio_{journal_id}_{session['user_id']}.wav"
+        audio_path = os.path.join(audio_dir, filename)
+        audio_file.save(audio_path)
+
+        entry = {
+            "journal_id": journal_id,
+            "user_id": session["user_id"],
+            "title": title,
+            "type": "audio",
+            "audio_file": filename,
+            "datetime": now,
+            "is_edited": False,
+            "date": date,
+            "time": time
+        }
+    else:
+        # Text entry
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+
+        title = data.get("title", "").strip()
+        content = data.get("content", "").strip()
+
+        if not title or not content:
+            return jsonify({"error": "Title and content are required"}), 400
+
+        entry = {
+            "journal_id": get_next_id(journals_col, "journal_id"),
+            "user_id": session["user_id"],
+            "title": title,
+            "entry": content,
+            "type": "text",
+            "datetime": datetime.now(),
+            "is_edited": False,
+            "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+            "time": data.get("time", datetime.now().strftime("%H:%M:%S"))
+        }
+
     try:
         journals_col.insert_one(entry)
         return jsonify({"message": "Journal added successfully", "id": entry["journal_id"]}), 201
@@ -459,19 +536,54 @@ def add_journal():
 def get_journals(username):
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
+
     user_entries = list(journals_col.find({"user_id": session["user_id"]}).sort("journal_id", -1))
     for e in user_entries:
         e["_id"] = str(e["_id"])
         e["id"] = e["journal_id"]
-        e["content"] = e["entry"]
+        # Handle both text and audio entries
+        if e.get("type") == "audio":
+            e["content"] = None  # Audio entries don't have text content
+        else:
+            e["content"] = e.get("entry", "")
+            e["type"] = "text"  # Ensure old entries have type
     return jsonify(user_entries)
+
+@app.route("/get_audio/<int:entry_id>")
+def get_audio(entry_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    entry = journals_col.find_one({"journal_id": entry_id, "user_id": session["user_id"], "type": "audio"})
+    if not entry or not entry.get("audio_file"):
+        abort(404)
+
+    audio_path = os.path.join("static", "audio", entry["audio_file"])
+    if os.path.exists(audio_path):
+        return send_file(audio_path, as_attachment=False)
+    else:
+        abort(404)
 
 @app.route("/delete_journal/<int:entry_id>", methods=["DELETE"])
 def delete_journal(entry_id):
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
-    
+
+    # Find the entry first to check if it's an audio entry
+    entry = journals_col.find_one({"journal_id": entry_id, "user_id": session["user_id"]})
+    if not entry:
+        return jsonify({"success": False, "error": "not found"}), 404
+
+    # Delete audio file if it exists
+    if entry.get("type") == "audio" and entry.get("audio_file"):
+        audio_path = os.path.join("static", "audio", entry["audio_file"])
+        if os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+            except Exception as e:
+                print(f"Failed to delete audio file: {e}")
+
+    # Delete the database entry
     res = journals_col.delete_one({"journal_id": entry_id, "user_id": session["user_id"]})
     if res.deleted_count == 1:
         return jsonify({"success": True})
@@ -487,13 +599,8 @@ def save_mood():
     data = request.get_json()
     mood = data.get("mood")
     
-    valid_moods = ['Very Happy', 'Feeling Blessed', 'Happy', 'Mind Blown', 'Frustrated', 'Sad', 'Angry', 'Crying']
-
-    # ✅ Define valid moods
-    valid_moods = [
-        "Very Happy", "Feeling Blessed", "Happy", "Mind Blown",
-        "Frustrated", "Sad", "Angry", "Crying"
-    ]
+    # ✅ Define valid moods (matching SVG files)
+    valid_moods = ["Happy", "Calm", "Void", "Sad", "Angry"]
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood value"}), 400
 
@@ -507,20 +614,26 @@ def save_mood():
 
     journaling_prompt = None
     # 🎯 Suggest journaling prompts based on mood
-    if mood in ["Sad", "Frustrated", "Angry", "Crying"]:
+    if mood in ["Sad", "Angry"]:
         journaling_prompt = (
             "I'm sorry you're feeling this way. "
-            "What do you think was the most saddening? "
-            "Or among all the sad things, what's one thing that made you smile?"
+            "What do you think contributed to this feeling? "
+            "Would you like to write about what might help you feel better?"
         )
-    elif mood in ["Very Happy", "Happy", "Feeling Blessed"]:
+    elif mood == "Happy":
         journaling_prompt = (
             "That's wonderful! What made you feel this way today? "
             "Would you like to write it down so you can revisit it later?"
         )
-    elif mood == "Mind Blown":
+    elif mood == "Calm":
         journaling_prompt = (
-            "Wow, sounds intense! What surprised or amazed you the most?"
+            "It's great that you're feeling peaceful. "
+            "What helped you achieve this sense of calm today?"
+        )
+    elif mood == "Void":
+        journaling_prompt = (
+            "Sometimes feeling neutral is perfectly okay. "
+            "Would you like to explore what's on your mind right now?"
         )
 
     try:
@@ -569,7 +682,7 @@ def download_csv():
                      download_name=f'moods_{session["username"]}.csv')
 
 
-@app.route("/download_chart")
+@app.route("/download_chart", methods=["GET"])
 def download_chart():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
@@ -628,7 +741,7 @@ def get_slots(therapist_id):
     try:
         # find slots for therapist + date
         t_oid = ObjectId(therapist_id)
-    except:
+    except Exception:
         abort(400, "Invalid therapist id")
     docs = list(slots_col.find({"therapist_id": t_oid, "date": date}))
     slots = []
@@ -645,109 +758,158 @@ def get_slots(therapist_id):
 
 @app.route('/api/book', methods=['POST'])
 def book_slot():
+    """
+    Payload (preferred):
+      {
+        therapist_id: <optional ObjectId string>,
+        proctor_id: <optional ObjectId string>,
+        slot_id: <optional slot _id string>,
+        date: "YYYY-MM-DD",
+        time: "HH:MM",
+        concerns: "...",
+        session_type: "individual" (optional)
+      }
+    The server will prefer session['user_id'] as the booking user.
+    """
     payload = request.get_json() or {}
-    therapist_id = payload.get('therapist_id')   # may be null -> server auto-match
-    slot_id = payload.get('slot_id')             # optional: if client selected exact slot
+    therapist_id = payload.get('therapist_id')
+    proctor_id = payload.get('proctor_id')
+    slot_id = payload.get('slot_id')
     date = payload.get('date')
     time = payload.get('time')
-    user_id = payload.get('user_id')
-    session_type = payload.get('session_type', 'individual')
     concerns = payload.get('concerns', '')
+    session_type = payload.get('session_type', 'individual')
 
-    if not date or not time or not user_id:
-        return jsonify({"error":"Missing fields"}), 400
+    # authoritative: prefer session user id
+    user_id = session.get('user_id') or payload.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Not logged in"}), 401
 
-    # If slot_id provided, attempt atomic update: only mark booked if status == 'available'
-    if slot_id:
+    if not date or not time:
+        return jsonify({"error": "Missing date/time"}), 400
+
+    # Helper to wrap string -> ObjectId safely
+    def to_oid(val):
         try:
-            s_oid = ObjectId(slot_id)
-        except:
-            return jsonify({"error":"Invalid slot id"}), 400
+            return ObjectId(val)
+        except Exception:
+            return None
 
+    # 1) If slot_id provided: attempt atomic update of that slot (works for therapist or proctor slots)
+    if slot_id:
+        s_oid = to_oid(slot_id)
+        if not s_oid:
+            return jsonify({"error": "Invalid slot id"}), 400
+
+        # We don't know whether this slot belongs to therapist or proctor - update only if status available
         res = slots_col.update_one(
             {"_id": s_oid, "status": "available"},
             {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
         )
         if res.modified_count == 0:
-            return jsonify({"error":"Slot already booked or unavailable"}), 409
+            return jsonify({"error": "Slot already booked or unavailable"}), 409
 
-        # create booking record
+        # fetch slot doc to determine owner (therapist/proctor)
+        slot_doc = slots_col.find_one({"_id": s_oid})
+        if not slot_doc:
+            return jsonify({"error": "Slot not found after booking update"}), 500
+
+        # construct booking document
         booking = {
-          "slot_id": s_oid,
-          "therapist_id": ObjectId(therapist_id),
-          "user_id": user_id,
-          "date": date,
-          "time": time,
-          "session_type": session_type,
-          "concerns": concerns,
-          "created_at": datetime.utcnow()
+            "slot_id": slot_doc["_id"],
+            "therapist_id": slot_doc.get("therapist_id"),
+            "proctor_id": slot_doc.get("proctor_id"),
+            "user_id": user_id,
+            "date": slot_doc.get("date", date),
+            "time": slot_doc.get("time", time),
+            "session_type": session_type,
+            "concerns": concerns,
+            "status": "confirmed",
+            "created_at": datetime.utcnow()
         }
         booking_id = bookings_col.insert_one(booking).inserted_id
         return jsonify({
             "message": "Booked",
             "booking_id": str(booking_id),
-            "therapist_id": therapist_id,
             "slot_id": str(s_oid),
-            "date": date,
-            "time": time
+            "date": booking["date"],
+            "time": booking["time"]
         }), 200
 
-    # If no slot_id, attempt server-side find+book: find first available slot for therapist on that date/time
-    if therapist_id:
-        try:
-            t_oid = ObjectId(therapist_id)
-        except:
-            return jsonify({"error":"Invalid therapist id"}),400
-        # find a slot for that exact time and date and try to book
+    # 2) If therapist_id/proctor_id provided + date/time: try to book a matching available slot
+    if therapist_id or proctor_id:
+        if therapist_id:
+            owner_field = "therapist_id"
+            owner_oid = to_oid(therapist_id)
+        else:
+            owner_field = "proctor_id"
+            owner_oid = to_oid(proctor_id)
+
+        if not owner_oid:
+            return jsonify({"error": "Invalid person id"}), 400
+
+        query = { owner_field: owner_oid, "date": date, "time": time, "status": "available" }
         res = slots_col.update_one(
-            {"therapist_id": t_oid, "date": date, "time": time, "status": "available"},
+            query,
             {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
         )
         if res.modified_count == 0:
-            return jsonify({"error":"Slot not available"}), 409
-        # find the slot doc now
-        s = slots_col.find_one({"therapist_id": t_oid, "date": date, "time": time})
+            return jsonify({"error": "Slot not available"}), 409
+
+        # fetch booked slot to include in booking
+        s = slots_col.find_one({ owner_field: owner_oid, "date": date, "time": time })
+        if not s:
+            return jsonify({"error": "Slot booked but cannot retrieve slot document"}), 500
+
         booking = {
-          "slot_id": s["_id"],
-          "therapist_id": t_oid,
-          "user_id": user_id,
-          "date": date,
-          "time": time,
-          "session_type": session_type,
-          "concerns": concerns,
-          "created_at": datetime.utcnow()
+            "slot_id": s["_id"],
+            "therapist_id": s.get("therapist_id"),
+            "proctor_id": s.get("proctor_id"),
+            "user_id": user_id,
+            "date": s.get("date"),
+            "time": s.get("time"),
+            "session_type": session_type,
+            "concerns": concerns,
+            "status": "confirmed",
+            "created_at": datetime.utcnow()
         }
         booking_id = bookings_col.insert_one(booking).inserted_id
         return jsonify({
-            "message":"Booked",
+            "message": "Booked",
             "booking_id": str(booking_id),
-            "therapist_id": therapist_id,
             "slot_id": str(s["_id"]),
-            "date": date,
-            "time": time
+            "date": s.get("date"),
+            "time": s.get("time")
         }), 200
 
-    # Auto-match: if therapist_id omitted, find any therapist with available slot for date/time
-    # (basic example: first matching slot)
+    # 3) Auto-match (no specific person): try to find any available slot for that date/time
     slot_doc = slots_col.find_one_and_update(
-      {"date": date, "time": time, "status": "available"},
-      {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
+        {"date": date, "time": time, "status": "available"},
+        {"$set": {"status": "booked", "booked_by": user_id, "booked_at": datetime.utcnow()}}
     )
     if not slot_doc:
-      return jsonify({"error":"No available slots"}), 409
+        return jsonify({"error": "No available slots"}), 409
+
     booking = {
-      "slot_id": slot_doc["_id"],
-      "therapist_id": slot_doc["therapist_id"],
-      "user_id": user_id,
-      "date": date,
-      "time": time,
-      "session_type": session_type,
-      "concerns": concerns,
-      "created_at": datetime.utcnow()
+        "slot_id": slot_doc["_id"],
+        "therapist_id": slot_doc.get("therapist_id"),
+        "proctor_id": slot_doc.get("proctor_id"),
+        "user_id": user_id,
+        "date": slot_doc.get("date"),
+        "time": slot_doc.get("time"),
+        "session_type": session_type,
+        "concerns": concerns,
+        "status": "confirmed",
+        "created_at": datetime.utcnow()
     }
     bid = bookings_col.insert_one(booking).inserted_id
-    return jsonify({"message":"Booked", "booking_id": str(bid), "therapist_id": str(slot_doc["therapist_id"]), "slot_id": str(slot_doc["_id"]), "date": date, "time": time}), 200
-
+    return jsonify({
+        "message":"Booked",
+        "booking_id": str(bid),
+        "slot_id": str(slot_doc["_id"]),
+        "date": slot_doc.get("date"),
+        "time": slot_doc.get("time")
+    }), 200
 
 # Utility: safe ObjectId -> str
 def oid_to_str(oid):
@@ -777,6 +939,7 @@ def get_proctors():
     except Exception as e:
         app.logger.exception("Failed to fetch proctors")
         return jsonify({"error": "Internal server error"}), 500
+    
 
 
 # -----------------------
@@ -790,7 +953,6 @@ def get_proctor_slots(proctor_id):
     if not date:
         return jsonify({"error": "Missing required query param: date (YYYY-MM-DD)"}), 400
 
-    # basic date-format validation (YYYY-MM-DD)
     try:
         datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
@@ -817,7 +979,7 @@ def get_proctor_slots(proctor_id):
     except Exception as e:
         app.logger.exception("Failed to fetch proctor slots")
         return jsonify({"error": "Internal server error"}), 500
-
+    
 
 # -----------------------
 # GET /api/bookings?user_id=<user_id>
@@ -826,28 +988,28 @@ def get_proctor_slots(proctor_id):
 # Each booking includes: _id, role ('therapist'|'proctor'), name (therapist/proctor name), date, time, status, created_at
 @app.route('/api/bookings', methods=['GET'])
 def get_bookings():
-    user_id = request.args.get('user_id')
+    # prefer explicit query param, else use session user
+    user_id = request.args.get('user_id') or session.get('user_id')
     if not user_id:
-        return jsonify({"error": "Missing user_id query parameter"}), 400
+        return jsonify({"error": "Missing user_id (or not logged in)"}), 400
 
     try:
         docs = list(bookings_col.find({"user_id": user_id}))
         out = []
         for b in docs:
-            # determine role & name
             role = 'therapist' if b.get('therapist_id') else ('proctor' if b.get('proctor_id') else 'unknown')
             name = None
             extra = None
             if role == 'therapist' and b.get('therapist_id'):
                 try:
-                    t = db.therapists.find_one({"_id": ObjectId(b['therapist_id'])})
+                    t = therapists_col.find_one({"_id": ObjectId(b['therapist_id'])}) if isinstance(b.get('therapist_id'), str) else therapists_col.find_one({"_id": b['therapist_id']})
                     name = t.get('name') if t else None
                     extra = t.get('expertise') if t else None
                 except Exception:
                     name = None
             elif role == 'proctor' and b.get('proctor_id'):
                 try:
-                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])})
+                    p = proctors_col.find_one({"_id": ObjectId(b['proctor_id'])}) if isinstance(b.get('proctor_id'), str) else proctors_col.find_one({"_id": b['proctor_id']})
                     name = p.get('name') if p else None
                     extra = p.get('department') if p else None
                 except Exception:
@@ -864,13 +1026,11 @@ def get_bookings():
                 "slot_id": oid_to_str(b.get("slot_id")),
                 "created_at": b.get("created_at").isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at")
             })
-        # optionally sort by date/time ascending
         out.sort(key=lambda x: (x.get("date") or "", x.get("time") or ""))
         return jsonify(out), 200
     except Exception as e:
         app.logger.exception("Failed to fetch bookings")
         return jsonify({"error": "Internal server error"}), 500
-
 
 # -----------------------
 # OPTIONAL: helper endpoint to seed a proctor (dev only)
@@ -889,6 +1049,46 @@ def seed_proctor():
     }
     res = proctors_col.insert_one(doc)
     return jsonify({"inserted_id": oid_to_str(res.inserted_id)}), 201
+
+@app.route('/api/bookings/<booking_id>/cancel', methods=['POST'])
+def cancel_booking(booking_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    # ensure booking exists
+    try:
+        b_oid = ObjectId(booking_id)
+    except Exception:
+        return jsonify({"error": "Invalid booking id"}), 400
+
+    booking = bookings_col.find_one({"_id": b_oid})
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    # check ownership (user who booked) or Admin
+    if str(booking.get("user_id")) != str(session["user_id"]) and session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized to cancel this booking"}), 403
+
+    # mark booking cancelled
+    bookings_col.update_one({"_id": b_oid}, {"$set": {"status": "cancelled", "cancelled_at": datetime.utcnow()}})
+
+    # release the slot if one exists
+    slot_id = booking.get("slot_id")
+    if slot_id:
+        try:
+            s_oid = slot_id if isinstance(slot_id, ObjectId) else ObjectId(slot_id)
+            # set slot status back to available and clear booked_by/booked_at
+            slots_col.update_one(
+                {"_id": s_oid},
+                {"$set": {"status": "available"}, "$unset": {"booked_by": "", "booked_at": ""}}
+            )
+        except Exception as e:
+            # slot may have been removed or changed - log and continue
+            app.logger.exception("Failed to release slot during cancellation: %s", e)
+
+    return jsonify({"message": "Booking cancelled"}), 200
+
+
 @app.route("/book_appointment", methods=["POST"])
 def book_appointment():
     if "user_id" not in session:
@@ -1166,11 +1366,11 @@ def delete_own_post(post_id):
 
         # Allow deletion if it's the owner's post OR if user is an Admin OR studentvol
         if (post_user_id != session_user_id and 
-            user_role not in ["Admin", "studentvol"]):
+            user_role not in ["admin", "studentvol"]):
             return jsonify({"error": "Unauthorized"}), 403
 
         # Soft delete for owners, hard delete for Admins and studentvols
-        if user_role in ["Admin", "studentvol"]:
+        if user_role in ["admin", "studentvol"]:
             peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
             return jsonify({"message": "Post permanently deleted"})
         else:
@@ -1201,10 +1401,10 @@ def delete_own_reply(post_id, reply_id):
         if str(reply["_id"]) == reply_id:
             # Allow deletion if owner OR Admin OR studentvol
             if (str(reply["user_id"]) != str(session["user_id"]) and 
-                user_role not in ["Admin", "studentvol"]):
+                user_role not in ["admin", "studentvol"]):
                 return jsonify({"error": "Unauthorized"}), 403
 
-            if user_role in ["Admin", "studentvol"]:
+            if user_role in ["admin", "studentvol"]:
                 replies = [r for r in replies if str(r["_id"]) != reply_id]  # remove reply entirely
                 updated = True
             else:
@@ -1268,8 +1468,8 @@ def flag_content(content_type, content_id):
 # --- Unflag content (Admin and studentvol) ---
 @app.route("/unflag_content/<content_type>/<content_id>", methods=["POST"])
 def unflag_content(content_type, content_id):
-    if "user_id" not in session or session.get("role") not in ["Admin", "studentvol"]:
-        return jsonify({"error": "Admin or studentvol access required"}), 403
+    if "user_id" not in session or session.get("role") not in ["admin", "studentvol"]:
+        return jsonify({"error": "admin or studentvol access required"}), 403
 
     try:
         if content_type == "post":
@@ -1313,8 +1513,8 @@ def unflag_content(content_type, content_id):
 # --- Admin-only moderation (hard delete) ---
 @app.route("/moderate/delete/<post_id>", methods=["DELETE"])
 def admin_delete_post(post_id):
-    if "user_id" not in session or session.get("role") != "Admin":
-        return jsonify({"error": "Admin access required"}), 403
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "admin access required"}), 403
 
     peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
     return jsonify({"message": "Post permanently deleted"})
@@ -1372,33 +1572,6 @@ def admin_dashboard():
         crisis_logs=logs,
         visits=visits
     )
-@app.route("/admin", methods=["GET"])
-def admin_web_analytics():
-    if "user_id" not in session or session.get("role") != "admin":
-        return redirect(url_for("login"))
-
-    # ✅ Debugging pipeline step by step
-    test = list(db.page_views.aggregate([
-        { "$match": { "page": "dashboard" } }
-    ]))
-    print("DEBUG MATCH RESULTS:", test[:3])  # shows first 3 docs in terminal
-
-    # Then try grouping
-    visits_by_date = list(db.page_views.aggregate([
-        { "$group": {
-            "_id": { "$dateToString": { "format": "%Y-%m-%d", "date": "$timestamp" } },
-            "count": { "$sum": 1 }
-        }}
-    ]))
-    print("DEBUG GROUP RESULTS:", visits_by_date)
-
-    total_visits = db.page_views.count_documents({"page": "dashboard"})
-
-    return render_template(
-        "admin_dashboard.html",
-        total_visits=total_visits,
-        visits_by_date=visits_by_date
-    )
 @app.route("/admin/visits_data")
 def visits_data():
     total_visits = db.page_views.count_documents({"page": "dashboard"})
@@ -1432,7 +1605,7 @@ def manage_users():
     users = get_all_users()  # fetch only non-admin users
     return render_template("admin_dashboard.html", users=users)
 
-@app.route("/Admin/flagged_posts", methods=["GET", "POST"])
+@app.route("/admin/flagged_posts", methods=["GET", "POST"])
 def Admin_flagged_posts():
     if "user_id" not in session or session.get("role", "").lower() != "admin":
         return "Unauthorized", 403
@@ -1446,7 +1619,7 @@ def Admin_flagged_posts():
             peersupportposts_col.update_one({"_id": ObjectId(post_id)}, {"$set": {"flagged": False}})
 
     posts = get_flagged_posts()
-    return render_template("Admin_flagged_posts.html", posts=posts)
+    return render_template("admin_flagged_posts.html", posts=posts)
 
 @app.route("/admin/crisis_logs", methods=["GET"])
 def get_crisis_logs():
@@ -1461,6 +1634,7 @@ def get_crisis_logs():
             "resolved": log.get("resolved", False),
             "resolved_at": log.get("resolved_at")
         })
+    print(logs)
     return logs
     
 
@@ -1491,14 +1665,11 @@ def mood_trends():
 
     # Map moods to numeric values for average calculation
     mood_map = {
-        "Very Happy": 6,
-        "Feeling Blessed": 5,
         "Happy": 4,
-        "Mind Blown": 3,
-        "Frustrated": 2,
+        "Calm": 3,
+        "Void": 2,
         "Sad": 1,
-        "Angry": 0,
-        "Crying": -1
+        "Angry": 0
     }
 
     # Aggregate counts per mood per day
@@ -1555,49 +1726,69 @@ def mood_trends():
 @app.route("/admin/api/average_scores", methods=["GET"])
 def admin_average_scores():
     try:
-        # Get all assessment recordsf
+        # Get all assessment records
         cursor = assess_col.find({})
         
         gad_scores = []
         phq_scores = []
+        ghq_likert_scores = []
+        ghq_bimodal_scores = []
+        test_type_counts = {}
         
         for doc in cursor:
+            # Count test types
+            test_type = doc.get("test_type", "COMBINED")
+            test_type_counts[test_type] = test_type_counts.get(test_type, 0) + 1
+            
+            # Collect scores
             gad_total = doc.get("gadTotal", 0)
             phq_total = doc.get("phqTotal", 0)
+            ghq_likert = doc.get("ghqLikertTotal", 0)
+            ghq_bimodal = doc.get("ghqBimodalTotal", 0)
             
-            if gad_total > 0:  # Only include non-zero scores
+            if gad_total > 0:
                 gad_scores.append(gad_total)
             if phq_total > 0:
                 phq_scores.append(phq_total)
+            if ghq_likert > 0:
+                ghq_likert_scores.append(ghq_likert)
+            if ghq_bimodal > 0:
+                ghq_bimodal_scores.append(ghq_bimodal)
         
         # Calculate averages
         avg_gad = round(sum(gad_scores) / len(gad_scores), 2) if gad_scores else 0
         avg_phq = round(sum(phq_scores) / len(phq_scores), 2) if phq_scores else 0
+        avg_ghq_likert = round(sum(ghq_likert_scores) / len(ghq_likert_scores), 2) if ghq_likert_scores else 0
+        avg_ghq_bimodal = round(sum(ghq_bimodal_scores) / len(ghq_bimodal_scores), 2) if ghq_bimodal_scores else 0
         
         # Calculate severity distributions
-        def gad_severity(total):
-            return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
-        def phq_severity(total):
-            return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
-        
         gad_severity_counts = {'Minimal': 0, 'Mild': 0, 'Moderate': 0, 'Severe': 0}
         phq_severity_counts = {'None-Minimal': 0, 'Mild': 0, 'Moderate': 0, 'Moderately severe': 0, 'Severe': 0}
+        ghq_severity_counts = {'Normal': 0, 'Mild': 0, 'Moderate': 0, 'Severe': 0}
         
         for score in gad_scores:
-            severity = gad_severity(score)
+            severity = calculate_gad_severity(score)
             gad_severity_counts[severity] += 1
             
         for score in phq_scores:
-            severity = phq_severity(score)
+            severity = calculate_phq_severity(score)
             phq_severity_counts[severity] += 1
+            
+        for score in ghq_likert_scores:
+            severity = calculate_ghq_severity(score)
+            ghq_severity_counts[severity] += 1
         
         return jsonify({
             "ok": True,
             "avg_gad": avg_gad,
             "avg_phq": avg_phq,
-            "total_assessments": len(set(gad_scores + phq_scores)),
+            "avg_ghq_likert": avg_ghq_likert,
+            "avg_ghq_bimodal": avg_ghq_bimodal,
+            "total_assessments": len(gad_scores + phq_scores + ghq_likert_scores),
+            "test_type_distribution": test_type_counts,
             "gad_severity_distribution": gad_severity_counts,
-            "phq_severity_distribution": phq_severity_counts
+            "phq_severity_distribution": phq_severity_counts,
+            "ghq_severity_distribution": ghq_severity_counts
         })
         
     except Exception as e:
@@ -1606,8 +1797,8 @@ def admin_average_scores():
 # --- Debug ---
 @app.route("/debug/all_collections")
 def debug_all_collections():
-    if "user_id" not in session or session["role"] != "Admin":
-        return jsonify({"error": "Admin access required"}), 403
+    if "user_id" not in session or session["role"] != "admin":
+        return jsonify({"error": "admin access required"}), 403
     
     try:
         collections_info = {}
@@ -1640,93 +1831,395 @@ def debug_all_collections():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    
-# #assessment routes 
-# @app.route("/assessment")
+
+# @app.route('/assessment')
 # def assessment():
-#     # If you require login, redirect to login if not logged in:
 #     if not session.get('username'):
-#         return redirect(url_for('login'))   # adapt to your auth route
-#     # render template (the template will pick username/user_id from session)
-#     return render_template("assessment.html")
+#         # redirect to login if you require auth
+#         return redirect(url_for('login'))
+#     # render the template; session values are available via session[...] inside template
+#     return render_template('assessment.html')
+
+# --- Assessment Scoring Helper Functions ---
+def calculate_ghq_scores(ghq_answers):
+    """
+    Calculate GHQ-12 scores using both Likert and bimodal methods.
+    GHQ questions have different orientations (positive/negative).
+    """
+    # GHQ-12 question orientations (based on the frontend questions)
+    # Positive items: 0, 2, 3, 6, 7, 11 (indices in GHQ subset)
+    # Negative items: 1, 4, 5, 8, 9, 10
+    positive_indices = [0, 2, 3, 6, 7, 11]
+    
+    likert_total = sum(ghq_answers)
+    
+    # Bimodal scoring: 0-1 = 0, 2-3 = 1
+    bimodal_total = 0
+    for i, score in enumerate(ghq_answers):
+        if i in positive_indices:
+            # For positive items: 0,1 = 0; 2,3 = 1
+            bimodal_total += 1 if score >= 2 else 0
+        else:
+            # For negative items: 0,1 = 0; 2,3 = 1  
+            bimodal_total += 1 if score >= 2 else 0
+    
+    return likert_total, bimodal_total
+
+def calculate_gad_severity(total):
+    """Calculate GAD-7 severity level"""
+    if total >= 15:
+        return 'Severe'
+    elif total >= 10:
+        return 'Moderate'
+    elif total >= 5:
+        return 'Mild'
+    else:
+        return 'Minimal'
+
+def calculate_phq_severity(total):
+    """Calculate PHQ-9 severity level"""
+    if total >= 20:
+        return 'Severe'
+    elif total >= 15:
+        return 'Moderately severe'
+    elif total >= 10:
+        return 'Moderate'
+    elif total >= 5:
+        return 'Mild'
+    else:
+        return 'None-Minimal'
+
+def calculate_ghq_severity(likert_total):
+    """Calculate GHQ-12 severity level based on Likert scoring"""
+    if likert_total >= 20:
+        return 'Severe'
+    elif likert_total >= 15:
+        return 'Moderate'
+    elif likert_total >= 10:
+        return 'Mild'
+    else:
+        return 'Normal'
 
 @app.route("/api/submit", methods=["POST"])
 def api_submit():
     payload = request.get_json(silent=True) or {}
     answers = payload.get("answers")
+    test_type = payload.get("testType", "COMBINED")
 
-    # basic validation
-    if not isinstance(answers, list) or len(answers) < 16:
-        return jsonify({"ok": False, "error": "Invalid answers array; expected 16 items"}), 400
+    # Validate answers based on test type
+    if not isinstance(answers, list):
+        return jsonify({"ok": False, "error": "Answers must be an array"}), 400
+
+    # Determine expected length based on test type
+    expected_lengths = {
+        "GAD": 7,
+        "PHQ": 9, 
+        "GHQ": 12,
+        "COMBINED": 28
+    }
+    
+    expected_length = expected_lengths.get(test_type, 28)
+    if len(answers) != expected_length:
+        return jsonify({
+            "ok": False, 
+            "error": f"Invalid answers array; expected {expected_length} items for {test_type} test"
+        }), 400
 
     # normalize answers to ints (null -> 0)
     try:
-        answers_norm = [int(x) if x is not None else 0 for x in answers[:16]]
+        answers_norm = [int(x) if x is not None else 0 for x in answers]
     except Exception:
         return jsonify({"ok": False, "error": "Answers must be numbers or null"}), 400
 
-    # compute GAD-7 (first 7) and PHQ-9 (next 9)
-    gad_scores = answers_norm[:7]
-    phq_scores = answers_norm[7:16]
-    gad_total = sum(gad_scores)
-    phq_total = sum(phq_scores)
+    # Initialize result variables
+    gad_total = 0
+    phq_total = 0
+    ghq_likert_total = 0
+    ghq_bimodal_total = 0
+    gad_sev = "Minimal"
+    phq_sev = "None-Minimal"
+    ghq_sev = "Normal"
 
-    # severity calculation (keep same thresholds you used client-side)
-    def gad_severity(total):
-        return 'Severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'Minimal'
-    def phq_severity(total):
-        return 'Severe' if total >= 20 else 'Moderately severe' if total >= 15 else 'Moderate' if total >= 10 else 'Mild' if total >= 5 else 'None-Minimal'
+    # Calculate scores based on test type
+    if test_type == "COMBINED":
+        # Combined: GAD-7 (0-6), PHQ-9 (7-15), GHQ-12 (16-27)
+        gad_scores = answers_norm[:7]
+        phq_scores = answers_norm[7:16]
+        ghq_scores = answers_norm[16:28]
+        
+        gad_total = sum(gad_scores)
+        phq_total = sum(phq_scores)
+        ghq_likert_total, ghq_bimodal_total = calculate_ghq_scores(ghq_scores)
+        
+    elif test_type == "GAD":
+        # GAD-7 only
+        gad_scores = answers_norm[:7]
+        gad_total = sum(gad_scores)
+        
+    elif test_type == "PHQ":
+        # PHQ-9 only
+        phq_scores = answers_norm[:9]
+        phq_total = sum(phq_scores)
+        
+    elif test_type == "GHQ":
+        # GHQ-12 only
+        ghq_scores = answers_norm[:12]
+        ghq_likert_total, ghq_bimodal_total = calculate_ghq_scores(ghq_scores)
 
-    gad_sev = gad_severity(gad_total)
-    phq_sev = phq_severity(phq_total)
+    # Calculate severity levels
+    gad_sev = calculate_gad_severity(gad_total)
+    phq_sev = calculate_phq_severity(phq_total)
+    ghq_sev = calculate_ghq_severity(ghq_likert_total)
 
     # associate user: prefer session user_id for security
     user_id = session.get('user_id') or payload.get('user_id') or 'anon'
 
+    # Build document for database
     doc = {
         "user_id": user_id,
+        "test_type": test_type,
         "answers": answers_norm,
-        "gadTotal": int(gad_total),
-        "phqTotal": int(phq_total),
-        "gadSeverity": gad_sev,
-        "phqSeverity": phq_sev,
         "timestamp": datetime.utcnow()
     }
 
+    # Add scores only if they were calculated
+    if gad_total > 0 or test_type in ["GAD", "COMBINED"]:
+        doc.update({
+            "gadTotal": int(gad_total),
+            "gadSeverity": gad_sev
+        })
+    
+    if phq_total > 0 or test_type in ["PHQ", "COMBINED"]:
+        doc.update({
+            "phqTotal": int(phq_total),
+            "phqSeverity": phq_sev
+        })
+    
+    if ghq_likert_total > 0 or test_type in ["GHQ", "COMBINED"]:
+        doc.update({
+            "ghqLikertTotal": int(ghq_likert_total),
+            "ghqBimodalTotal": int(ghq_bimodal_total),
+            "ghqSeverity": ghq_sev
+        })
+
+    # Insert into database
     res = assess_col.insert_one(doc)
-    return jsonify({
+    
+    # Build response
+    response = {
         "ok": True,
         "id": str(res.inserted_id),
-        "gadTotal": doc["gadTotal"],
-        "phqTotal": doc["phqTotal"],
-        "gadSeverity": gad_sev,
-        "phqSeverity": phq_sev,
+        "testType": test_type,
         "timestamp": doc["timestamp"].isoformat() + "Z"
-    }), 200
+    }
+    
+    # Add scores to response only if they were calculated
+    if "gadTotal" in doc:
+        response.update({
+            "gadTotal": doc["gadTotal"],
+            "gadSeverity": doc["gadSeverity"]
+        })
+    
+    if "phqTotal" in doc:
+        response.update({
+            "phqTotal": doc["phqTotal"],
+            "phqSeverity": doc["phqSeverity"]
+        })
+    
+    if "ghqLikertTotal" in doc:
+        response.update({
+            "ghqLikertTotal": doc["ghqLikertTotal"],
+            "ghqBimodalTotal": doc["ghqBimodalTotal"],
+            "ghqSeverity": doc["ghqSeverity"]
+        })
+
+    return jsonify(response), 200
 
 @app.route("/api/scores", methods=["GET"])
 def api_scores():
     # prefer logged-in session user
     uid = session.get('user_id') or request.args.get('user_id')
+    test_type = request.args.get('test_type')  # Optional filter by test type
+    
     query = {}
     if uid:
         query["user_id"] = uid
+    if test_type:
+        query["test_type"] = test_type
 
     cursor = assess_col.find(query).sort("timestamp", -1).limit(100)
     out = []
     for d in cursor:
-        out.append({
+        result = {
             "id": str(d.get("_id")),
             "user_id": d.get("user_id"),
-            "gadTotal": int(d.get("gadTotal", 0)),
-            "phqTotal": int(d.get("phqTotal", 0)),
-            "gadSeverity": d.get("gadSeverity"),
-            "phqSeverity": d.get("phqSeverity"),
+            "test_type": d.get("test_type", "COMBINED"),
             "timestamp": d.get("timestamp").isoformat() + "Z" if d.get("timestamp") else None
-        })
+        }
+        
+        # Add GAD scores if present
+        if "gadTotal" in d:
+            result.update({
+                "gadTotal": int(d.get("gadTotal", 0)),
+                "gadSeverity": d.get("gadSeverity")
+            })
+        
+        # Add PHQ scores if present
+        if "phqTotal" in d:
+            result.update({
+                "phqTotal": int(d.get("phqTotal", 0)),
+                "phqSeverity": d.get("phqSeverity")
+            })
+        
+        # Add GHQ scores if present
+        if "ghqLikertTotal" in d:
+            result.update({
+                "ghqLikertTotal": int(d.get("ghqLikertTotal", 0)),
+                "ghqBimodalTotal": int(d.get("ghqBimodalTotal", 0)),
+                "ghqSeverity": d.get("ghqSeverity")
+            })
+        
+        out.append(result)
+    
     return jsonify(out), 200
 
-from flask import render_template, session, redirect, url_for
+@app.route("/api/latest_scores", methods=["GET"])
+def api_latest_scores():
+    """Get the most recent assessment scores for a user"""
+    uid = session.get('user_id') or request.args.get('user_id')
+    if not uid:
+        return jsonify({"error": "User ID required"}), 400
+    
+    # Get the most recent assessment for this user
+    latest_assessment = assess_col.find_one(
+        {"user_id": uid}, 
+        sort=[("timestamp", -1)]
+    )
+    
+    if not latest_assessment:
+        return jsonify({"error": "No assessments found"}), 404
+    
+    result = {
+        "user_id": latest_assessment.get("user_id"),
+        "test_type": latest_assessment.get("test_type", "COMBINED"),
+        "timestamp": latest_assessment.get("timestamp").isoformat() + "Z" if latest_assessment.get("timestamp") else None
+    }
+    
+    # Add available scores
+    if "gadTotal" in latest_assessment:
+        result.update({
+            "gadTotal": int(latest_assessment.get("gadTotal", 0)),
+            "gadSeverity": latest_assessment.get("gadSeverity")
+        })
+    
+    if "phqTotal" in latest_assessment:
+        result.update({
+            "phqTotal": int(latest_assessment.get("phqTotal", 0)),
+            "phqSeverity": latest_assessment.get("phqSeverity")
+        })
+    
+    if "ghqLikertTotal" in latest_assessment:
+        result.update({
+            "ghqLikertTotal": int(latest_assessment.get("ghqLikertTotal", 0)),
+            "ghqBimodalTotal": int(latest_assessment.get("ghqBimodalTotal", 0)),
+            "ghqSeverity": latest_assessment.get("ghqSeverity")
+        })
+    
+    return jsonify(result), 200
+
+@app.route("/api/download_report", methods=["GET"])
+def api_download_report():
+    """Download assessment report as JSON"""
+    uid = session.get('user_id') or request.args.get('user_id')
+    assessment_id = request.args.get('assessment_id')
+    
+    if not uid:
+        return jsonify({"error": "User ID required"}), 400
+    
+    query = {"user_id": uid}
+    if assessment_id:
+        try:
+            query["_id"] = ObjectId(assessment_id)
+        except:
+            return jsonify({"error": "Invalid assessment ID"}), 400
+    
+    assessment = assess_col.find_one(query)
+    if not assessment:
+        return jsonify({"error": "Assessment not found"}), 404
+    
+    # Convert ObjectId to string for JSON serialization
+    assessment["_id"] = str(assessment["_id"])
+    if "timestamp" in assessment and assessment["timestamp"]:
+        assessment["timestamp"] = assessment["timestamp"].isoformat() + "Z"
+    
+    return jsonify(assessment), 200
+
+@app.route("/api/assessment_stats", methods=["GET"])
+def api_assessment_stats():
+    """Get assessment statistics for a user"""
+    uid = session.get('user_id') or request.args.get('user_id')
+    if not uid:
+        return jsonify({"error": "User ID required"}), 400
+    
+    try:
+        # Get all assessments for this user
+        cursor = assess_col.find({"user_id": uid}).sort("timestamp", -1)
+        assessments = list(cursor)
+        
+        if not assessments:
+            return jsonify({
+                "total_assessments": 0,
+                "latest_assessment": None,
+                "test_types_taken": [],
+                "score_trends": {}
+            })
+        
+        # Calculate statistics
+        test_types = list(set([a.get("test_type", "COMBINED") for a in assessments]))
+        
+        # Get latest assessment
+        latest = assessments[0]
+        latest_data = {
+            "test_type": latest.get("test_type", "COMBINED"),
+            "timestamp": latest.get("timestamp").isoformat() + "Z" if latest.get("timestamp") else None
+        }
+        
+        # Add scores from latest assessment
+        if "gadTotal" in latest:
+            latest_data.update({
+                "gadTotal": latest.get("gadTotal"),
+                "gadSeverity": latest.get("gadSeverity")
+            })
+        if "phqTotal" in latest:
+            latest_data.update({
+                "phqTotal": latest.get("phqTotal"),
+                "phqSeverity": latest.get("phqSeverity")
+            })
+        if "ghqLikertTotal" in latest:
+            latest_data.update({
+                "ghqLikertTotal": latest.get("ghqLikertTotal"),
+                "ghqBimodalTotal": latest.get("ghqBimodalTotal"),
+                "ghqSeverity": latest.get("ghqSeverity")
+            })
+        
+        # Calculate score trends (last 10 assessments)
+        recent_assessments = assessments[:10]
+        score_trends = {
+            "gad": [a.get("gadTotal", 0) for a in recent_assessments if "gadTotal" in a],
+            "phq": [a.get("phqTotal", 0) for a in recent_assessments if "phqTotal" in a],
+            "ghq_likert": [a.get("ghqLikertTotal", 0) for a in recent_assessments if "ghqLikertTotal" in a],
+            "ghq_bimodal": [a.get("ghqBimodalTotal", 0) for a in recent_assessments if "ghqBimodalTotal" in a]
+        }
+        
+        return jsonify({
+            "total_assessments": len(assessments),
+            "latest_assessment": latest_data,
+            "test_types_taken": test_types,
+            "score_trends": score_trends
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/assessment')
 def assessment():
@@ -1735,6 +2228,7 @@ def assessment():
         return redirect(url_for('login'))
     # render the template; session values are available via session[...] inside template
     return render_template('assessment.html')
+
 
 # crisis email message call------------------------------------------ 
 SENDER = os.environ.get("CRISIS_EMAIL")
@@ -1804,6 +2298,80 @@ def session_info():
         "username": session.get("username"),
         "role": session.get("role", "User")
     })
+
+
+
+# Make sure GOOGLE_APPLICATION_CREDENTIALS env var is set to the JSON key path.
+
+def convert_to_wav(input_path, output_path, sample_rate=16000):
+    """
+    Use ffmpeg to convert any input audio (webm/ogg/mp3) -> 16kHz 16-bit PCM WAV.
+    Requires ffmpeg installed on the server.
+    """
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", input_path,
+        "-ac", "1",                 # mono
+        "-ar", str(sample_rate),    # sample rate
+        "-sample_fmt", "s16",       # 16-bit
+        output_path
+    ]
+    subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+@app.route("/transcribe", methods=["POST"])
+def transcribe_audio():
+    """
+    Accepts multipart form-data with file field 'audio'.
+    Returns JSON: { "transcript": "..." }
+    """
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file provided."}), 400
+
+    audio_file = request.files['audio']
+
+    # Save original to a temp file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src_path = os.path.join(tmpdir, "input_audio")
+        audio_file.save(src_path)
+
+        wav_path = os.path.join(tmpdir, "converted.wav")
+        try:
+            convert_to_wav(src_path, wav_path, sample_rate=16000)
+        except subprocess.CalledProcessError as e:
+            # ffmpeg failed
+            return jsonify({"error": "Audio conversion failed. Make sure ffmpeg is installed."}), 500
+
+        # Read wav bytes
+        with open(wav_path, "rb") as f:
+            wav_bytes = f.read()
+
+        # Initialize Google Speech client
+        client = speech.SpeechClient()
+
+        audio = speech.RecognitionAudio(content=wav_bytes)
+        config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=16000,
+            language_code="en-US",  # change to desired language, e.g. "hi-IN"
+            enable_automatic_punctuation=True,
+            # model="default"  # can set to "video" or "phone_call" for specific scenarios
+        )
+
+        try:
+            response = client.recognize(config=config, audio=audio)
+        except Exception as e:
+            return jsonify({"error": f"Speech API error: {str(e)}"}), 500
+
+        # concatenate results
+        transcripts = []
+        for result in response.results:
+            transcripts.append(result.alternatives[0].transcript)
+
+        transcript_text = " ".join(transcripts).strip()
+        return jsonify({"transcript": transcript_text})
+
+
 
 # --- Run App ---
 if __name__ == "__main__":

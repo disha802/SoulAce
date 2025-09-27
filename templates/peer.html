@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>SoulAce - Peer Support</title>
-  <link rel="icon" href="..\static\header-logo.png" type="image/png">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- === Combined CSS (from Version B, tuned to keep A semantics) === -->
   <style>
     :root{--accent-1:#7B9B8B;--accent-2:#243B36;--muted:#777}
     body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.25s; padding-bottom:60px; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:var(--accent-1); }
-    .header-left { display:flex; align-items:center; gap:15px; }
-    .header-text h1 { margin:0; font-size:1.4rem; color:#fff; }
-    .header-text h3 { margin:0; font-size:0.85rem; color:#FFF7E4; }
     .logo-container img { width:52px; height:52px; border-radius:8px; object-fit:cover; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
     .user-popup { display:none; position:absolute; top:60px; right:20px; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.15); z-index:40 }
@@ -22,6 +19,7 @@
     h2 { color:var(--accent-2); }
 
     input, textarea, select { width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
+    input[type="checkbox"] { width:auto; margin:0; padding:0; }
     textarea { min-height:100px; resize:vertical; }
     button { background:linear-gradient(135deg, #657A74 , var(--accent-2)); color:#fff; font-size:15px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.12); transition:all 0.18s ease; }
     button:hover { transform:translateY(-2px); }
@@ -33,6 +31,7 @@
     .post-form { background:white; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:20px; }
     .post-form h3 { margin-top:0; color:var(--accent-2); }
     .anonymity-toggle { display:flex; align-items:center; gap:8px; margin:10px 0; }
+    .anonymity-toggle label { margin:0; cursor:pointer; user-select:none; }
 
     .post { background:white; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:14px; }
     .post-header { display:flex; justify-content:space-between; margin-bottom:8px; }
@@ -64,7 +63,6 @@
     .moderation-actions { display:flex; gap:8px; margin-top:8px }
 
     body.dark { background:#0f1112; color:#e6e6e6 }
-    body.dark header { background:#1f1f1f }
     body.dark .post, body.dark .post-form { background:#1e1e1f; color:#e6e6e6 }
     body.dark .reply { background:#232323 }
     body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444 }
@@ -84,32 +82,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <!-- Use flask static path or plain path depending on your server -->
-        <img src="/static/header-logo.png" alt="SoulAce Logo" onerror="this.style.display='none'">
-      </div>
-      <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
-      </div>
-    </div>
-
-    <div class="header-right">
-      <div class="user-icon-container" style="position:relative;">
-        <img src="/static/user-icon.jpeg" alt="User Icon" class="user-icon" id="userIcon" onclick="toggleUserPopup()">
-        <div id="user-popup" class="user-popup">
-          <button class="popup-btn" onclick="goHome()">🏠 Home</button>
-          <button class="popup-btn" onclick="goJournal()">📓 Journal</button>
-          <button class="popup-btn" onclick="toggleMode()">🌙 Change Mode</button>
-          <form id="logout-form" action="/logout" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">🚪 Logout</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </header>
+{% include 'header.html' %}
 
   <main>
     <div class="forum-header">

@@ -1,148 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Register - SoulAce</title>
-    <link rel="icon" href="..\static\header-logo.png" type="image/png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap');
+<meta charset="UTF-8">
+<title>Register - SoulAce</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        :root {
-            --dark-green: rgba(0,55,62,1);
-            --cream: #f9e6d0;
-            --light-cream: #f7f6f4;
-            --font-family: 'Bricolage Grotesque', Helvetica, sans-serif;
-        }
+<style>
+:root {
+    --light-cream: #f6f3f0;
+    --text-primary: #4a4a4a;
+    --heading-text: #6b4e3d;
+    --secondary-text: #8a8a8a;
+    --accent: #2d4a3a;
+    --accent-alt: #c17b6b;
+}
 
-        body {
-            font-family: var(--font-family);
-            background-color: var(--light-cream);
-            color: var(--dark-green);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+/* Body */
+body {
+    font-family: Georgia, serif;
+    background: url('{{ url_for("static", filename="register1.jpg") }}') no-repeat center center fixed;
+    background-size: cover;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
 
-        header {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 10px 20px;
-            background: var(--dark-green);
-            color: white;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        header .logo-placeholder {
-            width: 40px; height: 40px;
-            background: white; border-radius: 50%;
-            margin-right: 10px;
-        }
 
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 80vh;
-            width: 100%;
-        }
+/* Container */
+.container {
+    width: 90%;
+    max-width: 900px;
+}
 
-        .card {
-            background: var(--cream);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 350px;
-            text-align: center;
-        }
+/* Card */
+.card {
+    display: flex;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    width: 100%;
+    max-width: 1300px;
+    min-height: 600px;
+    background: linear-gradient(135deg, #f5e6d0, #6b4e3d, #fff3e6); /* beige → dark red → cream */
+}
 
-        .card h2 {
-            margin-bottom: 24px;
-        }
+/* Left text section */
+.card .left {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    color: white; /* text over image */
+    position: relative;
+    background: url('{{ url_for("static", filename="register2.jpg") }}') center/cover no-repeat;
+}
 
-        .card input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid #e5e5e5;
-            border-radius: 10px;
-            font-size: 16px;
-        }
 
-        .card button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            background: var(--dark-green);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+/* Optional overlay for better readability */
+.card .left::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.35); /* dark overlay to make text visible */
+    z-index: 1;
+}
 
-        .card button:hover {
-            background: rgba(0,55,62,0.9);
-        }
+.card .left div {
+    position: relative;
+    z-index: 2; /* text above overlay */
+    color: #f9e6d0;
+}
 
-        .card a {
-            color: var(--dark-green);
-            text-decoration: none;
-        }
+.card .left h2{
+    font-size: 3rem;
+    margin-bottom: 25px
+}
+.card .left p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
 
-        .toggle {
-            margin-top: 12px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-    </style>
+/* Right form section */
+.card .right {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    background: rgba(255,255,255,0.9);
+    flex-direction: column;
+    border-radius: 0 25px 25px 0;
+}
+
+.card h2 {
+    color: var(--heading-text);
+    margin-bottom: 25px;
+    font-size: 2rem;
+}
+
+/* Form elements */
+.card input {
+    width: 100%;
+    padding: 16px;
+    margin: 12px 0;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.card button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 15px;
+    background: #6b4e3d; /* earthy button */
+    color: #f9e6d0;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card button:hover {
+    background: #c17b6b;
+}
+
+.card a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.toggle {
+    margin-top: 15px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--secondary-text);
+}
+
+/* Form wrapper */
+.form-wrapper {
+    width: 100%;
+}
+
+/* Dark Mode */
+body.dark {
+    background-color: #2b2b2b;
+    color: #f9e6d0;
+}
+
+body.dark .card {
+    background: linear-gradient(135deg, #3a3a3a, #6b4e3d, #5c3a33); /* darker earthy gradient */
+}
+
+body.dark .card .left p,
+body.dark .card .left h2 {
+    color: #f9e6d0;
+}
+
+body.dark .card .right {
+    background: rgba(58,58,58,0.95);
+}
+
+body.dark .card input {
+    background-color: #4a4a4a;
+    color: #f9e6d0;
+    border: 2px solid #6b4e3d;
+}
+
+body.dark .card button {
+    background-color: #6b4e3d;
+    color: #f9e6d0;
+}
+
+body.dark .card button:hover {
+    background-color: #c17b6b;
+}
+
+body.dark .card a {
+    color: #c17b6b;
+}
+</style>
 </head>
 <body>
-<header>
-    <img src="{{ url_for('static', filename='header-logo.png') }}" 
-         alt="SoulAce Logo" 
-         width="40" height="40" 
-         style="margin-right:10px; border-radius:50%; object-fit:contain;">
-    SoulAce
-</header>
 
 <div class="container">
     <div class="card">
-        <h2>Register</h2>
-        <form method="POST">
-            <input type="text" name="username" placeholder="Choose User ID" required>
-            <input type="password" name="password" placeholder="Choose Password" required>
-            <button type="submit">Register</button>
-        </form>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <p style="color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;">
-                {{ message }}
-            </p>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
+        <!-- Left text section -->
+        <div class="left">
+            <div>
+                <h2>Welcome to SoulAce</h2>
+                <p>Join our community to explore wellness, track your habits, and grow positively every day. SoulAce helps you nurture your mind, mood, and habits in one place.</p>
+            </div>
+        </div>
 
+        <!-- Right register form -->
+        <div class="right">
+            <div class="form-wrapper">
+                <h2>Register</h2>
+                <form method="POST">
+                    <input type="text" name="username" placeholder="Choose User ID" required>
+                    <input type="password" name="password" placeholder="Choose Password" required>
+                    <button type="submit">Register</button>
+                </form>
 
-        <p>Already registered? <a href="{{ url_for('login') }}">Login here</a></p>
-        <div class="toggle" onclick="toggleTheme()">🌗 Toggle Dark/Light</div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p style="color: {% if category == 'error' %}red{% else %}green{% endif %}; font-size:14px; margin-bottom:10px;">
+                            {{ message }}
+                        </p>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <p>Already registered? <a href="{{ url_for('login') }}">Login here</a></p>
+                <div class="toggle" onclick="toggleTheme()">🌗 Toggle Dark/Light</div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
 function toggleTheme() {
     document.body.classList.toggle('dark');
-    if(document.body.classList.contains('dark')) {
-        document.body.style.background = '#00373e';
-        document.body.style.color = '#f9e6d0';
-    } else {
-        document.body.style.background = '#f7f6f4';
-        document.body.style.color = '#00373e';
-    }
+    const toggle = document.querySelector('.toggle');
+    toggle.textContent = document.body.classList.contains('dark') 
+        ? "Light Mode" 
+        : "Dark Mode";
 }
 </script>
+
 </body>
 </html>

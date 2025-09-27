@@ -4,95 +4,357 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SoulAce - AI Support</title>
-  <style>
-    body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
-    .header-left { display:flex; align-items:center; gap:15px; }
-    .header-text { display:flex; flex-direction:column; }
-    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
-    header h1 { margin:0; font-size:1.8rem; color:#fff; }
-    .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:#243B36; font-weight:600; padding: 5px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2); text-align:left; }
-    .popup-btn:hover { background:#f2f2f2; }
- a {text-decoration: none;}
-    main { padding:2rem; max-width:800px; margin:0 auto; }
-    h2 { color:#243B36; text-align:center; margin-bottom:2rem; }
-
-    .chat-container { background:#fff; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); height:500px; display:flex; flex-direction:column; }
-    .chat-header { background:#7B9B8B; color:white; padding:15px 20px; border-radius:20px 20px 0 0; text-align:center; font-weight:600; }
-    .chat-messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
-    .chat-input-container { padding:15px 20px; border-top:1px solid #e0e0e0; display:flex; gap:10px; align-items:center; }
-
-    .message { max-width:70%; padding:12px 16px; border-radius:18px; word-wrap:break-word; }
-    .user-message { background:#243B36; color:white; align-self:flex-end; border-bottom-right-radius:4px; }
-    .bot-message { background:#f0f8f5; color:#333; align-self:flex-start; border-bottom-left-radius:4px; }
-    .message.typing { background:#e0e0e0; color:#666; align-self:flex-start; }
-
-    .typing-indicator { display:flex; gap:4px; }
-    .typing-dot { width:8px; height:8px; border-radius:50%; background:#666; animation:typing 1.4s infinite; }
-    .typing-dot:nth-child(2) { animation-delay:0.2s; }
-    .typing-dot:nth-child(3) { animation-delay:0.4s; }
-
-    @keyframes typing {
-      0%, 60%, 100% { transform:translateY(0); }
-      30% { transform:translateY(-10px); }
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    #chat-input { flex:1; padding:12px 16px; border:2px solid #e0e0e0; border-radius:25px; font-size:16px; outline:none; }
-    #chat-input:focus { border-color:#7B9B8B; }
+    body { 
+      font-family: 'Georgia', serif; 
+      background: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+      color: #4a4a4a; 
+      min-height: 100vh;
+      transition: all 0.4s ease;
+    }
 
-    #send-btn { background:#7B9B8B; color:white; border:none; padding:12px 20px; border-radius:25px; cursor:pointer; font-weight:600; transition:all 0.3s; }
-    #send-btn:hover:not(:disabled) { background:#657A74; }
-    #send-btn:disabled { background:#ccc; cursor:not-allowed; }
+    /* ================= HEADER ================= */
+    /* ================= MAIN CONTENT ================= */
+    main { 
+      padding: 2rem; 
+      max-width: 900px; 
+      margin: 0 auto; 
+    }
 
-    .welcome-message { text-align:center; color:#666; font-style:italic; margin:20px 0; }
+    h2 { 
+      color: #6b4e3d; 
+      text-align: center; 
+      margin-bottom: 2rem;
+      font-size: 2.2rem;
+      font-weight: normal;
+    }
 
-    .quick-responses { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
-    .quick-btn { background:#fff; border:1px solid #7B9B8B; color:#7B9B8B; padding:6px 12px; border-radius:20px; cursor:pointer; font-size:12px; transition:all 0.3s; }
-    .quick-btn:hover { background:#7B9B8B; color:white; }
+    .chat-container { 
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 20px; 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      height: 500px; 
+      display: flex; 
+      flex-direction: column;
+      border: 1px solid rgba(193, 123, 107, 0.2);
+      backdrop-filter: blur(10px);
+    }
 
-    footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
+    .chat-header { 
+      background:  #c17b6b;
+      color: white; 
+      padding: 15px 20px; 
+      border-radius: 20px 20px 0 0; 
+      text-align: center; 
+      font-weight: 600; 
+    }
 
-    body.dark { background:#121212; color:#e0e0e0; }
-    body.dark header { background:#1f1f1f; color:#f9e6d0; }
-    body.dark .user-popup { background:#2a2a2a; color:#f9e6d0; border:1px solid #444; }
-    body.dark .chat-container { background:#2a2a2a; }
-    body.dark .chat-header { background:#1f1f1f; }
-    body.dark .bot-message { background:#3a3a3a; color:#e0e0e0; }
-    body.dark #chat-input { background:#3a3a3a; color:#e0e0e0; border-color:#555; }
-    body.dark footer { background:#1f1f1f; color:#e0e0e0; border-top:2px solid #444; }
+    .chat-messages { 
+      flex: 1; 
+      padding: 20px; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+    }
+
+    .chat-input-container { 
+      padding: 15px 20px; 
+      border-top: 1px solid rgba(193, 123, 107, 0.2);
+      display: flex; 
+      gap: 10px; 
+      align-items: center;
+      background: rgba(202, 219, 215, 0.3);
+      border-radius: 0 0 20px 20px;
+    }
+
+    .message { 
+      max-width: 70%; 
+      padding: 12px 16px; 
+      border-radius: 18px; 
+      word-wrap: break-word; 
+    }
+
+    .user-message { 
+      background: #6b4e3d;
+      color: white; 
+      align-self: flex-end; 
+      border-bottom-right-radius: 4px; 
+    }
+
+    .bot-message { 
+      background: #CADBD7;
+      color: #4a4a4a; 
+      align-self: flex-start; 
+      border-bottom-left-radius: 4px; 
+    }
+
+    .message.typing { 
+      background: #eee0d1;
+      color: #8a8a8a; 
+      align-self: flex-start; 
+    }
+
+    .typing-indicator { 
+      display: flex; 
+      gap: 4px; 
+    }
+
+    .typing-dot { 
+      width: 8px; 
+      height: 8px; 
+      border-radius: 50%; 
+      background: #8a8a8a;
+      animation: typing 1.4s infinite; 
+    }
+
+    .typing-dot:nth-child(2) { 
+      animation-delay: 0.2s; 
+    }
+
+    .typing-dot:nth-child(3) { 
+      animation-delay: 0.4s; 
+    }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+    }
+
+    #chat-input { 
+      flex: 1; 
+      padding: 12px 16px; 
+      border: 2px solid #c17b6b;
+      border-radius: 25px; 
+      font-size: 16px; 
+      outline: none;
+      background: white;
+      color: #4a4a4a;
+      font-family: 'Georgia', serif;
+    }
+
+    #chat-input:focus { 
+      border-color: #6b4e3d;
+      box-shadow: 0 0 0 3px rgba(107, 78, 61, 0.1);
+    }
+
+    #send-btn { 
+      background:  #c17b6b;
+      color: white; 
+      border: none; 
+      padding: 12px 20px; 
+      border-radius: 25px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      transition: all 0.3s ease;
+      font-size: 16px;
+    }
+
+    #send-btn:hover:not(:disabled) { 
+      background: #5a4034;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    #send-btn:disabled { 
+      background: #ccc; 
+      cursor: not-allowed; 
+    }
+
+    .welcome-message { 
+      text-align: center; 
+      color: #8a8a8a;
+      font-style: italic; 
+      margin: 20px 0;
+      background: rgba(202, 219, 215, 0.5);
+      padding: 15px;
+      border-radius: 15px;
+    }
+
+    .quick-responses { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 8px; 
+      margin: 10px 0; 
+    }
+
+    .quick-btn { 
+      background: white;
+      border: 1px solid #c17b6b;
+      color: #6b4e3d; 
+      padding: 8px 14px; 
+      border-radius: 20px; 
+      cursor: pointer; 
+      font-size: 12px; 
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+    }
+
+    .quick-btn:hover { 
+      background: #6b4e3d;
+      color: white; 
+    }
+
+    /* ================= FOOTER ================= */
+    footer { 
+      text-align: center; 
+      padding: 30px 20px; 
+      font-size: 14px; 
+      background: #eee0d1;
+      color: #6b4e3d;
+      border-top: 1px solid rgba(193, 123, 107, 0.2);
+      margin-top: 60px;
+    }
+
+    /* ================= DARK MODE ================= */
+    body.dark { 
+      background: linear-gradient(135deg, #2a2a2a 20%, #1a1a1a 100%);
+      color: #e0e0e0; 
+    }
+
+    body.dark .user-popup { 
+      background: #2a2a2a;
+      color: #e0e0e0;
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark .popup-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark .popup-btn:hover {
+      background: #666;
+      color: white;
+    }
+
+    body.dark #lang-select {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark h2 {
+      color: #e0e0e0;
+    }
+
+    body.dark .chat-container { 
+      background: rgba(42, 42, 42, 0.8);
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark .chat-header { 
+      background: #444;
+    }
+
+    body.dark .bot-message { 
+      background: rgba(68, 68, 68, 0.8);
+      color: #e0e0e0; 
+    }
+
+    body.dark .user-message {
+      background: #5a7a6a;
+    }
+
+    body.dark .message.typing {
+      background: #444;
+      color: #b0b0b0;
+    }
+
+    body.dark .typing-dot {
+      background: #b0b0b0;
+    }
+
+    body.dark .welcome-message {
+      background: rgba(68, 68, 68, 0.5);
+      color: #b0b0b0;
+    }
+
+    body.dark .quick-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark .quick-btn:hover {
+      background: #666;
+      color: white;
+    }
+
+    body.dark #chat-input { 
+      background: #3a3a3a;
+      color: #e0e0e0; 
+      border-color: #666;
+    }
+
+    body.dark #chat-input:focus {
+      border-color: #8a6b5a;
+    }
+
+    body.dark .chat-input-container {
+      background: rgba(68, 68, 68, 0.5);
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark footer { 
+      background: #333;
+      color: #e0e0e0; 
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 20px;
+      }
+      
+      main {
+        padding: 1.5rem 1rem;
+      }
+      
+      h2 {
+        font-size: 1.8rem;
+      }
+      
+      .chat-container {
+        height: 400px;
+      }
+      
+      .message {
+        max-width: 85%;
+      }
+      
+      .quick-responses {
+        flex-direction: column;
+      }
+      
+      .quick-btn {
+        width: 100%;
+      }
+
+      .chat-input-container {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      #chat-input,
+      #send-btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-      </div>
-      <div class="header-text">
-        <h1 >SoulAce</h1>
-        <h3>Wellness begins here</h3>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="user-icon-container">
-        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-        <div id="user-popup" class="user-popup">
-          <!-- Google Translate -->
-        <div id="google_translate_element" style="margin-bottom:10px;"></div>
-          <div style="margin-bottom:10px;">
-          </div>
-          <button onclick="location.href='{{ url_for('dashboard') }}'" class="popup-btn">🏠 Home</button>
-          <button onclick="toggleMode()" class="popup-btn" >🌙 Change Mode</button>
-          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">🚪 Logout</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </header>
+{% include 'header.html' %}
 
   <main>
     <h2>AI Support Chat 🤖</h2>
@@ -114,11 +376,21 @@
           <button class="quick-btn" onclick="sendQuickMessage('I need someone to talk to')" >I need someone to talk to</button>
         </div>
       </div>
-      
+
+        <div class="chat-input-container">
+    <button id="mic-btn" title="Hold to talk" style="background:#fff;border:2px solid #c17b6b;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+    🎤
+    </button>
+    <input type="text" id="chat-input" placeholder="Type your message..." data-en="Type your message..." data-ur="اپنا پیغام ٹائپ کریں..." data-hi="अपना संदेश टाइप करें...">
+    <button id="send-btn" onclick="sendMessage()" data-en="Send" data-ur="بھیجیں" data-hi="भेजें">Send</button>
+  </div>
+
+<!--       
       <div class="chat-input-container">
         <input type="text" id="chat-input" placeholder="Type your message..." >
         <button id="send-btn" onclick="sendMessage()">Send</button>
-      </div>
+      </div> -->
+
     </div>
   </main>
 
@@ -157,13 +429,6 @@
         sendMessage();
       }
     });
-// Google Translate
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement(
-    {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
-    'google_translate_element'
-  );
-}
     function addMessage(content, isUser = false) {
       const messagesContainer = document.getElementById('chat-messages');
       const messageDiv = document.createElement('div');
@@ -264,8 +529,103 @@ function googleTranslateElementInit() {
     window.addEventListener('load', () => {
       document.getElementById('chat-input').focus();
     });
+
+
+    /*
+  Voice input flow:
+  - Click mic once to start recording, click again to stop (toggle).
+  - We use MediaRecorder to capture audio as webm/ogg, send to backend.
+  - Backend converts it to LINEAR16 WAV (ffmpeg) and calls Google Speech-to-Text.
+*/
+
+  let micBtn, mediaRecorder = null, audioChunks = [], isRecording = false;
+
+  // Initialize mic functionality when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    micBtn = document.getElementById('mic-btn');
+    if (!micBtn) {
+      console.error('Mic button not found!');
+      return;
+    }
+
+  // Toggle recording on mic button click
+  micBtn.addEventListener('click', async () => {
+    if (!isRecording) {
+      try {
+        // start recording
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: audioChunks[0]?.type || 'audio/webm' });
+          await sendAudioBlobForTranscription(blob);
+          // stop tracks to release mic
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.style.background = '#c17b6b';
+        micBtn.style.color = '#fff';
+        micBtn.title = 'Click to stop recording';
+        addMessage("🎤 Recording... Click the mic again to stop.", false);
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        addMessage("❌ Microphone access denied. Please allow microphone permission and try again.", false);
+      }
+    } else {
+      // stop recording
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      micBtn.style.background = '#fff';
+      micBtn.style.color = '';
+      micBtn.title = 'Click to record voice message';
+    }
+  });
+
+  async function sendAudioBlobForTranscription(blob) {
+    try {
+      const form = new FormData();
+      // use 'audio' file form field
+      form.append('audio', blob, 'voice.webm');
+
+      // optional: set language code via header or extra form field
+      // form.append('languageCode', 'en-US');
+
+      const res = await fetch('/transcribe', {
+        method: 'POST',
+        body: form
+      });
+
+      if (!res.ok) {
+        console.error('Transcription request failed', res.statusText);
+        addMessage("I couldn't process your voice right now. Try again.", false);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.transcript) {
+        // Put transcript into input and send
+        document.getElementById('chat-input').value = data.transcript;
+        // Optionally auto-send
+        sendMessage();
+      } else {
+        addMessage("I couldn't hear that clearly. Try speaking more slowly.", false);
+      }
+    } catch (err) {
+      console.error('Error sending audio for transcription', err);
+      addMessage("There was an error sending your voice. Check your connection.", false);
+    }
+  }
+
+  }); // End DOMContentLoaded
+
+
   </script>
-  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
 

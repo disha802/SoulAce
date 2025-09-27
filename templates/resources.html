@@ -1,32 +1,67 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SoulAce - Wellness Resources</title>
-  <link rel="icon" href="..\static\header-logo.png" type="image/png">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; font-family:'Segoe UI', sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background-color:#7B9B8B; }
-    .header-left { display:flex; align-items:center; gap:15px; }
-    .header-text { display:flex; flex-direction:column; }
-    .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
-    header h1 { margin:0; font-size:1.8rem; color:#fff; }
-    .header-text h3 { margin:0; font-size:1rem; font-weight:normal; color:#FFF7E4; }
-    .header-right { display:flex; align-items:center; gap:10px; position:relative; }
-    .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:50px; right:0; background:#fff; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:200px; }
-    .user-popup .popup-btn { display:block; width:100%; padding:8px; border:none; background:none; text-align:left; cursor:pointer; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    /* Main content layout */
+    body { 
+      font-family: 'Georgia', serif; 
+      background: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
+      color: #6b4e3d; 
+      min-height: 100vh;
+      transition: all 0.4s ease;
+    }
+
+    /* ================= HEADER ================= */
+
+    /* ================= HERO SECTION ================= */
+    .hero { 
+      text-align: center; 
+      padding: 60px 20px; 
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      max-width: 900px; 
+      margin: 40px auto; 
+      border-radius: 20px;
+      border: 1px solid rgba(193, 123, 107, 0.2);
+    }
+
+    .hero h2 { 
+      font-size: 2.5rem; 
+      margin-bottom: 20px; 
+      color: #6b4e3d; 
+      font-weight: normal;
+    }
+
+    .hero p { 
+      font-size: 1.2rem; 
+      color: #8a8a8a;
+      max-width: 700px; 
+      margin: 0 auto; 
+      line-height: 1.6;
+    }
+
+    /* ================= MAIN CONTENT ================= */
     .main-container {
       display: flex;
       flex-wrap: wrap;
-      padding: 20px;
-      gap: 20px;
+      padding: 40px 20px;
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
     }
     
-    /* Slider section */
+    /* ================= SLIDER SECTION ================= */
     .slider-section {
       flex: 1;
       min-width: 300px;
@@ -37,8 +72,9 @@
       width: 100%;
       height: 400px;
       overflow: hidden;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      border: 1px solid rgba(193, 123, 107, 0.2);
     }
     
     .slider {
@@ -74,6 +110,16 @@
       background: rgba(0,0,0,0.6);
       z-index: 1;
     }
+
+    /* Override the dark overlay for custom slides */
+    .slide-custom::before {
+      display: none !important;
+    }
+
+    .slide-custom {
+      position: relative;
+      border: 1px solid rgba(107, 78, 61, 0.1);
+    }
     
     .slide-content {
       position: relative;
@@ -88,12 +134,26 @@
       font-size: 1.8rem;
       margin-bottom: 15px;
       color: #fcd58d;
+      font-weight: 600;
     }
     
     .slide p {
       font-size: 1.1rem;
       line-height: 1.5;
       text-align: left;
+    }
+
+    .slide-content h3 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .slide-content p {
+      line-height: 1.6;
+      text-align: left;
+      font-size: 1rem;
+      margin: 0;
     }
     
     .slider-controls {
@@ -107,16 +167,20 @@
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #ccc;
+      background: #8a8a8a;
       cursor: pointer;
       transition: background 0.3s;
     }
     
     .slider-dot.active {
-      background: #7B9B8B;
+      background: #2d4a3a;
+    }
+
+    .slider-dot:hover {
+      background: #c17b6b;
     }
     
-    /* Modules section */
+    /* ================= MODULES SECTION ================= */
     .modules-section {
       flex: 1;
       min-width: 300px;
@@ -128,37 +192,41 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     
     .module-tile {
-      background:#fff;
+      background: rgba(255, 255, 255, 0.8);
       padding: 25px 15px;
-      border-radius:16px;
-      text-align:center;
-      cursor:pointer;
-      box-shadow:0 4px 10px rgba(0,0,0,0.15);
-      transition: transform 0.2s ease, background 0.3s ease;
-      font-size:1.1rem;
+      border-radius: 20px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      font-size: 1.1rem;
       min-height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #6b4e3d;
+      font-weight: 500;
+      border: 1px solid rgba(193, 123, 107, 0.2);
     }
     
     .module-tile:hover {
-      background:#fcd58d;
-      transform:translateY(-6px);
+      background: rgba(193, 123, 107, 0.1);
+      transform: translateY(-6px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
     }
     
     .customization-btn {
-      background: #7B9B8B;
+      background: linear-gradient(135deg, #c17b6b);
       color: white;
       padding: 20px;
-      border-radius: 16px;
+      border-radius: 20px;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
       transition: all 0.3s ease;
       font-size: 1.2rem;
       font-weight: bold;
@@ -167,38 +235,122 @@
     }
     
     .customization-btn:hover {
-      background: #6a8a7a;
       transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     }
 
-    .hero { text-align:center; padding:2rem 1.5rem; background:#F5F7F2; }
-    .hero h2 { font-size:2rem; margin-bottom:1rem; color:#243B36; }
-    .hero p { font-size:1.1rem; color:#444; }
+    /* ================= MODAL STYLES ================= */
+    .modal { 
+      display: none; 
+      position: fixed; 
+      z-index: 1000; 
+      left: 0; 
+      top: 0; 
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; 
+      background: rgba(0,0,0,0.6); 
+    }
 
-    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.6); }
-    .modal-content { background:#fff; margin:3% auto; padding:30px; border-radius:20px; width:90%; max-width:1000px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.3); }
-    .modal-content h2 { text-align:center; margin-bottom:20px; color:#243B36; font-size:2rem; }
-    .modal-resources { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
-    .resource-card { background:#fafafa; padding:15px; border-radius:14px; box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; transition: transform .2s; }
-    .resource-card:hover { transform:translateY(-4px); background:#fff5e6; }
-    .resource-card iframe { width:100%; height:180px; border:none; border-radius:12px; margin-bottom:10px; }
-    .resource-card a { display:inline-block; margin-top:10px; color:#007B7F; font-weight:bold; text-decoration:none; }
-    .resource-card p { margin:5px 0; }
+    .modal-content { 
+      background: white;
+      margin: 3% auto; 
+      padding: 30px; 
+      border-radius: 20px; 
+      width: 90%; 
+      max-width: 1000px; 
+      position: relative; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      border: 1px solid rgba(193, 123, 107, 0.2);
+    }
 
-    .close { position:absolute; top:15px; right:20px; font-size:32px; cursor:pointer; color:#333; }
+    .modal-content h2 { 
+      text-align: center; 
+      margin-bottom: 20px; 
+      color: #6b4e3d; 
+      font-size: 2rem;
+      font-weight: 600;
+    }
 
-    footer { text-align:center; padding:1rem; font-size:0.9rem; background:#ffeecf; border-top:2px solid #fcd58d; margin-top:2rem; }
+    .modal-content h3 {
+      color: #6b4e3d;
+      font-size: 1.4rem;
+      margin: 20px 0 10px 0;
+      font-weight: 600;
+    }
 
-    body.dark { background:#121212; color:#e0e0e0; }
-    body.dark header { background:#1f1f1f; color:#f9e6d0; }
-    body.dark .user-popup { background:#2a2a2a; border:1px solid #444; }
-    body.dark .module-tile { background:#2a2a2a; color:#e0e0e0; }
-    body.dark .modal-content { background:#2a2a2a; color:#f9e6d0; }
-    body.dark footer { background:#1f1f1f; border-top:2px solid #444; }
-    body.dark .customization-btn { background: #2a2a2a; color: #f9e6d0; border: 1px solid #444; }
-    body.dark .slide h3 { color: #fcd58d; }
-    
-    /* Questionnaire Styles */
+    .modal-content p {
+      color: #6b4e3d;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .modal-resources { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+      gap: 20px; 
+    }
+
+    .resource-card { 
+      background: #CADBD7;
+      padding: 20px; 
+      border-radius: 15px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+      text-align: center; 
+      transition: all 0.3s ease;
+      border: 1px solid rgba(193, 123, 107, 0.2);
+    }
+
+    .resource-card:hover { 
+      transform: translateY(-4px); 
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .resource-card iframe { 
+      width: 100%; 
+      height: 180px; 
+      border: none; 
+      border-radius: 12px; 
+      margin-bottom: 10px; 
+    }
+
+    .resource-card a { 
+      display: inline-block; 
+      margin-top: 10px; 
+      color: #2d4a3a; 
+      font-weight: bold; 
+      text-decoration: none; 
+      transition: color 0.3s ease;
+    }
+
+    .resource-card a:hover {
+      color: #c17b6b;
+    }
+
+    .resource-card p { 
+      margin: 5px 0; 
+      color: #6b4e3d;
+      text-align: center;
+    }
+
+    .close { 
+      position: absolute; 
+      top: 15px; 
+      right: 20px; 
+      font-size: 32px; 
+      cursor: pointer; 
+      color: #6b4e3d; 
+      transition: color 0.3s ease;
+    }
+
+    .close:hover {
+      color: #c17b6b;
+    }
+
+    /* ================= QUESTIONNAIRE STYLES ================= */
     .questionnaire-container {
       max-width: 600px;
       margin: 0 auto;
@@ -207,13 +359,16 @@
     .question {
       margin-bottom: 25px;
       padding: 20px;
-      background: #f8f8f8;
-      border-radius: 12px;
+      background: rgba(202, 219, 215, 0.3);
+      border-radius: 15px;
+      border: 1px solid rgba(193, 123, 107, 0.2);
     }
     
     .question h3 {
       margin-top: 0;
-      color: #243B36;
+      color: #6b4e3d;
+      font-size: 1.2rem;
+      text-align: left;
     }
     
     .options {
@@ -224,21 +379,24 @@
     
     .option-btn {
       padding: 12px 20px;
-      background: #e8e8e8;
-      border: none;
-      border-radius: 8px;
+      background: #f5f2f0;
+      border: 1px solid #c17b6b;
+      border-radius: 10px;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s;
+      color: #6b4e3d;
+      font-size: 15px;
     }
     
     .option-btn:hover {
-      background: #d8d8d8;
+      background: rgba(193, 123, 107, 0.1);
     }
     
     .option-btn.selected {
-      background: #7B9B8B;
+      background: linear-gradient(135deg,  #c17b6b);
       color: white;
+      border-color: #2d4a3a;
     }
     
     .nav-buttons {
@@ -249,18 +407,19 @@
     
     .nav-btn {
       padding: 12px 25px;
-      background: #7B9B8B;
+      background: linear-gradient(135deg, #c17b6b);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 25px;
       cursor: pointer;
       font-weight: bold;
       transition: all 0.2s;
+      font-size: 16px;
     }
     
-    .nav-btn:hover {
-      background: #6a8a7a;
+    .nav-btn:hover:not(:disabled) {
       transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
     
     .nav-btn:disabled {
@@ -281,35 +440,233 @@
     .resource-item {
       padding: 15px;
       margin: 10px 0;
-      background: #f0f0f0;
-      border-radius: 8px;
+      background: rgba(202, 219, 215, 0.3);
+      border-radius: 12px;
+      border: 1px solid rgba(193, 123, 107, 0.2);
     }
-    
-    body.dark .question {
+
+    .resource-item strong {
+      color: #2d4a3a;
+    }
+
+    .resource-item p {
+      color: #6b4e3d;
+      text-align: left;
+      margin: 5px 0;
+    }
+
+    .resource-item a {
+      color: #2d4a3a;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .resource-item a:hover {
+      color: #c17b6b;
+    }
+
+    /* ================= FOOTER ================= */
+    footer { 
+      text-align: center; 
+      padding: 30px 20px; 
+      font-size: 15px; 
+      background: #eee0d1;
+      color: #6b4e3d;
+      border-top: 1px solid rgba(193, 123, 107, 0.2);
+      margin-top: 60px;
+    }
+
+    footer a {
+      color: #6b4e3d;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    footer a:hover {
+      color: #c17b6b;
+    }
+
+    /* ================= DARK MODE ================= */
+    body.dark-mode { 
+      background: linear-gradient(135deg, #2a2a2a 20%, #1a1a1a 100%);
+      color: #e0e0e0; 
+    }
+
+    body.dark-mode .logo {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .theme-toggle {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .translate-btn:hover {
+      background: #555;
+    }
+
+    body.dark-mode .home-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .home-btn:hover {
+      background: #666;
+      color: white;
+    }
+
+
+    body.dark-mode .hero { 
+      background: rgba(42, 42, 42, 0.8);
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark-mode .hero h2 {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .hero p {
+      color: #b0b0b0;
+    }
+
+    body.dark-mode .module-tile { 
+      background: rgba(42, 42, 42, 0.8);
+      color: #e0e0e0;
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark-mode .module-tile:hover {
+      background: rgba(68, 68, 68, 0.8);
+    }
+
+    body.dark-mode .modal-content { 
       background: #2a2a2a;
+      color: #e0e0e0;
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark-mode .modal-content h2,
+    body.dark-mode .modal-content h3 {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .modal-content p {
+      color: #b0b0b0;
+    }
+
+    body.dark-mode .resource-card { 
+      background: rgba(68, 68, 68, 0.5);
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark-mode .resource-card:hover {
+      background: rgba(90, 90, 90, 0.8);
+    }
+
+    body.dark-mode .resource-card p {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .resource-card a {
+      color: #8db3a0;
+    }
+
+    body.dark-mode .resource-card a:hover {
+      color: #c17b6b;
+    }
+
+    body.dark-mode .close {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .close:hover {
+      color: #c17b6b;
+    }
+
+    body.dark-mode .question {
+      background: rgba(68, 68, 68, 0.5);
+      border-color: rgba(224, 224, 224, 0.1);
     }
     
-    body.dark .question h3 {
-      color: #f9e6d0;
-    }
-    
-    body.dark .option-btn {
-      background: #3a3a3a;
+    body.dark-mode .question h3 {
       color: #e0e0e0;
     }
     
-    body.dark .option-btn:hover {
-      background: #4a4a4a;
-    }
-    
-    body.dark .resource-item {
-      background: #3a3a3a;
+    body.dark-mode .option-btn {
+      background: #444;
+      border-color: #666;
       color: #e0e0e0;
     }
     
+    body.dark-mode .option-btn:hover {
+      background: #555;
+    }
+    
+    body.dark-mode .resource-item {
+      background: rgba(68, 68, 68, 0.5);
+      border-color: rgba(224, 224, 224, 0.1);
+    }
+
+    body.dark-mode .resource-item strong {
+      color: #8db3a0;
+    }
+
+    body.dark-mode .resource-item p {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .resource-item a {
+      color: #8db3a0;
+    }
+
+    body.dark-mode .resource-item a:hover {
+      color: #c17b6b;
+    }
+
+    body.dark-mode footer { 
+      background: #333;
+      border-color: rgba(224, 224, 224, 0.1);
+      color: #e0e0e0; 
+    }
+
+    body.dark-mode footer a {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode footer a:hover {
+      color: #c17b6b;
+    }
+
+    /* ================= RESPONSIVE ================= */
     @media (max-width: 768px) {
+      header {
+        padding: 10px 20px;
+      }
+
+      .header-controls {
+        gap: 10px;
+      }
+      
+      .hero {
+        margin: 20px;
+        padding: 40px 20px;
+      }
+      
+      .hero h2 {
+        font-size: 2rem;
+      }
+      
       .main-container {
         flex-direction: column;
+        padding: 20px 15px;
       }
       
       .modules-grid {
@@ -319,36 +676,30 @@
       .slide-content {
         max-width: 95%;
       }
+
+      .slide-content p {
+        font-size: 0.9rem;
+        padding: 12px;
+      }
+      
+      .slide-content h3 {
+        font-size: 1.5rem;
+      }
+
+      .modal-content {
+        margin: 10% auto;
+        width: 95%;
+        padding: 20px;
+      }
+
+      .modal-resources {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <div class="header-left">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='header-logo.png') }}" alt="SoulAce Logo">
-      </div>
-      <div class="header-text">
-        <h1>SoulAce</h1>
-        <h3>Wellness begins here.</h3>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="user-icon-container">
-        <img src="{{ url_for('static', filename='user-icon.jpeg') }}" alt="User Icon" class="user-icon" onclick="toggleUserPopup()">
-        <div id="user-popup" class="user-popup">
-          <!-- Google Translate -->
-          <div id="google_translate_element" style="margin-bottom:10px;"></div>
-          <hr>
-          <button onclick="toggleMode()" class="popup-btn">Change Mode</button>
-          <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-            <button type="submit" class="popup-btn">Logout</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </header>
+{% include 'header.html' %}
 
   <!-- Hero -->
   <section class="hero">
@@ -356,45 +707,59 @@
     <p>Curated tools for a calmer, healthier you!</p>
   </section>
 
-  <!-- Main Content -->
   <div class="main-container">
     <!-- Slider Section -->
     <div class="slider-section">
       <div class="slider-container">
         <div class="slider">
-          <!-- Mental Health Slides -->
-          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1590065480004-477ef6d4d5de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+          <!-- Mental Health Slides with Updated Colors -->
+          <div class="slide slide-custom" style="background: linear-gradient(135deg, #CADBD7 0%, #eee0d1 100%); color: #4a4a4a;">
             <div class="slide-content">
-              <h3>Why Mental Health is Important</h3>
-              <p>Mental health plays a crucial role in how we think, feel, and act in daily life. It affects our ability to cope with stress, maintain relationships, and make sound decisions. Good mental health supports resilience, productivity, and overall life satisfaction. On the other hand, poor mental health can negatively impact physical health, reduce quality of life, and create challenges in personal, social, and professional areas. Taking care of mental wellbeing is therefore essential for living a balanced and fulfilling life.</p>
+              <h3 style="color: #6b4e3d; text-shadow: none;">Why Mental Health is Important</h3>
+              <p style="color: #4a4a4a; background: rgba(246, 243, 240, 0.95); padding: 15px; border-radius: 10px; border-left: 4px solid #2d4a3a; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                Mental health plays a crucial role in how we think, feel, and act in daily life. It affects our ability to cope with stress, maintain relationships, and make sound decisions. Good mental health supports resilience, productivity, and overall life satisfaction. On the other hand, poor mental health can negatively impact physical health, reduce quality of life, and create challenges in personal, social, and professional areas. Taking care of mental wellbeing is therefore essential for living a balanced and fulfilling life.
+              </p>
             </div>
           </div>
-          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1593811167562-9cef47bfc5d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+
+          <div class="slide slide-custom" style="background: linear-gradient(135deg, #CADBD7 0%, #f6f3f0 100%); color: #4a4a4a;">
             <div class="slide-content">
-              <h3>Anxiety vs. Depression</h3>
-              <p>Anxiety and depression are distinct mental health conditions, though they can sometimes overlap. Anxiety is characterized by excessive worry, nervousness, or fear, often focused on future events. Common symptoms include restlessness, rapid heartbeat, irritability, and difficulty concentrating. Depression, however, is marked by persistent sadness, loss of interest in activities, and feelings of hopelessness or worthlessness. Symptoms include fatigue, changes in sleep or appetite, and withdrawal from social interactions. While anxiety is often future-focused, depression tends to focus on past or present experiences.</p>
+              <h3 style="color: #6b4e3d; text-shadow: none;">Anxiety vs. Depression</h3>
+              <p style="color: #4a4a4a; background: rgba(246, 243, 240, 0.95); padding: 15px; border-radius: 10px; border-left: 4px solid #c17b6b; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                Anxiety and depression are distinct mental health conditions, though they can sometimes overlap. Anxiety is characterized by excessive worry, nervousness, or fear, often focused on future events. Common symptoms include restlessness, rapid heartbeat, irritability, and difficulty concentrating. Depression, however, is marked by persistent sadness, loss of interest in activities, and feelings of hopelessness or worthlessness. Symptoms include fatigue, changes in sleep or appetite, and withdrawal from social interactions. While anxiety is often future-focused, depression tends to focus on past or present experiences.
+              </p>
             </div>
           </div>
-          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1548605022-14d3e97ab2c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+
+          <div class="slide slide-custom" style="background: linear-gradient(135deg, #CADBD7 0%, #e8e1dc 100%); color: #4a4a4a;">
             <div class="slide-content">
-              <h3>Effects of Mental Health Issues</h3>
-              <p>Mental health issues can affect multiple areas of a person's life. Emotionally, they may experience mood swings, irritability, or persistent sadness. Cognitively, concentration and decision-making may suffer. Physically, symptoms can include fatigue, headaches, digestive problems, or sleep disturbances. Socially, individuals may withdraw from friends and family or struggle to maintain relationships. Professionally or academically, mental health challenges can reduce productivity, cause absenteeism, and make completing tasks more difficult.</p>
+              <h3 style="color: #6b4e3d; text-shadow: none;">Effects of Mental Health Issues</h3>
+              <p style="color: #4a4a4a; background: rgba(246, 243, 240, 0.95); padding: 15px; border-radius: 10px; border-left: 4px solid #2d4a3a; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                Mental health issues can affect multiple areas of a person's life. Emotionally, they may experience mood swings, irritability, or persistent sadness. Cognitively, concentration and decision-making may suffer. Physically, symptoms can include fatigue, headaches, digestive problems, or sleep disturbances. Socially, individuals may withdraw from friends and family or struggle to maintain relationships. Professionally or academically, mental health challenges can reduce productivity, cause absenteeism, and make completing tasks more difficult.
+              </p>
             </div>
           </div>
-          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+
+          <div class="slide slide-custom" style="background: linear-gradient(135deg, #CADBD7 0%, #eee0d1 100%); color: #4a4a4a;">
             <div class="slide-content">
-              <h3>When to Seek Help</h3>
-              <p>It is important to seek professional help when mental health issues begin to interfere with daily life. Signs include persistent sadness, anxiety, or irritability, changes in sleep or appetite, or feelings of hopelessness. If you experience thoughts of self-harm or an inability to cope with stress, it is crucial to consult a doctor or mental health professional. Physical symptoms without a clear medical cause, such as headaches or stomach issues triggered by stress, can also indicate the need for support.</p>
+              <h3 style="color: #6b4e3d; text-shadow: none;">When to Seek Help</h3>
+              <p style="color: #4a4a4a; background: rgba(246, 243, 240, 0.95); padding: 15px; border-radius: 10px; border-left: 4px solid #c17b6b; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                It is important to seek professional help when mental health issues begin to interfere with daily life. Signs include persistent sadness, anxiety, or irritability, changes in sleep or appetite, or feelings of hopelessness. If you experience thoughts of self-harm or an inability to cope with stress, it is crucial to consult a doctor or mental health professional. Physical symptoms without a clear medical cause, such as headaches or stomach issues triggered by stress, can also indicate the need for support.
+              </p>
             </div>
           </div>
-          <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+
+          <div class="slide slide-custom" style="background: linear-gradient(135deg, #CADBD7 0%, #f6f3f0 100%); color: #4a4a4a;">
             <div class="slide-content">
-              <h3>General Well-Being</h3>
-              <p>Maintaining general wellbeing involves taking care of both physical and mental health. Regular exercise, balanced nutrition, and adequate sleep are essential. Mindfulness practices like meditation, journaling, or deep breathing can help manage stress. Healthy social connections and maintaining a work-life balance are also important. Seeking therapy or counseling can provide guidance and coping strategies. Finally, practicing self-compassion, acknowledging emotions, and celebrating small achievements can promote overall wellness.</p>
+              <h3 style="color: #6b4e3d; text-shadow: none;">General Well-Being</h3>
+              <p style="color: #4a4a4a; background: rgba(246, 243, 240, 0.95); padding: 15px; border-radius: 10px; border-left: 4px solid #2d4a3a; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                Maintaining general wellbeing involves taking care of both physical and mental health. Regular exercise, balanced nutrition, and adequate sleep are essential. Mindfulness practices like meditation, journaling, or deep breathing can help manage stress. Healthy social connections and maintaining a work-life balance are also important. Seeking therapy or counseling can provide guidance and coping strategies. Finally, practicing self-compassion, acknowledging emotions, and celebrating small achievements can promote overall wellness.
+              </p>
             </div>
           </div>
         </div>
       </div>
+
       <div class="slider-controls">
         <div class="slider-dot active" onclick="showSlide(0)"></div>
         <div class="slider-dot" onclick="showSlide(1)"></div>
@@ -417,257 +782,260 @@
   </div>
 
   <!-- Meditation Modal -->
-<div id="modalMeditation" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
-    <h2>Meditations 🧘‍♂️</h2>
-    <p>Meditation is the pause that lets the mind breathe.</p>
+  <div id="modalMeditation" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalMeditation')">&times;</span>
+      <h2>Meditations 🧘‍♂️</h2>
+      <p>Meditation is the pause that lets the mind breathe.</p>
 
-    <div class="modal-resources">
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/60Gnd8Wy0gE" allowfullscreen></iframe>
-        <p>Morning Mindful Start</p>
-      </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/4ZtihFRxK28" allowfullscreen></iframe>
-        <p>Midday Reset Meditation</p>
-      </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/YRJ6xoiRcpQ" allowfullscreen></iframe>
-        <p>Evening Calm Wind-down</p>
-      </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/cF-w7jzVWcM" allowfullscreen></iframe>
-        <p>Deep Relaxation Journey</p>
-      </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/yDGakic4UAk" allowfullscreen></iframe>
-        <p>Sleep Mindfulness Session</p>
-      </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/Rcofz-30dnU" allowfullscreen></iframe>
-        <p>Stress Relief Meditation</p>
+      <div class="modal-resources">
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/60Gnd8Wy0gE" allowfullscreen></iframe>
+          <p>Morning Mindful Start</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/4ZtihFRxK28" allowfullscreen></iframe>
+          <p>Midday Reset Meditation</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/YRJ6xoiRcpQ" allowfullscreen></iframe>
+          <p>Evening Calm Wind-down</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/cF-w7jzVWcM" allowfullscreen></iframe>
+          <p>Deep Relaxation Journey</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/yDGakic4UAk" allowfullscreen></iframe>
+          <p>Sleep Mindfulness Session</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/Rcofz-30dnU" allowfullscreen></iframe>
+          <p>Stress Relief Meditation</p>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
 
   <!-- Podcasts & Books Modal -->
-<div id="modalPodcastsBooks" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
-    <h2>Podcasts & Books 🎧</h2>
-    
-    <!-- Podcasts Section -->
-    <p style="text-align:center; font-style:italic; margin-bottom:20px;">
-      A pause from noise, a path to insight.
-    </p>
+  <div id="modalPodcastsBooks" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalPodcastsBooks')">&times;</span>
+      <h2>Podcasts & Books 🎧</h2>
+      
+      <!-- Podcasts Section -->
+      <p style="text-align:center; font-style:italic; margin-bottom:20px;">
+        A pause from noise, a path to insight.
+      </p>
 
-    <h3 style="margin-bottom:10px; color:#243B36;">Podcasts 🎙️</h3>
-    
-    <div class="modal-resources">
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/tool-R8VJ2Y" style="height:180px;" allowfullscreen></iframe>
-        <p>Dr. Gabor Maté (Physician)</p>
+      <h3 style="margin-bottom:10px; color:#243B36;">Podcasts 🎙️</h3>
+      
+      <div class="modal-resources">
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/tool-R8VJ2Y" style="height:180px;" allowfullscreen></iframe>
+          <p>Dr. Gabor Maté (Physician)</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/SwQhKFMxmDY" style="height:180px;" allowfullscreen></iframe>
+          <p>Dr. Andrew Huberman (Neuroscientist)</p>
+        </div>
+        <div class="resource-card">
+          <iframe src="https://www.youtube.com/embed/-lDza7kSqvw" style="height:180px;" allowfullscreen></iframe>
+          <p>Dr. Julie Smith (Clinical Psychologist)</p>
+        </div>
       </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/SwQhKFMxmDY" style="height:180px;" allowfullscreen></iframe>
-        <p>Dr. Andrew Huberman (Neuroscientist)</p>
+
+      <!-- Books Section -->
+      <h3 style="margin:20px 0 10px 0; color:#243B36;">Books 📖</h3>
+      
+      <p style="margin-top:15px; font-style:italic;">
+        Browse the curated bookshelf we've crafted for you:
+      </p>
+
+      <div style="line-height:1.7; font-size:1rem; text-align:left;">
+        <!-- Mind–Body & Lifestyle -->
+        <p>🌿 <strong>Mind–Body & Lifestyle</strong></p>
+        <ol>
+          <li>
+            "Atomic Habits" – James Clear<br>
+            <small>A practical guide to building good habits and breaking bad ones through small, consistent changes.</small>
+          </li>
+          <li>
+            "In Defense of Food" – Michael Pollan<br>
+            <small>Pollan simplifies nutrition advice into: Eat food. Not too much. Mostly plants.</small>
+          </li>
+          <li>
+            "Ikigai" – Héctor García & Francesc Miralles<br>
+            <small>Discover the Japanese secret to living a long and happy life by finding your purpose.</small>
+          </li>
+          <li>
+            "Don't Believe Everything You Think" – Joseph Nguyen<br>
+            <small>A fresh perspective on freeing yourself from self-doubt and overthinking.</small>
+          </li>
+        </ol>
+
+        <!-- Mental & Emotional Well-Being -->
+        <p>🧘‍♀️ <strong>Mental & Emotional Well-Being</strong></p>
+        <ol>
+          <li>
+            "The Gifts of Imperfection" – Brené Brown<br>
+            <small>Encourages embracing vulnerability and living wholeheartedly.</small>
+          </li>
+          <li>
+            "The Untethered Soul" – Michael A. Singer<br>
+            <small>Explores inner freedom and letting go of limiting thoughts.</small>
+          </li>
+        </ol>
+
+        <!-- Holistic & Spiritual Wellness -->
+        <p>🌱 <strong>Holistic & Spiritual Wellness</strong></p>
+        <ol>
+          <li>
+            "The Four Agreements" – Don Miguel Ruiz<br>
+            <small>A spiritual guide to personal freedom through four simple principles.</small>
+          </li>
+          <li>
+            "The Seven Spiritual Laws of Success" – Deepak Chopra<br>
+            <small>Blends spirituality and success into a practical life philosophy.</small>
+          </li>
+          <li>
+            "The Power of Your Subconscious Mind" – Joseph Murphy<br>
+            <small>A classic book on unlocking the hidden potential of your mind.</small>
+          </li>
+        </ol>
       </div>
-      <div class="resource-card">
-        <iframe src="https://www.youtube.com/embed/-lDza7kSqvw" style="height:180px;" allowfullscreen></iframe>
-        <p>Dr. Julie Smith (Clinical Psychologist)</p>
-      </div>
-    </div>
 
-    <!-- Books Section -->
-    <h3 style="margin:20px 0 10px 0; color:#243B36;">Books 📖</h3>
-    
-    <p style="margin-top:15px; font-style:italic;">
-      Browse the curated bookshelf we've crafted for you:
-    </p>
-
-    <div style="line-height:1.7; font-size:1rem; text-align:left;">
-      <!-- Mind–Body & Lifestyle -->
-      <p>🌿 <strong>Mind–Body & Lifestyle</strong></p>
-      <ol>
-        <li>
-          "Atomic Habits" – James Clear<br>
-          <small>A practical guide to building good habits and breaking bad ones through small, consistent changes.</small>
-        </li>
-        <li>
-          "In Defense of Food" – Michael Pollan<br>
-          <small>Pollan simplifies nutrition advice into: Eat food. Not too much. Mostly plants.</small>
-        </li>
-        <li>
-          "Ikigai" – Héctor García & Francesc Miralles<br>
-          <small>Discover the Japanese secret to living a long and happy life by finding your purpose.</small>
-        </li>
-        <li>
-          "Don't Believe Everything You Think" – Joseph Nguyen<br>
-          <small>A fresh perspective on freeing yourself from self-doubt and overthinking.</small>
-        </li>
-      </ol>
-
-      <!-- Mental & Emotional Well-Being -->
-      <p>🧘‍♀️ <strong>Mental & Emotional Well-Being</strong></p>
-      <ol>
-        <li>
-          "The Gifts of Imperfection" – Brené Brown<br>
-          <small>Encourages embracing vulnerability and living wholeheartedly.</small>
-        </li>
-        <li>
-          "The Untethered Soul" – Michael A. Singer<br>
-          <small>Explores inner freedom and letting go of limiting thoughts.</small>
-        </li>
-      </ol>
-
-      <!-- Holistic & Spiritual Wellness -->
-      <p>🌱 <strong>Holistic & Spiritual Wellness</strong></p>
-      <ol>
-        <li>
-          "The Four Agreements" – Don Miguel Ruiz<br>
-          <small>A spiritual guide to personal freedom through four simple principles.</small>
-        </li>
-        <li>
-          "The Seven Spiritual Laws of Success" – Deepak Chopra<br>
-          <small>Blends spirituality and success into a practical life philosophy.</small>
-        </li>
-        <li>
-          "The Power of Your Subconscious Mind" – Joseph Murphy<br>
-          <small>A classic book on unlocking the hidden potential of your mind.</small>
-        </li>
-      </ol>
-    </div>
-
-    <p style="text-align:center; font-style:italic; margin-bottom:15px;">
-      Every page is a doorway to a new world.
-    </p>
-  </div>
-</div>
-
-<!-- Healthy Body & Mind Modal -->
-<div id="modalHealthyBodyMind" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
-    <h2>Healthy Body & Mind 🌿</h2>
-    <p>
-      Nourish your body, strengthen your mind, and find balance.
-    </p>
-
-    <h3 style="margin-top:20px;">📰 Articles on Healthy Living</h3>
-    <div class="modal-resources">
-      <div class="resource-card">
-        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/hidden-lifestyle-threats-to-heart-health-how-sleep-stress-pollution-gut-health-and-sugar-fuel-cardiovascular-risk/articleshow/123683120.cms?utm_source=chatgpt.com" target="_blank">
-          ❤️ Hidden Lifestyle Threats to Heart Health
-        </a>
-      </div>
-      <div class="resource-card">
-        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/3-simple-habits-to-keep-the-brain-young-according-to-a-top-neurosurgeon/photostory/123757718.cms?utm_source=chatgpt.com" target="_blank">
-          🧠 3 Simple Habits to Keep the Brain Young
-        </a>
-      </div>
-      <div class="resource-card">
-        <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/eat-right-for-a-better-life-dieticians-simple-guide-to-healthy-eating/articleshow/123780631.cms?utm_source=chatgpt.com" target="_blank">
-          🥗 Eat Right for a Better Life – A Dietician's Guide
-        </a>
-      </div>
+      <p style="text-align:center; font-style:italic; margin-bottom:15px;">
+        Every page is a doorway to a new world.
+      </p>
     </div>
   </div>
-</div>
 
-<!-- Digital Wellness Modal -->
-<div id="modalDigitalWellness" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
-    <h2>Digital Wellness 🌿</h2>
-    <p>Take a break from screens and find balance in your digital life.</p>
+  <!-- Healthy Body & Mind Modal -->
+  <div id="modalHealthyBodyMind" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalHealthyBodyMind')">&times;</span>
+      <h2>Healthy Body & Mind 🌿</h2>
+      <p>
+        Nourish your body, strengthen your mind, and find balance.
+      </p>
 
-    <p>
-      Tired of the digital world? A digital detox offers a much-needed pause from screens, scrolling, 
-      and constant pings. Read the articles about digital detox to get started.
-    </p>
-
-    <div class="modal-resources">
-      <div class="resource-card">
-        <a href="https://www.ndtv.com/india-news/karnataka-government-announces-digital-detox-initiative-to-encourage-mindful-use-of-social-media-4975460?utm_source=chatgpt.com" target="_blank">
-          📰 Karnataka Govt announces Digital Detox Initiative
-        </a>
-      </div>
-      <div class="resource-card">
-        <a href="https://cmhlp.org/imho/blog/indias-digital-mental-health-landscape-government-initiatives-and-challenges/?utm_source=chatgpt.com" target="_blank">
-          🌐 India's Digital Mental Health Landscape – Govt Initiatives & Challenges
-        </a>
-      </div>
-      <div class="resource-card">
-        <a href="https://timesofindia.indiatimes.com/city/nagpur/digital-obesity-silent-epidemic-among-students-vnit-director/articleshow/121834472.cms?utm_source=chatgpt.com" target="_blank">
-          ⚠️ Digital Obesity – A Silent Epidemic Among Students
-        </a>
+      <h3 style="margin-top:20px;">📰 Articles on Healthy Living</h3>
+      <div class="modal-resources">
+        <div class="resource-card">
+          <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/hidden-lifestyle-threats-to-heart-health-how-sleep-stress-pollution-gut-health-and-sugar-fuel-cardiovascular-risk/articleshow/123683120.cms?utm_source=chatgpt.com" target="_blank">
+            ❤️ Hidden Lifestyle Threats to Heart Health
+          </a>
+        </div>
+        <div class="resource-card">
+          <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/3-simple-habits-to-keep-the-brain-young-according-to-a-top-neurosurgeon/photostory/123757718.cms?utm_source=chatgpt.com" target="_blank">
+            🧠 3 Simple Habits to Keep the Brain Young
+          </a>
+        </div>
+        <div class="resource-card">
+          <a href="https://timesofindia.indiatimes.com/life-style/health-fitness/eat-right-for-a-better-life-dieticians-simple-guide-to-healthy-eating/articleshow/123780631.cms?utm_source=chatgpt.com" target="_blank">
+            🥗 Eat Right for a Better Life – A Dietician's Guide
+          </a>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Personalization Modal -->
-<div id="modalPersonalization" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('modalPersonalization')">&times;</span>
-    <h2>Personalize Your Experience 🌟</h2>
-    <p>Answer a few questions to get personalized wellness recommendations.</p>
-    
-    <div id="questionnaire" class="questionnaire-container">
-      <div id="question-1" class="question">
-        <h3>1. What brings you here today?</h3>
-        <div class="options">
-          <button class="option-btn" onclick="selectOption(1, 'Stress Relief')">Stress Relief</button>
-          <button class="option-btn" onclick="selectOption(1, 'Feeling Anxious')">Feeling Anxious</button>
-          <button class="option-btn" onclick="selectOption(1, 'Needing Companionship')">Needing Companionship</button>
-          <button class="option-btn" onclick="selectOption(1, 'Venting Out')">Venting Out</button>
-          <button class="option-btn" onclick="selectOption(1, 'Better Sleep')">Better Sleep</button>
+  <!-- Digital Wellness Modal -->
+  <div id="modalDigitalWellness" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalDigitalWellness')">&times;</span>
+      <h2>Digital Wellness 🌿</h2>
+      <p>Take a break from screens and find balance in your digital life.</p>
+
+      <p>
+        Tired of the digital world? A digital detox offers a much-needed pause from screens, scrolling, 
+        and constant pings. Read the articles about digital detox to get started.
+      </p>
+
+      <div class="modal-resources">
+        <div class="resource-card">
+          <a href="https://www.ndtv.com/india-news/karnataka-government-announces-digital-detox-initiative-to-encourage-mindful-use-of-social-media-4975460?utm_source=chatgpt.com" target="_blank">
+            📰 Karnataka Govt announces Digital Detox Initiative
+          </a>
         </div>
-      </div>
-      
-      <div id="question-2" class="question" style="display: none;">
-        <h3>2. How do you usually feel at the end of the day?</h3>
-        <div class="options">
-          <button class="option-btn" onclick="selectOption(2, 'Energized')">Energized</button>
-          <button class="option-btn" onclick="selectOption(2, 'Balanced')">Balanced</button>
-          <button class="option-btn" onclick="selectOption(2, 'Stressed')">Stressed</button>
-          <button class="option-btn" onclick="selectOption(2, 'Exhausted')">Exhausted</button>
-          <button class="option-btn" onclick="selectOption(2, 'Lonely')">Lonely</button>
+        <div class="resource-card">
+          <a href="https://cmhlp.org/imho/blog/indias-digital-mental-health-landscape-government-initiatives-and-challenges/?utm_source=chatgpt.com" target="_blank">
+            🌐 India's Digital Mental Health Landscape – Govt Initiatives & Challenges
+          </a>
         </div>
-      </div>
-      
-      <div id="question-3" class="question" style="display: none;">
-        <h3>3. What helps you feel better?</h3>
-        <div class="options">
-          <button class="option-btn" onclick="selectOption(3, 'Talking to Someone')">Talking to Someone</button>
-          <button class="option-btn" onclick="selectOption(3, 'Quiet Reflection')">Quiet Reflection</button>
-          <button class="option-btn" onclick="selectOption(3, 'Creative Activities')">Creative Activities</button>
-          <button class="option-btn" onclick="selectOption(3, 'Physical Activity')">Physical Activity</button>
+        <div class="resource-card">
+          <a href="https://timesofindia.indiatimes.com/city/nagpur/digital-obesity-silent-epidemic-among-students-vnit-director/articleshow/121834472.cms?utm_source=chatgpt.com" target="_blank">
+            ⚠️ Digital Obesity – A Silent Epidemic Among Students
+          </a>
         </div>
-      </div>
-      
-      <div id="results" class="results-container" style="display: none;">
-        <h3>Your Personalized Recommendations</h3>
-        <p>Based on your answers, we've curated these resources just for you:</p>
-        <div id="personalized-resources" class="personalized-resources">
-          <!-- Resources will be dynamically inserted here -->
-        </div>
-        <button class="nav-btn" onclick="closeModal('modalPersonalization')">Explore Resources</button>
-      </div>
-      
-      <div class="nav-buttons">
-        <button id="prev-btn" class="nav-btn" onclick="prevQuestion()" style="display: none;">Previous</button>
-        <button id="next-btn" class="nav-btn" onclick="nextQuestion()">Next</button>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- Personalization Modal -->
+  <div id="modalPersonalization" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalPersonalization')">&times;</span>
+      <h2>Personalize Your Experience 🌟</h2>
+      <p>Answer a few questions to get personalized wellness recommendations.</p>
+      
+      <div id="questionnaire" class="questionnaire-container">
+        <div id="question-1" class="question">
+          <h3>1. What brings you here today?</h3>
+          <div class="options">
+            <button class="option-btn" onclick="selectOption(1, 'Stress Relief')">Stress Relief</button>
+            <button class="option-btn" onclick="selectOption(1, 'Feeling Anxious')">Feeling Anxious</button>
+            <button class="option-btn" onclick="selectOption(1, 'Needing Companionship')">Needing Companionship</button>
+            <button class="option-btn" onclick="selectOption(1, 'Venting Out')">Venting Out</button>
+            <button class="option-btn" onclick="selectOption(1, 'Better Sleep')">Better Sleep</button>
+          </div>
+        </div>
+        
+        <div id="question-2" class="question" style="display: none;">
+          <h3>2. How do you usually feel at the end of the day?</h3>
+          <div class="options">
+            <button class="option-btn" onclick="selectOption(2, 'Energized')">Energized</button>
+            <button class="option-btn" onclick="selectOption(2, 'Balanced')">Balanced</button>
+            <button class="option-btn" onclick="selectOption(2, 'Stressed')">Stressed</button>
+            <button class="option-btn" onclick="selectOption(2, 'Exhausted')">Exhausted</button>
+            <button class="option-btn" onclick="selectOption(2, 'Lonely')">Lonely</button>
+          </div>
+        </div>
+        
+        <div id="question-3" class="question" style="display: none;">
+          <h3>3. What helps you feel better?</h3>
+          <div class="options">
+            <button class="option-btn" onclick="selectOption(3, 'Talking to Someone')">Talking to Someone</button>
+            <button class="option-btn" onclick="selectOption(3, 'Quiet Reflection')">Quiet Reflection</button>
+            <button class="option-btn" onclick="selectOption(3, 'Creative Activities')">Creative Activities</button>
+            <button class="option-btn" onclick="selectOption(3, 'Physical Activity')">Physical Activity</button>
+          </div>
+        </div>
+        
+        <div id="results" class="results-container" style="display: none;">
+          <h3>Your Personalized Recommendations</h3>
+          <p>Based on your answers, we've curated these resources just for you:</p>
+          <div id="personalized-resources" class="personalized-resources">
+            <!-- Resources will be dynamically inserted here -->
+          </div>
+          <button class="nav-btn" onclick="closeModal('modalPersonalization')">Explore Resources</button>
+        </div>
+        
+        <div class="nav-buttons">
+          <button id="prev-btn" class="nav-btn" onclick="prevQuestion()" style="display: none;">Previous</button>
+          <button id="next-btn" class="nav-btn" onclick="nextQuestion()">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <footer>
-    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+    <p>&copy; 2025 SoulAce. All rights reserved.</p>
+    <p>
+      <a href="#terms">Terms of Service</a>
+    </p>
   </footer>
 
   <script>
@@ -714,22 +1082,26 @@
       // Close user popup if clicking outside
       const popup = document.getElementById('user-popup');
       if (event.target.classList.contains('user-icon')) return;
-      if (popup.style.display === 'block' && !event.target.closest('.user-popup')) {
+      if (popup && popup.style.display === 'block' && !event.target.closest('.user-popup')) {
         popup.style.display = 'none';
       }
     }
 
-    function toggleMode() {
-      document.body.classList.toggle('dark');
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const themeIcon = document.getElementById('theme-icon');
+      if (document.body.classList.contains('dark-mode')) {
+        themeIcon.textContent = '🌙';
+      } else {
+        themeIcon.textContent = '🌸';
+      }
     }
 
-    // Google Translate Script
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement(
-        {pageLanguage: 'en', includedLanguages: 'en,hi,ur'},
-        'google_translate_element'
-      );
+    function toggleTranslate() {
+      const container = document.getElementById('translateContainer');
+      container.classList.toggle('active');
     }
+
     
     // Questionnaire functionality
     let currentQuestion = 1;
@@ -964,6 +1336,5 @@
       `;
     }
   </script>
-  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
