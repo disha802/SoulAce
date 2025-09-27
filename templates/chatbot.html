@@ -6,6 +6,7 @@
   <title>SoulAce - AI Support</title>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <style>
     * {
       margin: 0;
@@ -398,234 +399,233 @@
     <p >SoulAce © 2025 – Built with 💙 by SynapSix</p>
   </footer>
 
-  <script>
-    let isTyping = false;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM ready — initializing chat UI and mic');
 
-    function toggleUserPopup() {
-      const popup = document.getElementById('user-popup');
-      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function toggleMode() {
-      document.body.classList.toggle('dark');
-    }
-
-    // Language switcher
-    const langSelect = document.getElementById('lang-select');
+  // Safe language switcher (only if #lang-select exists)
+  const langSelect = document.getElementById('lang-select');
+  if (langSelect) {
     langSelect.addEventListener('change', () => {
       const lang = langSelect.value;
       document.querySelectorAll('[data-en]').forEach(el => {
-        if (el.tagName === 'INPUT') {
-          el.placeholder = el.getAttribute('data-' + lang);
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = el.getAttribute('data-' + lang) || el.getAttribute('data-en');
         } else {
-          el.textContent = el.getAttribute('data-' + lang);
+          el.textContent = el.getAttribute('data-' + lang) || el.getAttribute('data-en');
         }
       });
     });
+  } else {
+    console.log('No #lang-select found — skipping language switcher init');
+  }
 
-    // Handle Enter key in input
-    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+  // ---------- DOM references ----------
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  const messagesContainer = document.getElementById('chat-messages');
+  const micBtn = document.getElementById('mic-btn');
+  let isTyping = false;
+
+  function addMessage(content, isUser = false) {
+    if (!messagesContainer) return;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+    messageDiv.textContent = content;
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    if (!messagesContainer) return;
+    if (document.getElementById('typing-indicator')) return;
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message typing';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove();
+  }
+
+  if (chatInput) {
+    chatInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter' && !isTyping) {
+        e.preventDefault();
         sendMessage();
       }
     });
-    function addMessage(content, isUser = false) {
-      const messagesContainer = document.getElementById('chat-messages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-      messageDiv.textContent = content;
-      messagesContainer.appendChild(messageDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+  }
 
-    function showTypingIndicator() {
-      const messagesContainer = document.getElementById('chat-messages');
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'message typing';
-      typingDiv.id = 'typing-indicator';
-      typingDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-      messagesContainer.appendChild(typingDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+  async function sendMessage() {
+    if (!chatInput) return;
+    const message = chatInput.value.trim();
+    if (!message || isTyping) return;
+    addMessage(message, true);
+    chatInput.value = '';
 
-    function hideTypingIndicator() {
-      const typingIndicator = document.getElementById('typing-indicator');
-      if (typingIndicator) {
-        typingIndicator.remove();
-      }
-    }
+    isTyping = true;
+    if (sendBtn) sendBtn.disabled = true;
+    chatInput.disabled = true;
+    showTypingIndicator();
 
-    async function sendMessage() {
-      const input = document.getElementById('chat-input');
-      const sendBtn = document.getElementById('send-btn');
-      const message = input.value.trim();
-      
-      if (!message || isTyping) return;
-
-      // Add user message
-      addMessage(message, true);
-      input.value = '';
-      
-      // Disable input and show typing
-      isTyping = true;
-      sendBtn.disabled = true;
-      input.disabled = true;
-      showTypingIndicator();
-
-      try {
-        const response = await fetch('/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message: message })
-        });
-
-        const data = await response.json();
-        
-        // Small delay for better UX
-        setTimeout(() => {
-          hideTypingIndicator();
-          
-          if (data.response) {
-            addMessage(data.response);
-          } else {
-            addMessage("I'm here to listen. Could you tell me more about how you're feeling?");
-          }
-          
-          // Re-enable input
-          isTyping = false;
-          sendBtn.disabled = false;
-          input.disabled = false;
-          input.focus();
-        }, 1000);
-
-      } catch (error) {
-        console.error('Error:', error);
-        hideTypingIndicator();
-        addMessage("I'm having trouble connecting right now, but I'm still here for you. Please try again.");
-        
-        isTyping = false;
-        sendBtn.disabled = false;
-        input.disabled = false;
-      }
-    }
-
-    function sendQuickMessage(message) {
-      document.getElementById('chat-input').value = message;
-      sendMessage();
-    }
-
-    // Hide user popup when clicking outside
-    window.addEventListener('click', (e) => {
-      const popup = document.getElementById('user-popup');
-      const icon = document.querySelector('.user-icon');
-      if (!popup.contains(e.target) && e.target !== icon) {
-        popup.style.display = 'none';
-      }
-    });
-
-    // Focus on input when page loads
-    window.addEventListener('load', () => {
-      document.getElementById('chat-input').focus();
-    });
-
-
-    /*
-  Voice input flow:
-  - Click mic once to start recording, click again to stop (toggle).
-  - We use MediaRecorder to capture audio as webm/ogg, send to backend.
-  - Backend converts it to LINEAR16 WAV (ffmpeg) and calls Google Speech-to-Text.
-*/
-
-  let micBtn, mediaRecorder = null, audioChunks = [], isRecording = false;
-
-  // Initialize mic functionality when DOM is ready
-  document.addEventListener('DOMContentLoaded', function() {
-    micBtn = document.getElementById('mic-btn');
-    if (!micBtn) {
-      console.error('Mic button not found!');
-      return;
-    }
-
-  // Toggle recording on mic button click
-  micBtn.addEventListener('click', async () => {
-    if (!isRecording) {
-      try {
-        // start recording
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) audioChunks.push(e.data);
-        };
-        mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: audioChunks[0]?.type || 'audio/webm' });
-          await sendAudioBlobForTranscription(blob);
-          // stop tracks to release mic
-          stream.getTracks().forEach(t => t.stop());
-        };
-        mediaRecorder.start();
-        isRecording = true;
-        micBtn.style.background = '#c17b6b';
-        micBtn.style.color = '#fff';
-        micBtn.title = 'Click to stop recording';
-        addMessage("🎤 Recording... Click the mic again to stop.", false);
-      } catch (error) {
-        console.error('Error accessing microphone:', error);
-        addMessage("❌ Microphone access denied. Please allow microphone permission and try again.", false);
-      }
-    } else {
-      // stop recording
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-      isRecording = false;
-      micBtn.style.background = '#fff';
-      micBtn.style.color = '';
-      micBtn.title = 'Click to record voice message';
-    }
-  });
-
-  async function sendAudioBlobForTranscription(blob) {
     try {
-      const form = new FormData();
-      // use 'audio' file form field
-      form.append('audio', blob, 'voice.webm');
-
-      // optional: set language code via header or extra form field
-      // form.append('languageCode', 'en-US');
-
-      const res = await fetch('/transcribe', {
+      const response = await fetch('/chat', {
         method: 'POST',
-        body: form
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
       });
-
-      if (!res.ok) {
-        console.error('Transcription request failed', res.statusText);
-        addMessage("I couldn't process your voice right now. Try again.", false);
-        return;
-      }
-
-      const data = await res.json();
-      if (data.transcript) {
-        // Put transcript into input and send
-        document.getElementById('chat-input').value = data.transcript;
-        // Optionally auto-send
-        sendMessage();
-      } else {
-        addMessage("I couldn't hear that clearly. Try speaking more slowly.", false);
-      }
+      const data = await response.json();
+      setTimeout(() => {
+        hideTypingIndicator();
+        if (data && data.response) addMessage(data.response);
+        else addMessage("I'm here to listen. Could you tell me more about how you're feeling?");
+        isTyping = false;
+        if (sendBtn) sendBtn.disabled = false;
+        if (chatInput) chatInput.disabled = false;
+        chatInput && chatInput.focus();
+      }, 800);
     } catch (err) {
-      console.error('Error sending audio for transcription', err);
-      addMessage("There was an error sending your voice. Check your connection.", false);
+      console.error('chat send error', err);
+      hideTypingIndicator();
+      addMessage("I'm having trouble connecting right now, but I'm still here for you. Please try again.");
+      isTyping = false;
+      if (sendBtn) sendBtn.disabled = false;
+      if (chatInput) chatInput.disabled = false;
     }
   }
 
-  }); // End DOMContentLoaded
+  window.sendMessage = sendMessage;
+  window.sendQuickMessage = function(msg) {
+    if (chatInput) chatInput.value = msg;
+    sendMessage();
+  };
 
+  // ---------- Microphone / MediaRecorder ----------
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+  let recordingTimeout = null;
 
-  </script>
+  function setMicUIRecording(on) {
+    if (!micBtn) return;
+    if (on) {
+      micBtn.style.background = '#c17b6b';
+      micBtn.style.color = '#fff';
+      micBtn.title = 'Click to stop';
+    } else {
+      micBtn.style.background = '#fff';
+      micBtn.style.color = '';
+      micBtn.title = 'Hold to talk';
+    }
+  }
+
+  // Defensive: if micBtn missing just skip mic initialization
+  if (micBtn) {
+    micBtn.addEventListener('click', async () => {
+      try {
+        if (!isRecording) {
+          // request mic permission and start
+          micBtn.disabled = true;
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) audioChunks.push(e.data);
+          };
+          mediaRecorder.onstop = async () => {
+            clearTimeout(recordingTimeout);
+            setMicUIRecording(false);
+            isRecording = false;
+            micBtn.disabled = false;
+
+            const blob = new Blob(audioChunks, { type: audioChunks[0]?.type || 'audio/webm' });
+            // stop tracks to release mic
+            stream.getTracks().forEach(t => t.stop());
+            await sendAudioBlobForTranscription(blob);
+          };
+          mediaRecorder.start();
+          isRecording = true;
+          setMicUIRecording(true);
+          micBtn.disabled = false;
+
+          // safety: auto-stop after 60s
+          recordingTimeout = setTimeout(() => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+              mediaRecorder.stop();
+              console.warn('Recording auto-stopped after 60s');
+            }
+          }, 60000);
+        } else {
+          // stop recording
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+          isRecording = false;
+          setMicUIRecording(false);
+        }
+      } catch (err) {
+        console.error('Microphone permission or start error', err);
+        addMessage("I can't access your microphone. Please grant permission or try a different browser.", false);
+        micBtn.disabled = false;
+        setMicUIRecording(false);
+        isRecording = false;
+      }
+    });
+  } else {
+    console.warn('No mic button (#mic-btn) found in DOM — skipping mic init');
+  }
+
+  async function sendAudioBlobForTranscription(blob) {
+  try {
+    if (micBtn) micBtn.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+
+    const form = new FormData();
+    form.append('audio', blob, 'voice.webm');
+
+    // include language if you have one
+    const lang = (document.getElementById('lang-select') && document.getElementById('lang-select').value) ? document.getElementById('lang-select').value : null;
+    if (lang) form.append('languageCode', lang);
+
+    const res = await fetch('/transcribe', { method: 'POST', body: form });
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      console.error('Invalid JSON from /transcribe', jsonErr);
+    }
+
+    if (!res.ok) {
+      const errMsg = data && data.error ? data.error : `Server error: ${res.status} ${res.statusText}`;
+      addMessage(`Transcription failed: ${errMsg}`, false);
+      console.error('Transcription failed:', errMsg, data);
+      return;
+    }
+
+    if (data.transcript) {
+      document.getElementById('chat-input').value = data.transcript;
+      sendMessage();
+    } else {
+      const errMsg = data && data.error ? data.error : "No transcript returned";
+      addMessage(`I couldn't hear that clearly. (${errMsg})`, false);
+      console.warn('No transcript:', data);
+    }
+  } catch (err) {
+    console.error('Error sending audio for transcription', err);
+    addMessage("There was an error sending your voice. Check your connection.", false);
+  } finally {
+    if (micBtn) micBtn.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+});
+</script>
+
 </body>
 </html>
-
