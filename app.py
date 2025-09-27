@@ -1519,6 +1519,259 @@ def admin_delete_post(post_id):
     peersupportposts_col.delete_one({"_id": ObjectId(post_id)})
     return jsonify({"message": "Post permanently deleted"})
 
+# --- Enhanced Flagged Posts API ---
+@app.route("/admin/api/flagged_posts", methods=["GET"])
+def api_get_flagged_posts():
+    """API endpoint to get flagged posts with filtering and pagination"""
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return jsonify({'ok': False, 'error': 'Admin access required'}), 403
+
+    try:
+        # Get query parameters
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        filter_type = request.args.get('type', 'all')  # all, ai, manual, unresolved
+        filter_category = request.args.get('category', 'all')
+        search_text = request.args.get('search', '').strip()
+
+        # Build query
+        query = {}
+
+        # Filter by flag type
+        if filter_type == 'ai':
+            query['ai_flagged'] = True
+        elif filter_type == 'manual':
+            query['flagged'] = True
+            query['ai_flagged'] = {'$ne': True}
+        elif filter_type == 'unresolved':
+            query['$or'] = [
+                {'flagged': True},
+                {'ai_flagged': True}
+            ]
+            query['resolved'] = {'$ne': True}
+        else:  # all flagged
+            query['$or'] = [
+                {'flagged': True},
+                {'ai_flagged': True}
+            ]
+
+        # Filter by AI category
+        if filter_category != 'all' and filter_category:
+            query['flag_categories'] = {'$in': [filter_category]}
+
+        # Search in content
+        if search_text:
+            search_query = {'$or': [
+                {'content': {'$regex': search_text, '$options': 'i'}},
+                {'title': {'$regex': search_text, '$options': 'i'}},
+                {'username': {'$regex': search_text, '$options': 'i'}}
+            ]}
+            if '$or' in query:
+                query = {'$and': [query, search_query]}
+            else:
+                query.update(search_query)
+
+        # Get total count for pagination
+        total_count = peersupportposts_col.count_documents(query)
+        total_pages = (total_count + per_page - 1) // per_page
+
+        # Get posts with pagination
+        skip = (page - 1) * per_page
+        posts_cursor = peersupportposts_col.find(query).sort('datetime', -1).skip(skip).limit(per_page)
+
+        posts = []
+        for post in posts_cursor:
+            # Serialize post
+            post['_id'] = str(post['_id'])
+
+            # Get user info
+            user = users_col.find_one({"user_id": post["user_id"]})
+            post["username"] = "Anonymous" if post.get("is_anonymous") else (user.get("username", "Unknown") if user else "Unknown")
+            post["isstudentvol"] = user.get("role") == "studentvol" if user else False
+
+            # Serialize replies
+            for reply in post.get("replies", []):
+                if "_id" in reply:
+                    reply["_id"] = str(reply["_id"])
+                if "id" in reply and hasattr(reply["id"], 'binary'):
+                    reply["id"] = str(reply["id"])
+
+                # Get reply user info
+                reply_user = users_col.find_one({"user_id": reply["user_id"]})
+                reply["author"] = reply_user.get("username", "Unknown") if reply_user else "Unknown"
+                reply["isstudentvol"] = reply_user.get("role") == "studentvol" if reply_user else False
+
+            posts.append(post)
+
+        # Get statistics
+        stats = get_flagged_posts_stats()
+
+        # Pagination info
+        pagination = {
+            'current_page': page,
+            'total_pages': total_pages,
+            'total_posts': total_count,
+            'per_page': per_page
+        }
+
+        return jsonify({
+            'ok': True,
+            'posts': posts,
+            'stats': stats,
+            'pagination': pagination
+        })
+
+    except Exception as e:
+        print(f"Error getting flagged posts: {str(e)}")
+        return jsonify({'ok': False, 'error': 'Failed to load flagged posts'}), 500
+
+def get_flagged_posts_stats():
+    """Get statistics about flagged posts"""
+    try:
+        # Count AI flagged posts
+        ai_flagged_count = peersupportposts_col.count_documents({'ai_flagged': True})
+
+        # Count manually flagged posts
+        manual_flagged_count = peersupportposts_col.count_documents({
+            'flagged': True,
+            'ai_flagged': {'$ne': True}
+        })
+
+        # Total flagged
+        total_flagged = peersupportposts_col.count_documents({
+            '$or': [
+                {'flagged': True},
+                {'ai_flagged': True}
+            ]
+        })
+
+        # Resolved today
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        resolved_today = peersupportposts_col.count_documents({
+            'resolved': True,
+            'resolved_at': {'$gte': today_start}
+        })
+
+        return {
+            'ai_flagged': ai_flagged_count,
+            'manual_flagged': manual_flagged_count,
+            'total_flagged': total_flagged,
+            'resolved_today': resolved_today
+        }
+
+    except Exception as e:
+        print(f"Error getting flagged posts stats: {str(e)}")
+        return {
+            'ai_flagged': 0,
+            'manual_flagged': 0,
+            'total_flagged': 0,
+            'resolved_today': 0
+        }
+
+@app.route('/admin/api/mark_resolved/post/<post_id>', methods=['POST'])
+def mark_post_resolved(post_id):
+    """Mark a flagged post as resolved"""
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return jsonify({'ok': False, 'error': 'Admin access required'}), 403
+
+    try:
+        # Update the post
+        result = peersupportposts_col.update_one(
+            {'_id': ObjectId(post_id)},
+            {
+                '$set': {
+                    'resolved': True,
+                    'resolved_at': datetime.utcnow(),
+                    'resolved_by': session.get('user_id')
+                }
+            }
+        )
+
+        if result.modified_count > 0:
+            print(f"Post {post_id} marked as resolved by admin {session.get('user_id')}")
+            return jsonify({'ok': True, 'message': 'Post marked as resolved'})
+        else:
+            return jsonify({'ok': False, 'error': 'Post not found'}), 404
+
+    except Exception as e:
+        print(f"Error marking post {post_id} as resolved: {str(e)}")
+        return jsonify({'ok': False, 'error': 'Failed to mark post as resolved'}), 500
+
+@app.route('/admin/api/bulk_action', methods=['POST'])
+def bulk_action():
+    """Perform bulk actions on multiple flagged posts"""
+    if "user_id" not in session or session.get("role", "").lower() != "admin":
+        return jsonify({'ok': False, 'error': 'Admin access required'}), 403
+
+    try:
+        data = request.get_json()
+        action = data.get('action')  # unflag, delete, resolve
+        post_ids = data.get('post_ids', [])
+
+        if not action or not post_ids:
+            return jsonify({'ok': False, 'error': 'Missing action or post IDs'}), 400
+
+        # Convert string IDs to ObjectIds
+        object_ids = [ObjectId(pid) for pid in post_ids]
+
+        if action == 'unflag':
+            result = peersupportposts_col.update_many(
+                {'_id': {'$in': object_ids}},
+                {
+                    '$unset': {
+                        'flagged': '',
+                        'ai_flagged': '',
+                        'flag_categories': '',
+                        'flag_reason': ''
+                    },
+                    '$set': {
+                        'unflagged_at': datetime.utcnow(),
+                        'unflagged_by': session.get('user_id')
+                    }
+                }
+            )
+            message = f"Unflagged {result.modified_count} posts"
+
+        elif action == 'delete':
+            result = peersupportposts_col.update_many(
+                {'_id': {'$in': object_ids}},
+                {
+                    '$set': {
+                        'is_deleted': True,
+                        'deleted_at': datetime.utcnow(),
+                        'deleted_by': session.get('user_id')
+                    }
+                }
+            )
+            message = f"Deleted {result.modified_count} posts"
+
+        elif action == 'resolve':
+            result = peersupportposts_col.update_many(
+                {'_id': {'$in': object_ids}},
+                {
+                    '$set': {
+                        'resolved': True,
+                        'resolved_at': datetime.utcnow(),
+                        'resolved_by': session.get('user_id')
+                    }
+                }
+            )
+            message = f"Resolved {result.modified_count} posts"
+
+        else:
+            return jsonify({'ok': False, 'error': 'Invalid action'}), 400
+
+        print(f"Bulk action {action} performed on {len(post_ids)} posts by admin {session.get('user_id')}")
+
+        return jsonify({
+            'ok': True,
+            'message': message,
+            'affected_count': result.modified_count
+        })
+
+    except Exception as e:
+        print(f"Error performing bulk action: {str(e)}")
+        return jsonify({'ok': False, 'error': 'Failed to perform bulk action'}), 500
 
 #---Crisis---
 
@@ -1606,7 +1859,7 @@ def manage_users():
     return render_template("admin_dashboard.html", users=users)
 
 @app.route("/admin/flagged_posts", methods=["GET", "POST"])
-def Admin_flagged_posts():
+def admin_flagged_posts():
     if "user_id" not in session or session.get("role", "").lower() != "admin":
         return "Unauthorized", 403
 

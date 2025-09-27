@@ -38,6 +38,215 @@
       line-height: 1.6;
       min-height: 100vh;
     }
+
+        * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: 'Zain', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .common-header {
+        font-family: 'Zain', sans-serif;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 40px;
+        background: #eee0d1;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        color: #6b4e3d; /* Header text color */
+        font-size: 18px; /* Increase header text size */
+        font-weight: normal; /* Remove bold */
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #6b4e3d;
+        font-weight: normal; /* Remove bold */
+    }
+
+    .header-logo img {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px; /* Increase border radius */
+    }
+
+    .header-logo span {
+        font-size: 1.3rem; /* Increase text size */
+        font-weight: normal; /* Remove bold */
+        color: #6b4e3d;
+    }
+
+    .header-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: #6b4e3d;
+        font-weight: normal; /* Remove bold */
+        padding: 10px 18px;
+        border-radius: 12px; /* Increase border radius */
+        transition: all 0.2s ease;
+        position: relative;
+        font-size: 1rem; /* Increase text size */
+    }
+
+    .nav-link:hover {
+        color: #6b4e3d;
+        background: rgba(47, 122, 96, 0.1);
+    }
+
+    .nav-link.active {
+        color: #6b4e3d;
+        background: var(--light-green);
+        font-weight: normal;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .translate-container {
+        position: relative;
+    }
+
+    .translate-btn {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: #6b4e3d;
+        padding: 10px 16px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-size: 1rem; /* Increase text size */
+        transition: all 0.2s ease;
+    }
+
+    .translate-btn:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+        color: #6b4e3d;
+    }
+
+    .theme-toggle {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: #6b4e3d;
+        padding: 10px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-size: 1.2rem; /* Increase size */
+        transition: all 0.2s ease;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-toggle:hover {
+        background: var(--light-green);
+        border-color: var(--accent-green);
+        color: #6b4e3d;
+    }
+
+    .logout-btn {
+        background: #c17b6b; /* Updated background */
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px; /* Increase border radius */
+        cursor: pointer;
+        font-weight: normal; /* Remove bold */
+        font-size: 1rem; /* Increase text size */
+        transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+        background: #a85d52;
+    }
+
+    #google_translate_element {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 5px;
+        display: none;
+        color: #6b4e3d;
+    }
+
+    /* Dark theme CSS */
+    .dark-theme {
+        --bg: #1a1a1a;
+        --panel: #2d2d2d;
+        --muted: #888888;
+        --text: #ffffff;
+        --accent-green: #4ade80;
+        --light-green: #374151;
+        --card-border: #374151;
+    }
+
+    .dark-theme .common-header {
+        background: #2d2d2d;
+        color: var(--text);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .common-header {
+            padding: 12px 20px;
+            font-size: 16px; /* Reduce slightly on smaller screens */
+        }
+
+        .header-nav {
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 8px 12px;
+            font-size: 0.95rem;
+        }
+
+        .header-right {
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .header-nav {
+            display: none;
+        }
+
+        .header-left {
+            gap: 15px;
+        }
+    }
+    
+    
     .logo-container {
       width: 64px;
       height: 64px;
@@ -620,7 +829,8 @@
   </style>
 </head>
 <body>
-{% include 'header.html' %}
+
+{% include 'header admin.html' %}
 
 <div class="dashboard-container">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -813,6 +1023,26 @@
     </tbody>
   </table>
 </section>
+
+  <!-- Flagged Posts Management -->
+  <section class="admin-section">
+    <h2>🚩 Flagged Posts Management</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+      Review and manage posts flagged by AI moderation or student volunteers in the peer forum.
+    </p>
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <a href="/admin/flagged_posts" style="text-decoration: none;">
+        <button style="background: var(--gradient-warning); margin-right: 0;">
+          🚩 View Flagged Posts
+        </button>
+      </a>
+      <div style="display: flex; gap: 2rem; color: var(--text-secondary); font-size: 0.9rem;">
+        <span>🤖 AI Moderated: <strong id="quick-ai-count">—</strong></span>
+        <span>👤 Manually Flagged: <strong id="quick-manual-count">—</strong></span>
+        <span>⏳ Pending Review: <strong id="quick-pending-count">—</strong></span>
+      </div>
+    </div>
+  </section>
 
   <!-- User Management -->
   <section class="admin-section">
@@ -1417,10 +1647,48 @@ async function fetchVisits() {
 }
 
 // refresh every 5 seconds
-setInterval(fetchVisits, 5000);
+//setInterval(fetchVisits, 5000);
 
 // Initial load
 fetchVisits();
+
+// Load quick flagged posts stats
+async function loadQuickFlaggedStats() {
+  try {
+    const response = await fetch('/admin/api/flagged_posts?per_page=1');
+    const data = await response.json();
+
+    if (data.ok && data.stats) {
+      document.getElementById('quick-ai-count').textContent = data.stats.ai_flagged || 0;
+      document.getElementById('quick-manual-count').textContent = data.stats.manual_flagged || 0;
+      document.getElementById('quick-pending-count').textContent =
+        (data.stats.total_flagged || 0) - (data.stats.resolved_today || 0);
+    }
+  } catch (error) {
+    console.error('Error loading quick flagged stats:', error);
+    document.getElementById('quick-ai-count').textContent = '—';
+    document.getElementById('quick-manual-count').textContent = '—';
+    document.getElementById('quick-pending-count').textContent = '—';
+  }
+}
+
+// Load flagged stats on page load and refresh with other stats
+document.addEventListener('DOMContentLoaded', function() {
+  loadAdminStats();
+  loadDailyHits();
+  loadMoodTrend();
+  loadAverageScores();
+  loadQuickFlaggedStats();
+});
+
+// Update refresh button to include flagged stats
+document.getElementById('refreshStats').addEventListener('click', () => {
+  loadAdminStats();
+  loadDailyHits();
+  loadMoodTrend();
+  loadAverageScores();
+  loadQuickFlaggedStats();
+});
 
 </script>
 

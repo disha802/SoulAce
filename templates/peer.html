@@ -13,8 +13,8 @@
     body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.25s; padding-bottom:60px; }
     .logo-container img { width:52px; height:52px; border-radius:8px; object-fit:cover; }
     .user-icon { width:40px; height:40px; border-radius:50%; cursor:pointer; }
-    .user-popup { display:none; position:absolute; top:60px; right:20px; background:#fff; border-radius:12px; padding:10px; min-width:160px; box-shadow:0 5px 15px rgba(0,0,0,0.15); z-index:40 }
-    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:var(--accent-2); font-weight:600; padding:8px; border:none; border-radius:8px; cursor:pointer; text-align:left }
+    .user-popup { display:none; position:absolute; top:60px; right:20px; background:#fff; border-radius:12px; padding:10px; min-width:160px; z-index:40 }
+    .popup-btn { display:block; width:100%; margin-bottom:8px; background:#fff; color:var(--accent-2); padding:8px; border:none; border-radius:8px; cursor:pointer; text-align:left }
     .popup-btn:hover { background:#f2f2f2; }
     main { padding:1.5rem; max-width:1100px; margin:0 auto; }
     h2 { color:var(--accent-2); }
@@ -22,14 +22,14 @@
     input, textarea, select { width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ccc; font-size:1rem; box-sizing:border-box; }
     input[type="checkbox"] { width:auto; margin:0; padding:0; }
     textarea { min-height:100px; resize:vertical; }
-    button { background:#C17B6B; color:#fff; font-size:15px; font-weight:600; padding:8px 14px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.12); transition:all 0.18s ease; }
+    button { background:#C17B6B; color:#fff; font-size:15px; padding:8px 14px; border:none; border-radius:8px; cursor:pointer;transition:all 0.18s ease; }
     button:hover { transform:translateY(-2px); }
     button.secondary { background:#E0E0E0; color:#333; }
     button.danger { background:#f8f8f8; color:#b33a3a; border:1px solid #b33a3a; }
 
     .forum-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
     .search-container { display:flex; gap:10px; margin:6px 0; align-items:center; }
-    .post-form { background:white; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:20px; }
+    .post-form { background:white; padding:16px; border-radius:12px; margin-bottom:20px; }
     .post-form h3 { margin-top:0; color:var(--accent-2); }
     .anonymity-toggle { display:flex; align-items:center; gap:8px; margin:10px 0; }
     .anonymity-toggle label { margin:0; cursor:pointer; user-select:none; }

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoulAce - Admin Flagged Posts</title>
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --bg-alt: #e9ecef;
+      --header-footer: #f1f3f4;
+      --text-primary: #2c3e50;
+      --heading: #34495e;
+      --text-secondary: #6c757d;
+      --accent-1: #3498db;
+      --accent-2: #e74c3c;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --features-bg: #ecf0f1;
+      --card: #ffffff;
+      --shadow-light: 0 2px 10px rgba(0,0,0,0.08);
+      --shadow-medium: 0 4px 20px rgba(0,0,0,0.12);
+      --ai-flag-color: #ff6b6b;
+      --manual-flag-color: #4b69d6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Zain', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .common-header {
+      font-family: 'Zain', sans-serif;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      background: #eee0d1;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      color: #6b4e3d;
+      font-size: 18px;
+      font-weight: normal;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #6b4e3d;
+      font-weight: normal;
+    }
+
+    .header-logo img {
+      width: 45px;
+      height: 45px;
+      border-radius: 12px;
+    }
+
+    .header-logo span {
+      font-size: 1.3rem;
+      font-weight: normal;
+      color: #6b4e3d;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #6b4e3d;
+      font-weight: normal;
+      padding: 10px 18px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      position: relative;
+      font-size: 1rem;
+    }
+
+    .nav-link:hover {
+      color: #6b4e3d;
+      background: rgba(47, 122, 96, 0.1);
+    }
+
+    .nav-link.active {
+      color: #6b4e3d;
+      background: var(--light-green);
+      font-weight: normal;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logout-btn {
+      background: #c17b6b;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: normal;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      background: #a85d52;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      color: var(--heading);
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+
+    .filter-container {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow-light);
+      margin-bottom: 2rem;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-group label {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    select, input {
+      padding: 8px 12px;
+      border: 2px solid var(--bg-alt);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: var(--card);
+      color: var(--text-primary);
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--accent-1);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: var(--accent-1);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-danger {
+      background: var(--accent-2);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #d68910;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow-light);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ai-flagged .stat-value {
+      color: var(--ai-flag-color);
+    }
+
+    .manual-flagged .stat-value {
+      color: var(--manual-flag-color);
+    }
+
+    .posts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .post-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow-light);
+      padding: 1.5rem;
+      border-left: 4px solid var(--bg-alt);
+      transition: all 0.2s ease;
+    }
+
+    .post-card.ai-flagged {
+      border-left-color: var(--ai-flag-color);
+      background: #fff5f5;
+    }
+
+    .post-card.manual-flagged {
+      border-left-color: var(--manual-flag-color);
+      background: #f5f5ff;
+    }
+
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .post-meta {
+      flex: 1;
+    }
+
+    .post-author {
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .flag-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .ai-flag-badge {
+      background: linear-gradient(135deg, #ff6b6b, #c53030);
+    }
+
+    .manual-flag-badge {
+      background: linear-gradient(135deg, #4b69d6, #2c3e99);
+    }
+
+    .studentvol-badge {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #000;
+    }
+
+    .post-date {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .post-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--heading);
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content {
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+
+    .flag-info {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .flag-info.manual {
+      background: rgba(75, 105, 214, 0.1);
+      border-color: rgba(75, 105, 214, 0.3);
+    }
+
+    .flag-info h4 {
+      margin: 0 0 0.5rem 0;
+      color: var(--ai-flag-color);
+      font-size: 0.9rem;
+    }
+
+    .flag-info.manual h4 {
+      color: var(--manual-flag-color);
+    }
+
+    .flag-categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .flag-category {
+      background: var(--accent-2);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .replies-section {
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--bg-alt);
+      padding-top: 1rem;
+    }
+
+    .reply-card {
+      background: var(--features-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid var(--bg-alt);
+    }
+
+    .reply-card.flagged {
+      background: #fff0f0;
+      border-left-color: var(--ai-flag-color);
+    }
+
+    .reply-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .reply-author {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .reply-date {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .reply-content {
+      color: var(--text-primary);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .reply-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .no-posts {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      border: 1px solid var(--bg-alt);
+      background: var(--card);
+      color: var(--text-primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .pagination button:hover {
+      background: var(--features-bg);
+    }
+
+    .pagination button.active {
+      background: var(--accent-1);
+      color: white;
+      border-color: var(--accent-1);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.9rem;
+      background: var(--header-footer);
+      border-top: 2px solid var(--bg-alt);
+      margin-top: 3rem;
+      color: var(--text-secondary);
+    }
+
+    /* Dark mode */
+    body.dark {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    body.dark .common-header {
+      background: #2d2d2d;
+      color: #f9e6d0;
+    }
+
+    body.dark .filter-container,
+    body.dark .stat-card,
+    body.dark .post-card {
+      background: #2a2a2a;
+      color: #e0e0e0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    body.dark .reply-card {
+      background: #3a3a3a;
+    }
+
+    body.dark select,
+    body.dark input {
+      background: #3a3a3a;
+      color: #e0e0e0;
+      border-color: #4a4a4a;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      main {
+        padding: 1rem;
+      }
+
+      .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .post-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .post-actions {
+        justify-content: flex-start;
+      }
+
+      .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+
+      .post-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .reply-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'header admin.html' %}
+
+  <main>
+    <h1>🚩 Flagged Posts Management</h1>
+
+    <!-- Statistics -->
+    <div class="stats-container">
+      <div class="stat-card ai-flagged">
+        <div class="stat-value" id="ai-flagged-count">—</div>
+        <div class="stat-label">AI Flagged Posts</div>
+      </div>
+      <div class="stat-card manual-flagged">
+        <div class="stat-value" id="manual-flagged-count">—</div>
+        <div class="stat-label">Manually Flagged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-flagged-count">—</div>
+        <div class="stat-label">Total Flagged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="resolved-count">—</div>
+        <div class="stat-label">Resolved Today</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-container">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="filter-type">Filter by Type:</label>
+          <select id="filter-type">
+            <option value="all">All Flagged Posts</option>
+            <option value="ai">AI Flagged Only</option>
+            <option value="manual">Manually Flagged Only</option>
+            <option value="unresolved">Unresolved Only</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-category">AI Category:</label>
+          <select id="filter-category">
+            <option value="all">All Categories</option>
+            <option value="harassment">Harassment</option>
+            <option value="hate">Hate Speech</option>
+            <option value="violence">Violence</option>
+            <option value="self-harm">Self-harm</option>
+            <option value="sexual">Sexual Content</option>
+            <option value="spam">Spam</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="search-text">Search Content:</label>
+          <input type="text" id="search-text" placeholder="Search posts...">
+        </div>
+        <div class="filter-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Posts Container -->
+    <div id="posts-container" class="posts-container">
+      <div class="loading">Loading flagged posts...</div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination">
+    </div>
+  </main>
+
+  <footer>
+    <p>SoulAce © 2025 — Built with 💙 by SynapSix</p>
+  </footer>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentFilters = {
+      type: 'all',
+      category: 'all',
+      search: ''
+    };
+
+    // Load flagged posts data
+    async function loadFlaggedPosts(page = 1) {
+      try {
+        const params = new URLSearchParams({
+          page: page,
+          type: currentFilters.type,
+          category: currentFilters.category,
+          search: currentFilters.search
+        });
+
+        const response = await fetch(`/admin/api/flagged_posts?${params}`);
+        const data = await response.json();
+
+        if (!data.ok) {
+          throw new Error(data.error || 'Failed to load flagged posts');
+        }
+
+        displayPosts(data.posts);
+        updateStats(data.stats);
+        updatePagination(data.pagination);
+
+      } catch (error) {
+        console.error('Error loading flagged posts:', error);
+        document.getElementById('posts-container').innerHTML =
+          '<div class="no-posts">Error loading flagged posts. Please try again.</div>';
+      }
+    }
+
+    // Display posts
+    function displayPosts(posts) {
+      const container = document.getElementById('posts-container');
+
+      if (!posts || posts.length === 0) {
+        container.innerHTML = '<div class="no-posts">No flagged posts found with current filters.</div>';
+        return;
+      }
+
+      container.innerHTML = posts.map(post => createPostHTML(post)).join('');
+    }
+
+    // Create HTML for a single post
+    function createPostHTML(post) {
+      const flagType = post.ai_flagged ? 'ai-flagged' : 'manual-flagged';
+      const flagBadge = post.ai_flagged ?
+        '<span class="flag-badge ai-flag-badge">AI Flagged</span>' :
+        '<span class="flag-badge manual-flag-badge">Manually Flagged</span>';
+
+      const studentVolBadge = post.isstudentvol ?
+        '<span class="flag-badge studentvol-badge">Student Volunteer</span>' : '';
+
+      const flagInfo = post.ai_flagged && post.flag_categories && post.flag_categories.length > 0 ?
+        `<div class="flag-info">
+          <h4>🤖 AI Detection Results:</h4>
+          <div class="flag-categories">
+            ${post.flag_categories.map(cat => `<span class="flag-category">${cat}</span>`).join('')}
+          </div>
+        </div>` :
+        `<div class="flag-info manual">
+          <h4>👤 Manually flagged by ${post.flagged_by || 'volunteer'}</h4>
+          <p>Reason: ${post.flag_reason || 'Inappropriate content'}</p>
+        </div>`;
+
+      const repliesHTML = post.replies && post.replies.length > 0 ?
+        `<div class="replies-section">
+          <h4>Replies (${post.replies.length}):</h4>
+          ${post.replies.map(reply => createReplyHTML(reply, post._id)).join('')}
+        </div>` : '';
+
+      return `
+        <div class="post-card ${flagType}" data-post-id="${post._id}">
+          <div class="post-header">
+            <div class="post-meta">
+              <div class="post-author">
+                ${post.is_anonymous ? 'Anonymous' : post.username}
+                ${studentVolBadge}
+                ${flagBadge}
+              </div>
+              <div class="post-date">${formatDate(post.datetime || post.date)}</div>
+              ${post.title ? `<div class="post-title">${escapeHtml(post.title)}</div>` : ''}
+            </div>
+          </div>
+
+          ${flagInfo}
+
+          <div class="post-content">${escapeHtml(post.content)}</div>
+
+          <div class="post-actions">
+            <button class="btn btn-success" onclick="unflagPost('${post._id}')">✅ Unflag</button>
+            <button class="btn btn-danger" onclick="deletePost('${post._id}')">🗑️ Delete</button>
+            <button class="btn btn-warning" onclick="markResolved('${post._id}')">⚠️ Mark Resolved</button>
+            <span style="margin-left: auto; color: var(--text-secondary); font-size: 0.9rem;">
+              👍 ${post.likes || 0} | 👎 ${post.dislikes || 0} | 💬 ${(post.replies || []).length}
+            </span>
+          </div>
+
+          ${repliesHTML}
+        </div>
+      `;
+    }
+
+    // Create HTML for a reply
+    function createReplyHTML(reply, postId) {
+      const flagClass = reply.flagged ? 'flagged' : '';
+      const flagBadge = reply.flagged ?
+        (reply.ai_flagged ?
+          '<span class="flag-badge ai-flag-badge">AI Flagged</span>' :
+          '<span class="flag-badge manual-flag-badge">Manually Flagged</span>') : '';
+
+      const studentVolBadge = reply.isstudentvol ?
+        '<span class="flag-badge studentvol-badge">Student Volunteer</span>' : '';
+
+      return `
+        <div class="reply-card ${flagClass}" data-reply-id="${reply.id}">
+          <div class="reply-header">
+            <div class="reply-author">
+              ${reply.anonymous ? 'Anonymous' : reply.author}
+              ${studentVolBadge}
+              ${flagBadge}
+            </div>
+            <div class="reply-date">${formatDate(reply.datetime || reply.date)}</div>
+          </div>
+          <div class="reply-content">${escapeHtml(reply.content)}</div>
+          ${reply.flagged ? `
+          <div class="reply-actions">
+            <button class="btn btn-success" onclick="unflagReply('${postId}', '${reply.id}')">✅ Unflag</button>
+            <button class="btn btn-danger" onclick="deleteReply('${postId}', '${reply.id}')">🗑️ Delete</button>
+          </div>` : ''}
+        </div>
+      `;
+    }
+
+    // Update statistics
+    function updateStats(stats) {
+      document.getElementById('ai-flagged-count').textContent = stats.ai_flagged || 0;
+      document.getElementById('manual-flagged-count').textContent = stats.manual_flagged || 0;
+      document.getElementById('total-flagged-count').textContent = stats.total_flagged || 0;
+      document.getElementById('resolved-count').textContent = stats.resolved_today || 0;
+    }
+
+    // Update pagination
+    function updatePagination(pagination) {
+      currentPage = pagination.current_page;
+      totalPages = pagination.total_pages;
+
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+
+      // Previous button
+      html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="loadFlaggedPosts(${currentPage - 1})">« Previous</button>`;
+
+      // Page numbers
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="loadFlaggedPosts(${i})">${i}</button>`;
+      }
+
+      // Next button
+      html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="loadFlaggedPosts(${currentPage + 1})">Next »</button>`;
+
+      container.innerHTML = html;
+    }
+
+    // Apply filters
+    function applyFilters() {
+      currentFilters.type = document.getElementById('filter-type').value;
+      currentFilters.category = document.getElementById('filter-category').value;
+      currentFilters.search = document.getElementById('search-text').value;
+      loadFlaggedPosts(1);
+    }
+
+    // Action functions
+    async function unflagPost(postId) {
+      if (!confirm('Are you sure you want to unflag this post?')) return;
+
+      try {
+        const response = await fetch(`/unflag_content/post/${postId}`, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.ok) {
+          showSuccess('Post unflagged successfully');
+          loadFlaggedPosts(currentPage);
+        } else {
+          showError(result.error || 'Failed to unflag post');
+        }
+      } catch (error) {
+        showError('Error unflagging post');
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`/delete_post/${postId}`, { method: 'DELETE' });
+        const result = await response.json();
+
+        if (result.ok) {
+          showSuccess('Post deleted successfully');
+          loadFlaggedPosts(currentPage);
+        } else {
+          showError(result.error || 'Failed to delete post');
+        }
+      } catch (error) {
+        showError('Error deleting post');
+      }
+    }
+
+    async function markResolved(postId) {
+      try {
+        const response = await fetch(`/admin/api/mark_resolved/post/${postId}`, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.ok) {
+          showSuccess('Post marked as resolved');
+          loadFlaggedPosts(currentPage);
+        } else {
+          showError(result.error || 'Failed to mark as resolved');
+        }
+      } catch (error) {
+        showError('Error marking post as resolved');
+      }
+    }
+
+    async function unflagReply(postId, replyId) {
+      if (!confirm('Are you sure you want to unflag this reply?')) return;
+
+      try {
+        const response = await fetch(`/unflag_content/reply/${replyId}`, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.ok) {
+          showSuccess('Reply unflagged successfully');
+          loadFlaggedPosts(currentPage);
+        } else {
+          showError(result.error || 'Failed to unflag reply');
+        }
+      } catch (error) {
+        showError('Error unflagging reply');
+      }
+    }
+
+    async function deleteReply(postId, replyId) {
+      if (!confirm('Are you sure you want to delete this reply? This action cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`/delete_reply/${postId}/${replyId}`, { method: 'DELETE' });
+        const result = await response.json();
+
+        if (result.ok) {
+          showSuccess('Reply deleted successfully');
+          loadFlaggedPosts(currentPage);
+        } else {
+          showError(result.error || 'Failed to delete reply');
+        }
+      } catch (error) {
+        showError('Error deleting reply');
+      }
+    }
+
+    // Utility functions
+    function formatDate(dateString) {
+      if (!dateString) return 'Unknown';
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showSuccess(message) {
+      // Use existing notification system if available
+      if (window.showSuccess) {
+        window.showSuccess(message);
+      } else {
+        alert(message);
+      }
+    }
+
+    function showError(message) {
+      // Use existing notification system if available
+      if (window.showError) {
+        window.showError(message);
+      } else {
+        alert('Error: ' + message);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('search-text').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadFlaggedPosts(1);
+    });
+
+    // Refresh every 30 seconds
+    setInterval(() => {
+      loadFlaggedPosts(currentPage);
+    }, 30000);
+  </script>
+</body>
+</html>
