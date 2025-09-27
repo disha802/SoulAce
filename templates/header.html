@@ -256,4 +256,147 @@
             <button type="submit" class="logout-btn">Logout</button>
         </form>
     </div>
-</header>
+<!-- Notification Container -->
+<div class="notification-container" id="notificationContainer"></div>
+
+<!-- Header JavaScript -->
+<script>
+// Translation toggle function
+function toggleTranslate() {
+    const element = document.getElementById('google_translate_element');
+    if (element.style.display === 'none' || element.style.display === '') {
+        element.style.display = 'block';
+        // Initialize Google Translate if not already done
+        if (!window.googleTranslateLoaded) {
+            loadGoogleTranslate();
+        }
+    } else {
+        element.style.display = 'none';
+    }
+}
+
+// Theme toggle function
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        themeIcon.textContent = '🌸';
+        localStorage.setItem('theme', 'light');
+    } else {
+        body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// Load saved theme
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeIcon = document.getElementById('theme-icon');
+
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '🌙';
+    }
+});
+
+// Google Translate initialization
+function loadGoogleTranslate() {
+    if (!window.googleTranslateLoaded) {
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        document.head.appendChild(script);
+        window.googleTranslateLoaded = true;
+    }
+}
+
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,bn,te,ta,gu,mr,ur,pa,ml,kn,or,as',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+}
+
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 7000) {
+    const container = document.getElementById('notificationContainer');
+    if (!container) return;
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+
+    // Get appropriate icon based on type
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${icons[type] || icons.info}</span>
+            <span class="notification-text">${message}</span>
+        </div>
+        <button class="notification-close" onclick="closeNotification(this)">×</button>
+    `;
+
+    // Add to container
+    container.appendChild(notification);
+
+    // Trigger animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+
+    // Auto remove after duration
+    setTimeout(() => {
+        removeNotification(notification);
+    }, duration);
+
+    return notification;
+}
+
+function closeNotification(button) {
+    const notification = button.closest('.notification');
+    removeNotification(notification);
+}
+
+function removeNotification(notification) {
+    if (!notification) return;
+
+    notification.classList.remove('show');
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 300);
+}
+
+// Override default alert function
+window.alert = function(message) {
+    showNotification(message, 'info');
+};
+
+// Add convenience functions
+window.showSuccess = function(message, duration) {
+    showNotification(message, 'success', duration);
+};
+
+window.showError = function(message, duration) {
+    showNotification(message, 'error', duration);
+};
+
+window.showWarning = function(message, duration) {
+    showNotification(message, 'warning', duration);
+};
+
+window.showInfo = function(message, duration) {
+    showNotification(message, 'info', duration);
+};
+</script>
+</header>   

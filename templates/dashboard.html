@@ -28,11 +28,70 @@
     .hero h2 { font-size:2.5rem; margin-bottom:20px; color:#6b4e3d; font-weight:normal; }
     .hero p { font-size:1.2rem; color:#8a8a8a; max-width:700px; margin:0 auto; line-height:1.6; }
 
+    /* ========== DASHBOARD SECTION ========== */
+    .dashboard-section {
+      display: grid; grid-template-columns: 1fr 2fr; gap: 30px;
+      margin: 60px 20px; max-width: 1200px; margin-left: auto; margin-right: auto;
+    }
+
+    /* ========== STREAK COUNTER ========== */
+    .streak-counter {
+      text-align: center; background: rgba(255,255,255,0.6);
+      padding: 30px 20px; border-radius: 20px; backdrop-filter: blur(10px);
+      border: 1px solid rgba(193,123,107,0.2);
+      box-shadow: 0 8px 32px rgba(193,123,107,0.15);
+    }
+    .streak-counter h3 {
+      font-size: 1.4rem; color: #6b4e3d; margin-bottom: 20px; font-weight: normal;
+    }
+    .streak-display {
+      display: flex; align-items: center; justify-content: center; gap: 15px;
+      margin: 20px 0;
+    }
+    .streak-flame {
+      font-size: 2.5rem; position: relative;
+      animation: flameDance 0.8s ease-in-out infinite alternate, flameFlicker 0.3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(255,69,0,0.8))
+              drop-shadow(0 0 15px rgba(255,140,0,0.6))
+              drop-shadow(0 0 25px rgba(255,165,0,0.4));
+    }
+    @keyframes flameDance {
+      0% { transform: scale(0.98) rotate(-1deg) translateY(1px); }
+      25% { transform: scale(1.02) rotate(1deg) translateY(-1px); }
+      50% { transform: scale(1.01) rotate(-0.5deg) translateY(-2px); }
+      75% { transform: scale(0.99) rotate(0.8deg) translateY(0px); }
+      100% { transform: scale(1.03) rotate(-0.8deg) translateY(-1px); }
+    }
+    @keyframes flameFlicker {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(255,69,0,0.8))
+                drop-shadow(0 0 15px rgba(255,140,0,0.6))
+                drop-shadow(0 0 25px rgba(255,165,0,0.4));
+      }
+      50% {
+        filter: drop-shadow(0 0 12px rgba(255,69,0,0.9))
+                drop-shadow(0 0 20px rgba(255,140,0,0.7))
+                drop-shadow(0 0 30px rgba(255,165,0,0.5));
+      }
+    }
+    .streak-number {
+      font-size: 3rem; font-weight: bold; color: #c17b6b;
+      text-shadow: 0 2px 4px rgba(193,123,107,0.3);
+    }
+    .streak-label {
+      font-size: 1rem; color: #8a8a8a; margin-bottom: 15px;
+    }
+    .streak-motivation {
+      background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+      color: #6b4e3d; padding: 10px 16px; border-radius: 25px;
+      font-size: 0.85rem; font-weight: 500; margin-top: 15px;
+      display: inline-block; box-shadow: 0 4px 12px rgba(250,177,160,0.3);
+    }
+
     /* ========== MOOD TRACKER ========== */
     .mood-tracker {
-      text-align:center; margin:60px 20px; background: rgba(255,255,255,0.4);
+      text-align:center; background: rgba(255,255,255,0.4);
       padding:40px; border-radius:20px; backdrop-filter: blur(10px);
-      max-width:1000px; margin-left:auto; margin-right:auto;
     }
     .mood-tracker h2 { font-size:2rem; color:#6b4e3d; margin-bottom:30px; font-weight:normal; }
 
@@ -118,7 +177,21 @@
     body.dark-mode {
       background: linear-gradient(135deg,#2a2a2a 20%, #1a1a1a 100%); color:#e0e0e0;
     }
-    /* (dark-mode rules omitted here for brevity — they remain similar to previously provided CSS) */
+    body.dark-mode .streak-counter {
+      background: rgba(60,60,60,0.8); border: 1px solid rgba(224,224,224,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    body.dark-mode .streak-counter h3 { color: #e0e0e0; }
+    body.dark-mode .streak-number {
+      color: #fab1a0;
+      text-shadow: 0 2px 4px rgba(250,177,160,0.3);
+    }
+    body.dark-mode .streak-label { color: #b0b0b0; }
+    body.dark-mode .streak-motivation {
+      background: linear-gradient(135deg, #2d3436, #636e72);
+      color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    /* (other dark-mode rules omitted here for brevity — they remain similar to previously provided CSS) */
 
     /* ========== RESPONSIVE ========== */
     @media (max-width:768px) {
@@ -126,7 +199,14 @@
       .header-controls { gap:10px; }
       .hero { margin:20px; padding:40px 20px; }
       .hero h2 { font-size:2rem; }
-      .mood-tracker { margin:40px 20px; padding:30px 20px; }
+      .dashboard-section {
+        grid-template-columns: 1fr; gap: 20px; margin: 40px 20px;
+      }
+      .streak-counter { padding:25px 15px; }
+      .streak-flame { font-size:2rem; }
+      .streak-number { font-size:2.5rem; }
+      .streak-counter h3 { font-size:1.2rem; }
+      .mood-tracker { padding:30px 20px; }
       .moods { grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap:20px; }
       .features { padding:60px 20px; }
       .crisis-btn { bottom:20px; right:20px; padding:12px 20px; font-size:14px; }
@@ -149,51 +229,63 @@
       <p>Your safe space for mental wellness is here. Take a moment to check in with yourself, explore our resources, and connect with supportive community when you're ready.</p>
     </section>
 
-    <section class="mood-tracker">
-      <h2>How are you feeling?</h2>
-      <div class="moods">
-        <div class="mood-option" onclick="setMood('Happy')">
-          <div class="mood-btn">
-            <img src="{{ url_for('static', filename='moods/happy.svg') }}" alt="Happy" class="mood-svg" width="42" height="42">
+    <div class="dashboard-section">
+      <section class="streak-counter">
+        <h3>Daily Check-in Streak</h3>
+        <div class="streak-display">
+          <span class="streak-flame">🔥</span>
+          <span class="streak-number" id="streakNumber">7</span>
+        </div>
+        <div class="streak-label">days in a row</div>
+        <div class="streak-motivation" id="streakMotivation">Keep it up! You're building a healthy habit 🌟</div>
+      </section>
+
+      <section class="mood-tracker">
+        <h2>How are you feeling?</h2>
+        <div class="moods">
+          <div class="mood-option" onclick="setMood('Happy')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/happy.svg') }}" alt="Happy" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Happy</div>
           </div>
-          <div class="label">Happy</div>
+
+          <div class="mood-option" onclick="setMood('Calm')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/calm.svg') }}" alt="Calm" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Calm</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Void')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/void.svg') }}" alt="Neutral" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Neutral</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Sad')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/Sad.svg') }}" alt="Sad" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Sad</div>
+          </div>
+
+          <div class="mood-option" onclick="setMood('Angry')">
+            <div class="mood-btn">
+              <img src="{{ url_for('static', filename='moods/Angry.svg') }}" alt="Angry" class="mood-svg" width="42" height="42">
+            </div>
+            <div class="label">Angry</div>
+          </div>
         </div>
 
-        <div class="mood-option" onclick="setMood('Calm')">
-          <div class="mood-btn">
-            <img src="{{ url_for('static', filename='moods/calm.svg') }}" alt="Calm" class="mood-svg" width="42" height="42">
-          </div>
-          <div class="label">Calm</div>
-        </div>
+        <form action="/download_chart" method="get" style="margin-top:12px;">
+          <button type="submit" class="download-btn">📊 Download Mood History</button>
+        </form>
+        <!-- fix the route here, maybe the method -->
 
-        <div class="mood-option" onclick="setMood('Void')">
-          <div class="mood-btn">
-            <img src="{{ url_for('static', filename='moods/void.svg') }}" alt="Neutral" class="mood-svg" width="42" height="42">
-          </div>
-          <div class="label">Neutral</div>
-        </div>
-
-        <div class="mood-option" onclick="setMood('Sad')">
-          <div class="mood-btn">
-            <img src="{{ url_for('static', filename='moods/Sad.svg') }}" alt="Sad" class="mood-svg" width="42" height="42">
-          </div>
-          <div class="label">Sad</div>
-        </div>
-
-        <div class="mood-option" onclick="setMood('Angry')">
-          <div class="mood-btn">
-            <img src="{{ url_for('static', filename='moods/Angry.svg') }}" alt="Angry" class="mood-svg" width="42" height="42">
-          </div>
-          <div class="label">Angry</div>
-        </div>
-      </div>
-
-      <form action="/download_chart" method="get" style="margin-top:12px;">
-        <button type="submit" class="download-btn">📊 Download Mood History</button>
-      </form>
-      <!-- fix the route here, maybe the method -->
-       
-    </section>
+      </section>
+    </div>
 
     <section class="features">
       <div class="features-container">
@@ -298,6 +390,42 @@
   </footer>
 
   <script>
+
+    /* ---------- Streak Counter Logic ---------- */
+    function updateStreakDisplay() {
+      const streakNumber = document.getElementById('streakNumber');
+      const streakMotivation = document.getElementById('streakMotivation');
+
+      // For demo purposes, using a mock streak count of 7
+      // In real implementation, this would come from backend
+      const currentStreak = 7;
+
+      const motivationalMessages = {
+        1: "Great start! Every journey begins with a single step 🌱",
+        2: "Two days strong! You're building momentum 💪",
+        3: "Three days in a row! You're on fire 🔥",
+        7: "One week! You're building a healthy habit 🌟",
+        14: "Two weeks! Your consistency is impressive 🏆",
+        30: "One month! You're a wellness champion 👑",
+        50: "50 days! Your dedication is inspiring ✨",
+        100: "100 days! You're a true wellness warrior 🦋"
+      };
+
+      streakNumber.textContent = currentStreak;
+
+      // Find the most appropriate message
+      let message = "Keep it up! You're doing amazing 🌟";
+      for (const [days, msg] of Object.entries(motivationalMessages)) {
+        if (currentStreak >= parseInt(days)) {
+          message = msg;
+        }
+      }
+
+      streakMotivation.textContent = message;
+    }
+
+    // Initialize streak display on page load
+    document.addEventListener('DOMContentLoaded', updateStreakDisplay);
 
     /* ---------- Confetti celebration ---------- */
 (() => {
