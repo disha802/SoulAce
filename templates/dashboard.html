@@ -145,7 +145,7 @@
 
   <main>
     <section class="hero">
-      <h2>Welcome back, {{ username }} 💛</h2>
+      <h2>Welcome {{ username }} 💛</h2>
       <p>Your safe space for mental wellness is here. Take a moment to check in with yourself, explore our resources, and connect with supportive community when you're ready.</p>
     </section>
 
@@ -287,7 +287,7 @@
         <!-- Action row: Send crisis alert -->
         <div style="margin-top:18px; display:flex; gap:10px; justify-content:flex-end;">
           <button type="button" class="request-btn" onclick="sendCrisis()">📨 Request Immediate Support</button>
-          <button type="button" class="close-btn" onclick="closeCrisisPopup()">Close</button>
+          <!-- <button type="button" class="close-btn" onclick="closeCrisisPopup()">Close</button> -->
         </div>
       </div>
     </div>

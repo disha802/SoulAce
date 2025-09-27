@@ -837,7 +837,6 @@
                 <select name="role" onchange="this.form.submit()">
                   <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
                   <option value="therapist" {% if user.role == 'therapist' %}selected{% endif %}>Therapist</option>
-                  <option value="volunteer" {% if user.role == 'volunteer' %}selected{% endif %}>Volunteer</option>
                   <option value="studentvol" {% if user.role == 'studentvol' %}selected{% endif %}>Student Volunteer</option>
                   <option value="proctor" {% if user.role == 'proctor' %}selected{% endif %}>Proctor</option>
                 </select>
@@ -865,8 +864,8 @@
           <button onclick="showBar()"> Bar Area</button>
         </div>  
         <div class="mood-graph-container">
-          <canvas id="lineChart"></canvas>
-          <canvas id="stackedChart" style="display:none;"></canvas>
+          <canvas id="lineChart" style="display:none;"></canvas>
+          <canvas id="stackedChart"></canvas>
         </div>
 
       </div>
@@ -1337,8 +1336,8 @@ function showLine() {
   const barChart = document.getElementById("stackedChart");
   
   if (lineChart && barChart) {
-    lineChart.style.display = "block";
-    barChart.style.display = "none";
+    lineChart.style.display = "none";
+    barChart.style.display = "block";
   }
 }
 

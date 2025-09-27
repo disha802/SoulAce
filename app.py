@@ -1533,7 +1533,7 @@ def crisis():
     crisis_doc = {
         "username": username,
         "ip_address": ip_address,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.now()
     }
     db["crisis"].insert_one(crisis_doc)
 

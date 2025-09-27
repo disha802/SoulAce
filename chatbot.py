@@ -2,15 +2,6 @@ import os
 from crewai import Agent, Task, Crew
 from crewai.llm import LLM
 from dotenv import load_dotenv
-import threading
-import time
-import queue
-
-import speech_recognition as sr
-import pyttsx3
-import threading
-# removed simpleaudio
-
 
 load_dotenv(dotenv_path="d:/SIH/SoulAce-main/SoulAce/.env")
 api_key = os.getenv("GROQ_API_KEY")
@@ -21,7 +12,7 @@ class EmotionalChatbot:
         self.llm = LLM(
             model="groq/llama-3.1-8b-instant",
             api_key=api_key,
-            max_tokens=200
+            max_tokens=512
         )
         self.setup_agents()
 
@@ -219,6 +210,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling anxious and said: "{message}"
 
             Provide a warm, calming response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Acknowledges their feelings with empathy
             - Offers gentle reassurance
             - Suggests a simple breathing or grounding technique
@@ -231,6 +223,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling depressed and said: "{message}"
 
             Provide a compassionate response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Validates their feelings without trying to "fix" them
             - Offers gentle encouragement and hope
             - Suggests one small, manageable positive action
@@ -243,6 +236,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling stressed and said: "{message}"
 
             Provide a supportive response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Acknowledges the difficulty of their situation
             - Offers practical stress management advice
             - Suggests breaking things down into smaller steps
@@ -256,6 +250,7 @@ class EmotionalChatbot:
 
             Respond naturally like a caring friend would. Be genuine and conversational. 
             You can:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Ask follow-up questions if they shared something interesting
             - Share a related thought or experience
             - Show genuine interest and enthusiasm
@@ -313,174 +308,44 @@ class EmotionalChatbot:
         response = self.generate_response(message, emotion)
         return response
 
-class AudioInterface:
-    """
-    Simple audio helper:
-      - listen_from_mic(): capture from microphone and return transcribed text (or None)
-      - speak(text, block=False): queue & play TTS via pyttsx3 (non-blocking by default)
-    """
-
-    def __init__(self, tts_rate: int = 170, tts_volume: float = 1.0, voice_index: int = 0):
-        # STT
-        self.recognizer = sr.Recognizer()
-
-        # TTS engine setup (pyttsx3)
-        self.tts = pyttsx3.init()
-        try:
-            self.tts.setProperty("rate", tts_rate)
-            self.tts.setProperty("volume", tts_volume)
-        except Exception:
-            # Some pyttsx3 backends might throw on setProperty; ignore non-fatal errors
-            pass
-
-        # Tune voice selection if multiple voices exist
-        try:
-            voices = self.tts.getProperty("voices")
-            if voices and 0 <= voice_index < len(voices):
-                self.tts.setProperty("voice", voices[voice_index].id)
-        except Exception:
-            pass
-
-        # TTS queue so multiple responses don't overlap badly
-        self._tts_queue = queue.Queue()
-        self._tts_thread = threading.Thread(target=self._tts_worker, daemon=True)
-        self._tts_thread.start()
-
-    # ---------------- STT ----------------
-    def listen_from_mic(self, timeout=6, phrase_time_limit=12, adjust_for_ambient=True):
-        """
-        Listen from default microphone, return transcribed string or None.
-        timeout: how long to wait for phrase start
-        phrase_time_limit: max seconds to capture after start
-        """
-        try:
-            with sr.Microphone() as source:
-                if adjust_for_ambient:
-                    # Short ambient noise adjust
-                    self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
-                print("Listening... (speak now)")
-                audio = self.recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
-        except sr.WaitTimeoutError:
-            print("No speech detected (timed out).")
-            return None
-        except OSError as e:
-            # Microphone not found or permission error
-            print(f"Microphone error: {e}")
-            return None
-
-        # Use Google Web Speech API (free & good for quick dev)
-        try:
-            text = self.recognizer.recognize_google(audio)
-            print(f"Transcribed: {text}")
-            return text
-        except sr.UnknownValueError:
-            print("Couldn't understand audio.")
-            return None
-        except sr.RequestError as e:
-            print(f"Speech recognition request failed: {e}")
-            return None
-
-    # ---------------- TTS ----------------
-    def _tts_worker(self):
-        """Background TTS worker that consumes the queue."""
-        while True:
-            text = self._tts_queue.get()  # blocks
-            if text is None:
-                # sentinel to stop (not used here, but keeps a clean API)
-                break
-            try:
-                # call pyttsx3 synchronously for each item
-                self.tts.say(text)
-                self.tts.runAndWait()
-            except Exception as e:
-                # don't crash the worker
-                print(f"TTS error: {e}")
-            self._tts_queue.task_done()
-
-    def speak(self, text: str, block: bool = False):
-        """
-        Queue text for speaking. If block=True, block until this text finishes speaking.
-        """
-        if not text:
-            return
-        if block:
-            # Synchronous speak (useful in some flows)
-            try:
-                self.tts.say(text)
-                self.tts.runAndWait()
-            except Exception as e:
-                print(f"TTS play error: {e}")
-            return
-
-        # Non-blocking: enqueue and return
-        self._tts_queue.put(text)
-
 def main():
-    """
-    Run interactive console chatbot with both text and voice input.
-    - Type text and press Enter to chat.
-    - Type '/voice' to speak a message via the microphone.
-    - Type '/exit' or 'bye' to quit.
-    """
-    # If your EmotionalChatbot takes an api key or config, create it accordingly.
-    # Example: chatbot = EmotionalChatbot(os.getenv("GROQ_API_KEY"))
-    # Replace the line below with the exact constructor you already use:
+    print("                                     Welcome to SoulAce\n")
+    print("                                Your Emotional Support Chatbot!\n")
+
+    # Get API key from environment variable
+    api_key = os.getenv("GROQ_API_KEY")
+    
+    if not api_key:
+        print("❌ Please set your GROQ_API_KEY environment variable.")
+        print("💡 In VSCode terminal, run: export GROQ_API_KEY='your_api_key_here'")
+        return
+
     try:
-        chatbot = EmotionalChatbot(os.getenv("GROQ_API_KEY"))
-    except Exception:
-        # Fallback in case your constructor signature is different:
-        chatbot = EmotionalChatbot()
+        # Initialize chatbot
+        chatbot = EmotionalChatbot(api_key)
 
-    audio = AudioInterface()
+        # Start conversation loop
+        while True:
+            user_input = input("You: ").strip()
 
-    print("\n=== Welcome — text + voice chatbot ===")
-    print("Controls:")
-    print("  • Type your message and press Enter (text chat).")
-    print("  • Type '/voice' to speak (microphone → bot).")
-    print("  • Type '/exit' or 'bye' to quit.\n")
+            # Check for quit commands
+            if user_input.lower() in ['bye']:
+                print("\n Take care of yourself! Remember, you're stronger than you know. 💙")
+                break
 
-    while True:
-        try:
-            user_input = input("You (or /voice): ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nExiting — take care.")
-            break
-
-        if not user_input:
-            continue
-
-        if user_input.lower() in ['/exit', 'bye']:
-            print("Goodbye — be kind to yourself.")
-            break
-
-        if user_input == "/voice":
-            # Capture microphone speech, send to chatbot, speak reply
-            transcribed = audio.listen_from_mic()
-            if not transcribed:
-                print("Bot: I didn't catch that. Try speaking clearly or check mic permissions.")
+            if not user_input:
+                print("Bot: I'm here whenever you're ready to talk. 😊")
                 continue
 
-            print(f"You (voice): {transcribed}")
             try:
-                response = chatbot.chat(transcribed)
+                response = chatbot.chat(user_input)
+                print(f"\nBot: {response}\n")
             except Exception as e:
-                print(f"Bot error while processing: {e}")
-                response = "Sorry, I ran into an error processing that."
+                print(f"\nBot: I'm here to listen and support you. Could you tell me more about how you're feeling?\n")
 
-            print(f"\nBot: {response}\n")
-            # Non-blocking TTS so you can continue typing
-            audio.speak(response, block=False)
-            continue
+    except Exception as e:
+        print(f"❌ Error initializing chatbot: {e}")
+        print("Please check your API key and try again.")
 
-        # Normal text path
-        try:
-            response = chatbot.chat(user_input)
-        except Exception as e:
-            print(f"Bot error: {e}")
-            response = "Sorry, I couldn't process that. Could you rephrase?"
-
-        print(f"\nBot: {response}\n")
-        audio.speak(response, block=False)
-        
 if __name__ == "__main__":
     main()
