@@ -12,7 +12,7 @@ class EmotionalChatbot:
         self.llm = LLM(
             model="groq/llama-3.1-8b-instant",
             api_key=api_key,
-            max_tokens=100
+            max_tokens=512
         )
         self.setup_agents()
 
@@ -210,6 +210,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling anxious and said: "{message}"
 
             Provide a warm, calming response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Acknowledges their feelings with empathy
             - Offers gentle reassurance
             - Suggests a simple breathing or grounding technique
@@ -222,6 +223,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling depressed and said: "{message}"
 
             Provide a compassionate response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Validates their feelings without trying to "fix" them
             - Offers gentle encouragement and hope
             - Suggests one small, manageable positive action
@@ -234,6 +236,7 @@ class EmotionalChatbot:
             prompt = f'''The user is feeling stressed and said: "{message}"
 
             Provide a supportive response that:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Acknowledges the difficulty of their situation
             - Offers practical stress management advice
             - Suggests breaking things down into smaller steps
@@ -247,6 +250,7 @@ class EmotionalChatbot:
 
             Respond naturally like a caring friend would. Be genuine and conversational. 
             You can:
+            - Keep responses concise — 2 to 4 sentences maximum, unless the user asks for more detail.
             - Ask follow-up questions if they shared something interesting
             - Share a related thought or experience
             - Show genuine interest and enthusiasm
