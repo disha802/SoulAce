@@ -1723,6 +1723,204 @@ def mood_trends():
     }
     return jsonify(data), 200
 
+@app.route("/admin/api/stats", methods=["GET"])
+def admin_api_stats():
+    """Return KPI statistics for admin dashboard"""
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"ok": False, "error": "Admin access required"}), 403
+    
+    try:
+        # Calculate active users (users who logged in within last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        
+        # For active users, you might want to track login times in users collection
+        # For now, we'll use users with recent mood entries or journal entries as proxy
+        recent_mood_users = moodtracking_col.distinct("user_id", 
+            {"datetime": {"$gte": thirty_days_ago}})
+        recent_journal_users = journals_col.distinct("user_id", 
+            {"datetime": {"$gte": thirty_days_ago}})
+        
+        active_users = len(set(recent_mood_users + recent_journal_users))
+        
+        # New users this month
+        first_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        new_monthly_users = users_col.count_documents({
+            "date_joined": {"$gte": first_of_month},
+            "role": {"$ne": "admin"}
+        })
+        
+        # Count therapists
+        therapists_count = therapists_col.count_documents({})
+        
+        # Count volunteers (studentvol role)
+        volunteers_count = users_col.count_documents({"role": "studentvol"})
+        
+        # Count proctors
+        proctors_count = proctors_col.count_documents({})
+        
+        # Calculate bounce rate (simplified version)
+        # Bounce rate = users with only 1 page view / total users with page views
+        total_page_views = page_views_col.count_documents({})
+        if total_page_views > 0:
+            # Users who visited only once
+            single_visit_users = len(list(page_views_col.aggregate([
+                {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
+                {"$match": {"count": 1}}
+            ])))
+            
+            total_unique_visitors = len(page_views_col.distinct("user_id")) or 1
+            bounce_rate_percent = round((single_visit_users / total_unique_visitors) * 100)
+        else:
+            bounce_rate_percent = 0
+        
+        kpis = {
+            "active_users": active_users,
+            "new_monthly_users": new_monthly_users,
+            "therapists": therapists_count,
+            "volunteers": volunteers_count,
+            "proctors": proctors_count,
+            "bounce_rate_percent": bounce_rate_percent
+        }
+        
+        return jsonify({"ok": True, "kpis": kpis}), 200
+        
+    except Exception as e:
+        print(f"Error calculating admin stats: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+    
+    
+@app.route("/admin/api/daily_hits", methods=["GET"])
+def admin_daily_hits():
+    """Return daily page hits for the last 30 days"""
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+    
+    try:
+        # Get last 30 days of page views
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        
+        pipeline = [
+            {"$match": {"timestamp": {"$gte": thirty_days_ago}}},
+            {"$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        results = list(page_views_col.aggregate(pipeline))
+        
+        # Create array of last 30 days
+        dates = []
+        counts = []
+        
+        for i in range(30):
+            date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
+            dates.append(date)
+            
+            # Find count for this date
+            count = 0
+            for result in results:
+                if result["_id"] == date:
+                    count = result["count"]
+                    break
+            counts.append(count)
+        
+        return jsonify({
+            "labels": [datetime.strptime(d, "%Y-%m-%d").strftime("%m/%d") for d in dates],
+            "counts": counts
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting daily hits: {e}")
+        return jsonify({"labels": [], "counts": []}), 500
+
+@app.route("/admin/api/mood_trend", methods=["GET"])
+def admin_mood_trend():
+    """Return mood trend data for the last 30 days"""
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+    
+    try:
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        
+        # Mood scoring system
+        mood_scores = {
+            "Very Happy": 8,
+            "Feeling Blessed": 7,
+            "Happy": 6,
+            "Mind Blown": 5,
+            "Frustrated": 3,
+            "Sad": 2,
+            "Angry": 1,
+            "Crying": 0
+        }
+        
+        pipeline = [
+            {"$match": {"datetime": {"$gte": thirty_days_ago}}},
+            {"$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$datetime"}},
+                "moods": {"$push": "$mood"}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        results = list(moodtracking_col.aggregate(pipeline))
+        
+        # Calculate daily averages
+        dates = []
+        averages = []
+        
+        for i in range(30):
+            date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
+            dates.append(date)
+            
+            # Find moods for this date
+            daily_moods = []
+            for result in results:
+                if result["_id"] == date:
+                    daily_moods = result["moods"]
+                    break
+            
+            if daily_moods:
+                # Calculate average mood score for the day
+                scores = [mood_scores.get(mood, 4) for mood in daily_moods]  # default to 4 if unknown
+                avg = sum(scores) / len(scores)
+                averages.append(round(avg, 1))
+            else:
+                averages.append(0)
+        
+        return jsonify({
+            "labels": [datetime.strptime(d, "%Y-%m-%d").strftime("%m/%d") for d in dates],
+            "avgs": averages
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting mood trend: {e}")
+        return jsonify({"labels": [], "avgs": []}), 500
+
+@app.route("/track_page", methods=["POST"])
+def track_page():
+    """Track page visits with user information"""
+    data = request.get_json() or {}
+    
+    # Add user info if available
+    user_id = session.get("user_id")
+    username = session.get("username")
+    
+    page_view = {
+        "page": data.get("page", "unknown"),
+        "user_id": user_id,
+        "username": username,
+        "timestamp": datetime.now(),
+        "duration": data.get("duration", 0),  # time spent on page
+        "user_agent": request.headers.get("User-Agent", ""),
+        "ip_address": request.headers.get("X-Forwarded-For", request.remote_addr)
+    }
+    
+    page_views_col.insert_one(page_view)
+    return jsonify({"status": "success"}), 200
+
 @app.route("/admin/api/average_scores", methods=["GET"])
 def admin_average_scores():
     try:

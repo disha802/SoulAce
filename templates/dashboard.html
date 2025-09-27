@@ -102,11 +102,11 @@
     .crisis-options { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:18px; margin-top:14px; }
     .crisis-card { background:#fff; padding:16px; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align:left; }
     .crisis-icon { font-size:22px; margin-bottom:8px; }
-    .phone-input-group { display:flex; gap:8px; margin-top:10px; }
-    .phone-input { flex:1; padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); }
-    .request-btn { background:#2d4a3a; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .phone-input-group { display:flex; gap:8px; margin-top:10px; align-items: center; }
+    .phone-input { flex: 1 1 auto; min-width: 0; box-sizing: border-box; padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); }
+    .request-btn { background:#2d4a3a; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; flex-shrink: 0; white-space: nowrap; }
     .support-card small { color:#666; }
-    .crisis-link { display:inline-block; margin-top:8px; color:#c1474a; text-decoration:none; font-weight:600; }
+    .crisis-link { display:inline-block; margin-top:8px; color:#c1474a; text-decoration:none; font-weight:600; }  
 
     /* ========== FOOTER ========== */
     footer { text-align:center; padding:30px 20px; font-size:14px; background:#eee0d1; color:#6b4e3d; border-top:1px solid rgba(193,123,107,0.2); }

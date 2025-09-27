@@ -393,6 +393,17 @@
       height: 100% !important;
     }
 
+    .mood-graph-container {
+      width: 600px;   /* adjust as needed */
+      height: 350px;  /* adjust as needed */
+      margin: auto;
+    }
+    .mood-graph-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+
     .chart-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -618,7 +629,7 @@
     <p>Here you can manage users, review flagged posts, track mood stats, view bookings, and monitor crisis reports.</p>
   </section>
   
-  <!-- Overview KPIs -->
+<!-- Overview KPIs -->
   <section class="admin-section" aria-labelledby="kpi-heading" bgcolor="var(--card)">
     <h2 id="kpi-heading">📊 Dashboard Overview</h2>
     <div class="kpi-grid">
@@ -764,27 +775,44 @@
     </div>
   </section>
 
-  <!-- Crisis Mode / IP Logs -->
-  <section class="admin-section">
-    <h2>🚨 Crisis Mode Logs</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Time</th>
-          <th>IP Address</th>
-          <th>Status</th>
-          <th>Action</th>
+<section class="admin-section">
+  <h2>🚨 Crisis Mode Logs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Time</th>
+        <th>IP Address</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="crisis-logs-tbody">
+      {% if crisis_logs %}
+        {% for log in crisis_logs %}
+        <tr{% if log.resolved %} class="resolved"{% endif %}>
+          <td>{{ log.username }}</td>
+          <td>{{ log.timestamp }}</td>
+          <td>{{ log.ip_address }}</td>
+          <td>{{ "Resolved" if log.resolved else "Active" }}</td>
+          <td>
+            {% if not log.resolved %}
+              <button class="resolve-btn" onclick="resolveCrisis('{{ log.id }}')">Resolve</button>
+            {% else %}
+              Resolved at: {{ log.resolved_at or "N/A" }}
+            {% endif %}
+          </td>
         </tr>
-      </thead>
-      <tbody>
+        {% endfor %}
+      {% else %}
         <tr>
           <td colspan="5" style="text-align:center; color: var(--text-secondary); font-style: italic;">No crisis logs found</td>
         </tr>
-      </tbody>
-    </table>
-  </section>
-  
+      {% endif %}
+    </tbody>
+  </table>
+</section>
+
   <!-- User Management -->
   <section class="admin-section">
     <h2>👥 User Management</h2>
@@ -833,11 +861,13 @@
         <h3>All Users Mood Trends</h3>
         <div class="mood-controls">
           <button onclick="showLine()">Line Chart</button>
-          <button onclick="showStacked()"> Stacked Area</button>
+          <button onclick="showBar()"> Bar Area</button>
+        </div>  
+        <div class="mood-graph-container">
+          <canvas id="lineChart"></canvas>
+          <canvas id="stackedChart" style="display:none;"></canvas>
         </div>
-        
-        <canvas id="lineChart" height="120"></canvas>
-        <canvas id="stackedChart" height="120" style="display:none;"></canvas>
+
       </div>
     </div>
   </section>
@@ -1124,21 +1154,36 @@ window.onload = function() {
     .catch(err => console.error("Error fetching crisis logs:", err));
 };
 
-let lineChart, stackedChart;
+let lineChart, barChart;
 
 async function loadData() {
   try {
-    const res = await fetch("/admin/mood_trends"); // note: no "api" now
+    const res = await fetch("/admin/mood_trends"); // Ensure this endpoint exists
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
     const data = await res.json();
+    console.log("DEBUG: Fetched mood trend data:", data);
 
-    console.log("DEBUG: Fetched mood trend data:", data); // Debug
+    // Validate data structure
+    if (!data.dates || !data.averages || !data.moods || !data.distribution) {
+      console.error("Invalid data structure:", data);
+      return;
+    }
 
     const ctxLine = document.getElementById("lineChart").getContext("2d");
-    const ctxStack = document.getElementById("stackedChart").getContext("2d");
+    const ctxBar = document.getElementById("stackedChart").getContext("2d"); // Reusing the same canvas
 
     // Destroy old charts if they exist
-    if (lineChart) lineChart.destroy();
-    if (stackedChart) stackedChart.destroy();
+    if (lineChart) {
+      lineChart.destroy();
+      lineChart = null;
+    }
+    if (barChart) {
+      barChart.destroy();
+      barChart = null;
+    }
 
     // Line chart for average mood
     lineChart = new Chart(ctxLine, {
@@ -1161,65 +1206,156 @@ async function loadData() {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          title: { display: true, text: "Average Mood Over Time" }
+          title: { 
+            display: true, 
+            text: "Average Mood Over Time",
+            font: { size: 16, weight: 'bold' }
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
         },
-        scales: { y: { suggestedMin: -1, suggestedMax: 6 } }
+        scales: { 
+          y: { 
+            suggestedMin: 0, 
+            suggestedMax: 10,
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Mood Score'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          }
+        }
       }
     });
 
-    // Stacked area chart for mood distribution
-    stackedChart = new Chart(ctxStack, {
-      type: 'line',
+    // Bar chart with splits for mood distribution
+    const datasets = data.moods.map((mood, i) => ({
+      label: mood,
+      data: data.distribution.map(row => Array.isArray(row) ? (row[i] || 0) : 0),
+      backgroundColor: getRandomColor(i, 0.8),
+      borderColor: getRandomColor(i, 1),
+      borderWidth: 1
+    }));
+
+    barChart = new Chart(ctxBar, {
+      type: 'bar',
       data: {
         labels: data.dates,
-        datasets: data.moods.map((mood, i) => ({
-          label: mood,
-          data: data.distribution.map(row => row[i] ?? 0),
-          fill: true,
-          tension: 0.4,
-          borderColor: getRandomColor(i),
-          backgroundColor: getRandomColor(i, 0.3)
-        }))
+        datasets: datasets
       },
       options: {
         responsive: true,
-        plugins: { title: { display: true, text: "Mood Distribution Over Time" } },
-        scales: { y: { stacked: true } }
+        maintainAspectRatio: false,
+        plugins: {
+          title: { 
+            display: true, 
+            text: "Mood Distribution Over Time",
+            font: { size: 16, weight: 'bold' }
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Count'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        }
       }
     });
 
   } catch (err) {
     console.error("ERROR loading mood trends:", err);
+    
+    // Show error message to user
+    const lineCanvas = document.getElementById("lineChart");
+    const barCanvas = document.getElementById("stackedChart");
+    
+    if (lineCanvas) {
+      const ctx = lineCanvas.getContext('2d');
+      ctx.fillStyle = '#ff0000';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Error loading mood trend data', lineCanvas.width / 2, lineCanvas.height / 2);
+    }
+    
+    if (barCanvas) {
+      const ctx = barCanvas.getContext('2d');
+      ctx.fillStyle = '#ff0000';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Error loading mood distribution data', barCanvas.width / 2, barCanvas.height / 2);
+    }
   }
 }
 
-// Helper to generate semi-random colors
-function getRandomColor(index, alpha=1) {
+// Helper to generate colors for different moods
+function getRandomColor(index, alpha = 1) {
   const colors = [
-    `rgba(255, 99, 132, ${alpha})`,
-    `rgba(54, 162, 235, ${alpha})`,
-    `rgba(255, 206, 86, ${alpha})`,
-    `rgba(75, 192, 192, ${alpha})`,
-    `rgba(153, 102, 255, ${alpha})`,
-    `rgba(255, 159, 64, ${alpha})`,
-    `rgba(199, 199, 199, ${alpha})`,
-    `rgba(83, 102, 255, ${alpha})`
+    `rgba(255, 99, 132, ${alpha})`,   // Red
+    `rgba(54, 162, 235, ${alpha})`,   // Blue
+    `rgba(255, 206, 86, ${alpha})`,   // Yellow
+    `rgba(75, 192, 192, ${alpha})`,   // Teal
+    `rgba(153, 102, 255, ${alpha})`,  // Purple
+    `rgba(255, 159, 64, ${alpha})`,   // Orange
+    `rgba(199, 199, 199, ${alpha})`,  // Gray
+    `rgba(83, 102, 255, ${alpha})`,   // Indigo
+    `rgba(255, 99, 255, ${alpha})`,   // Pink
+    `rgba(99, 255, 132, ${alpha})`    // Green
   ];
   return colors[index % colors.length];
 }
 
 function showLine() {
-  document.getElementById("lineChart").style.display = "block";
-  document.getElementById("stackedChart").style.display = "none";
+  const lineChart = document.getElementById("lineChart");
+  const barChart = document.getElementById("stackedChart");
+  
+  if (lineChart && barChart) {
+    lineChart.style.display = "block";
+    barChart.style.display = "none";
+  }
 }
 
-function showStacked() {
-  document.getElementById("lineChart").style.display = "none";
-  document.getElementById("stackedChart").style.display = "block";
+function showBar() {
+  const lineChart = document.getElementById("lineChart");
+  const barChart = document.getElementById("stackedChart");
+  
+  if (lineChart && barChart) {
+    lineChart.style.display = "none";
+    barChart.style.display = "block";
+  }
 }
 
-loadData();
+// Initialize charts when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Add a small delay to ensure all elements are rendered
+  setTimeout(loadData, 500);
+});
 
 async function fetchVisits() {
   try {
