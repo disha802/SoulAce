@@ -5,6 +5,7 @@
   <title>SoulAce - Peer Support</title>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- === Combined CSS (from Version B, tuned to keep A semantics) === -->
   <style>
@@ -308,7 +309,7 @@
       const title = document.getElementById('post-title').value.trim();
       const content = document.getElementById('post-content').value.trim();
       const is_anonymous = document.getElementById('anonymous-toggle').checked;
-      if (!content) { alert('Please enter some content before posting.'); return; }
+      if (!content) { showError('Please enter some content before posting.'); return; }
 
       try {
         const res = await fetch('/add_post', {
@@ -322,7 +323,7 @@
         } else {
           const text = await res.text();
           console.error('Failed to add post:', text);
-          alert('Failed to add post: ' + text);
+          showError('Failed to add post: ' + text);
         }
       } catch (err) {
         console.error('Error adding post', err);
@@ -357,7 +358,7 @@
       const textarea = document.getElementById(`reply-content-${postId}`);
       const anonBox = document.getElementById(`reply-anonymous-${postId}`);
       if(!textarea) return; const content = textarea.value.trim();
-      if(!content){ alert('Reply cannot be empty.'); return; }
+      if(!content){ showError('Reply cannot be empty.'); return; }
 
       try{
         const res = await fetch(`/add_reply/${postId}`, {
@@ -369,7 +370,7 @@
 
     // Delete post/reply - uses A endpoints
     async function deletePost(postId){
-      if(!confirm('Are you sure you want to delete this post?')) return;
+      if(!(await showConfirm('Are you sure you want to delete this post?', 'Delete Post', 'Delete', 'Cancel'))) return;
       try{
         const res = await fetch(`/delete_post/${postId}`, { method:'DELETE' });
         if(res.ok) {
@@ -377,16 +378,17 @@
           // If we're in a filtered view, reapply the filter to remove deleted posts
           if (currentFilter !== 'all') {
             applyFilter();
+            showSuccess('Post deleted successfully');
           }
         } else { 
           const txt = await res.text(); 
-          alert('Failed to delete post: '+txt); 
+          showError('Failed to delete post: '+txt); 
         }
       }catch(e){console.error(e)}
     }
 
     async function deleteReply(postId, replyId){
-      if(!confirm('Are you sure you want to delete this reply?')) return;
+      if(!(await showConfirm('Are you sure you want to delete this reply?', 'Delete Reply', 'Delete', 'Cancel'))) return;
       try{
         const res = await fetch(`/delete_reply/${postId}/${replyId}`, { method:'DELETE' });
         if(res.ok) {
@@ -394,40 +396,41 @@
           // If we're in a filtered view, reapply the filter
           if (currentFilter !== 'all') {
             applyFilter();
+            showSuccess('Reply deleted successfully');
           }
         } else { 
           const txt = await res.text(); 
-          alert('Failed to delete reply: '+txt); 
+          showError('Failed to delete reply: '+txt); 
         }
       }catch(e){console.error(e)}
     }
 
     // Flag content (StudentVol) - uses A's /flag_content/{type}/{id}
     async function flagContent(contentType, contentId, postId=null){
-      if(!currentUser) { alert('You must be logged in to flag content.'); return; }
-      if(!isstudentvol(currentUser)){ alert('Only Student Volunteers can flag content.'); return; }
-      if(!confirm('Flag this content as inappropriate?')) return;
+      if(!currentUser) { showError('You must be logged in to flag content.'); return; }
+      if(!isstudentvol(currentUser)){ showError('Only Student Volunteers can flag content.'); return; }
+      if(!(await showConfirm('Flag this content as inappropriate?', 'Flag Content', 'Flag', 'Cancel'))) return;
       try{
         // contentType expected: 'post' or 'reply'
         const targetId = contentType === 'reply' && postId ? contentId : contentId;
         const endpoint = (contentType === 'reply' && postId) ? `/flag_content/${contentType}/${contentId}` : `/flag_content/${contentType}/${contentId}`;
         const res = await fetch(endpoint, { method:'POST' });
-        if(res.ok){ alert('Content flagged successfully'); await loadPosts(); } else { alert('Failed to flag content: ' + await res.text()); }
+        if(res.ok){ showSuccess('Content flagged successfully'); await loadPosts(); } else { showError('Failed to flag content: ' + await res.text()); }
       }catch(e){console.error(e)}
     }
 
     // Unflag content (StudentVol and Admin) - uses new /unflag_content endpoint
     async function unflagContent(contentType, contentId, postId=null){
-      if(!currentUser) { alert('You must be logged in to unflag content.'); return; }
+      if(!currentUser) { showError('You must be logged in to unflag content.'); return; }
       if(!isstudentvol(currentUser) && currentUser.role !== 'Admin'){ 
-        alert('Only Student Volunteers and Admins can unflag content.'); 
+        showError('Only Student Volunteers and Admins can unflag content.'); 
         return; 
       }
-      if(!confirm('Unflag this content?')) return;
+      if(!(await showConfirm('Unflag this content?', 'Unflag Content', 'Unflag', 'Cancel'))) return;
       try{
         const endpoint = `/unflag_content/${contentType}/${contentId}`;
         const res = await fetch(endpoint, { method:'POST' });
-        if(res.ok){ alert('Content unflagged successfully'); await loadPosts(); } else { alert('Failed to unflag content: ' + await res.text()); }
+        if(res.ok){ showSuccess('Content unflagged successfully'); await loadPosts(); } else { showError('Failed to unflag content: ' + await res.text()); }
       }catch(e){console.error(e)}
     }
 

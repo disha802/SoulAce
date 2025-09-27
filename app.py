@@ -2499,13 +2499,23 @@ def session_info():
 
 
 
+# Add dependencies:
+# pip install google-cloud-speech flask tempfile
+
+
 # Make sure GOOGLE_APPLICATION_CREDENTIALS env var is set to the JSON key path.
+# configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("transcribe")
+
+def ffmpeg_installed():
+    try:
+        subprocess.check_output(["ffmpeg", "-version"])
+        return True
+    except Exception:
+        return False
 
 def convert_to_wav(input_path, output_path, sample_rate=16000):
-    """
-    Use ffmpeg to convert any input audio (webm/ogg/mp3) -> 16kHz 16-bit PCM WAV.
-    Requires ffmpeg installed on the server.
-    """
     cmd = [
         "ffmpeg",
         "-y",
@@ -2515,60 +2525,91 @@ def convert_to_wav(input_path, output_path, sample_rate=16000):
         "-sample_fmt", "s16",       # 16-bit
         output_path
     ]
-    subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    logger.info("Running ffmpeg command: %s", " ".join(cmd))
+    subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
 @app.route("/transcribe", methods=["POST"])
 def transcribe_audio():
     """
     Accepts multipart form-data with file field 'audio'.
-    Returns JSON: { "transcript": "..." }
+    Optional form field: 'languageCode' (e.g. 'en-US' or 'hi-IN').
+    Returns JSON with either {"transcript": "..."} or {"error": "..."} and proper status code.
     """
-    if 'audio' not in request.files:
-        return jsonify({"error": "No audio file provided."}), 400
+    try:
+        # Basic checks
+        if 'audio' not in request.files:
+            logger.warning("No 'audio' in request.files")
+            return jsonify({"error": "No audio file uploaded. Send multipart/form-data with field 'audio'."}), 400
 
-    audio_file = request.files['audio']
+        audio_file = request.files['audio']
+        logger.info("Received file: filename=%s content_type=%s size=%s", audio_file.filename, audio_file.content_type, request.content_length)
 
-    # Save original to a temp file
-    with tempfile.TemporaryDirectory() as tmpdir:
-        src_path = os.path.join(tmpdir, "input_audio")
-        audio_file.save(src_path)
+        # Save incoming file to temp
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src_path = os.path.join(tmpdir, "input_audio")
+            audio_file.save(src_path)
+            logger.info("Saved incoming audio to %s", src_path)
 
-        wav_path = os.path.join(tmpdir, "converted.wav")
-        try:
-            convert_to_wav(src_path, wav_path, sample_rate=16000)
-        except subprocess.CalledProcessError as e:
-            # ffmpeg failed
-            return jsonify({"error": "Audio conversion failed. Make sure ffmpeg is installed."}), 500
+            # Optional: check file size (in bytes) and reject huge files
+            max_bytes = 10 * 1024 * 1024  # 10 MB
+            file_size = os.path.getsize(src_path)
+            logger.info("Uploaded file size: %d bytes", file_size)
+            if file_size > max_bytes:
+                return jsonify({"error": f"Uploaded audio too large ({file_size} bytes). Max allowed {max_bytes} bytes."}), 413
 
-        # Read wav bytes
-        with open(wav_path, "rb") as f:
-            wav_bytes = f.read()
+            # Make sure ffmpeg exists
+            if not ffmpeg_installed():
+                logger.error("ffmpeg not found on server PATH")
+                return jsonify({"error": "Server misconfiguration: ffmpeg not installed on server."}), 500
 
-        # Initialize Google Speech client
-        client = speech.SpeechClient()
+            wav_path = os.path.join(tmpdir, "converted.wav")
+            try:
+                convert_to_wav(src_path, wav_path, sample_rate=16000)
+            except subprocess.CalledProcessError as e:
+                logger.exception("ffmpeg conversion failed")
+                return jsonify({"error": "Audio conversion failed (ffmpeg error). Are you sending a valid audio blob?"}), 500
 
-        audio = speech.RecognitionAudio(content=wav_bytes)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=16000,
-            language_code="en-US",  # change to desired language, e.g. "hi-IN"
-            enable_automatic_punctuation=True,
-            # model="default"  # can set to "video" or "phone_call" for specific scenarios
-        )
+            # read converted wav
+            with open(wav_path, "rb") as f:
+                wav_bytes = f.read()
 
-        try:
-            response = client.recognize(config=config, audio=audio)
-        except Exception as e:
-            return jsonify({"error": f"Speech API error: {str(e)}"}), 500
+            # Prepare Google Speech client
+            try:
+                client = speech.SpeechClient()
+            except Exception as e:
+                logger.exception("Failed to initialize Google Speech client")
+                return jsonify({"error": "Server misconfiguration: Google Speech client init failed. Check GOOGLE_APPLICATION_CREDENTIALS."}), 500
 
-        # concatenate results
-        transcripts = []
-        for result in response.results:
-            transcripts.append(result.alternatives[0].transcript)
+            language_code = request.form.get('languageCode') or request.headers.get('X-Language-Code') or "en-US"
+            logger.info("Using language code: %s", language_code)
 
-        transcript_text = " ".join(transcripts).strip()
-        return jsonify({"transcript": transcript_text})
+            audio = speech.RecognitionAudio(content=wav_bytes)
+            config = speech.RecognitionConfig(
+                encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+                sample_rate_hertz=16000,
+                language_code=language_code,
+                enable_automatic_punctuation=True,
+            )
 
+            try:
+                # synchronous recognize (good for short audio < 60s)
+                response = client.recognize(config=config, audio=audio)
+            except Exception as e:
+                logger.exception("Google Speech API error")
+                return jsonify({"error": f"Speech API error: {str(e)}"}), 500
+
+            # Build transcript
+            transcripts = []
+            for result in response.results:
+                transcripts.append(result.alternatives[0].transcript)
+            transcript_text = " ".join(transcripts).strip()
+
+            logger.info("Transcription result: %s", transcript_text)
+            return jsonify({"transcript": transcript_text}), 200
+
+    except Exception as e:
+        logger.exception("Unhandled exception in /transcribe")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 # --- Run App ---

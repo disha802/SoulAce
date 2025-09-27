@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 
 <style>
 * {
@@ -1205,7 +1206,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
     // --- Download Functions ---
     function downloadReport(assessmentId){
       if(!assessmentId){
-        alert('Assessment ID not found');
+        showError('Assessment ID not found');
         return;
       }
       
@@ -1230,7 +1231,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
         })
         .catch(error => {
           console.error('Download error:', error);
-          alert('Failed to download report: ' + error.message);
+          showError('Failed to download report: ' + error.message);
         });
     }
 
@@ -1256,7 +1257,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
         })
         .catch(error => {
           console.error('Download error:', error);
-          alert('Failed to download latest report: ' + error.message);
+          showError('Failed to download latest report: ' + error.message);
         });
     }
 
@@ -1488,7 +1489,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
         const unanswered = answers.some(a => a === null);
         if(unanswered){
           const firstUn = answers.findIndex(a => a === null) + 1;
-          alert('Please answer question ' + firstUn + ' before submitting.');
+          showError('Please answer question ' + firstUn + ' before submitting.');
           return;
         }
 
@@ -1538,7 +1539,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
             // Reset button state
             nextBtn.textContent = originalText;
             nextBtn.disabled = false;
-            alert('Error saving assessment: ' + (data && data.error ? data.error : 'Server returned invalid response'));
+            showError('Error saving assessment: ' + (data && data.error ? data.error : 'Server returned invalid response'));
             return;
           }
           // show returned values if any
@@ -1569,7 +1570,7 @@ body.dark-mode .chart-legend-item.ghq { background: rgba(202, 219, 215, 0.1); }
           // Reset button state
           nextBtn.textContent = originalText;
           nextBtn.disabled = false;
-          alert('Network error submitting assessment: ' + err.message);
+          showError('Network error submitting assessment: ' + err.message);
         });
 
         return;

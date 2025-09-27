@@ -6,6 +6,7 @@
   <title>SoulAce - Your Mental Health Companion</title>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <style>
     /* ---------- Reset & Base ---------- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -389,7 +390,7 @@ function showToast(msg,time=1500){
     /* ---------- request call (placeholder) ---------- */
     function requestCall() {
       const phone = document.getElementById('userPhone').value.trim();
-      if (!phone) { alert('Please enter your phone number.'); return; }
+      if (!phone) { showError('Please enter your phone number.'); return; }
       // example POST - wire this endpoint server-side
       fetch('/request_call', {
         method: 'POST',
@@ -397,8 +398,8 @@ function showToast(msg,time=1500){
         body: JSON.stringify({ phone })
       })
       .then(res => res.json())
-      .then(data => { alert(data.message || 'We will call you shortly.'); closeCrisisPopup(); })
-      .catch(err => { console.error(err); alert('Request failed.'); });
+      .then(data => { showSuccess(data.message || 'We will call you shortly.'); closeCrisisPopup(); })
+      .catch(err => { console.error(err); showError('Request failed.'); });
     }
 
     /* ---------- sendCrisis (keeps your original behaviour, with better UI) ---------- */
@@ -408,20 +409,20 @@ function showToast(msg,time=1500){
         const response = await fetch('/crisis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urgent: true }) });
         const result = await response.json().catch(()=> ({}));
         if (response.ok) {
-          alert(result.message || 'Crisis logged. Support team notified.');
+          showSuccess(result.message || 'Crisis logged. Support team notified.');
         } else {
-          alert(result.error || 'Failed to log crisis.');
+          showError(result.error || 'Failed to log crisis.');
         }
       } catch (err) {
         console.error('Error:', err);
-        alert('Network error, try again!');
+        showError('Network error, try again!');
       }
 
       // Try sending an email (your original flow)
       try {
         const res = await fetch('/send_email', { method: 'POST', headers: { 'Content-Type': 'application/json' }});
         const data = await res.json().catch(()=> ({}));
-        if (res.ok && data.ok) alert('📧 Crisis email sent!');
+        if (res.ok && data.ok) showSuccess('📧 Crisis email sent!');
         else console.warn('Email not sent:', data);
       } catch (err) {
         console.warn('Email fetch error:', err);

@@ -6,6 +6,7 @@
   <title>SoulAce Admin Dashboard</title>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <style>
     :root {
       --bg: #f8f9fa;
@@ -911,11 +912,11 @@ async function resolveCrisis(logId) {
     if (response.ok) {
       location.reload(); // Refresh the page to show updated status
     } else {
-      alert('Failed to resolve crisis log');
+      showError('Failed to resolve crisis log');
     }
   } catch (error) {
     console.error('Error:', error);
-    alert('Error resolving crisis log');
+    showError('Error resolving crisis log');
   }
 }
 
@@ -1136,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.closest("tr").remove();
           console.log(data.message);
         } else if (data.error) {
-          alert("Error: " + data.error);
+          showError("Error: " + data.error);
         }
       })
       .catch(err => console.error("Error resolving log:", err));

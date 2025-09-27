@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
   <style>
     body { margin:0; font-family:'Segoe UI',sans-serif; background:#F5F7F2; color:#333; transition:0.4s; }
     .logo-container img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
@@ -192,7 +193,7 @@
     async function saveEntry() {
       const title = document.getElementById("title-input").value.trim();
       const content = textarea.value.trim();
-      if (!title || !content) { alert("Please add a title and content."); return; }
+      if (!title || !content) { showError("Please add a title and content."); return; }
 
       const now = new Date();
       const date = now.toLocaleDateString();
@@ -238,7 +239,7 @@
           document.getElementById('recording-status').className = 'recording';
           document.getElementById('recording-status').textContent = 'Recording in progress...';
         } catch (error) {
-          alert('Could not access microphone. Please allow microphone access and try again.');
+          showError('Could not access microphone. Please allow microphone access and try again.');
         }
       }
     }
@@ -261,7 +262,7 @@
     async function saveAudioEntry() {
       const title = document.getElementById('audio-title-input').value.trim();
       if (!title || !recordedBlob) {
-        alert('Please add a title and record audio.');
+        showError('Please add a title and record audio.');
         return;
       }
 
@@ -286,7 +287,7 @@
 
         loadEntries();
       } catch (error) {
-        alert('Failed to save audio entry.');
+        showError('Failed to save audio entry.');
       }
     }
 
@@ -333,7 +334,7 @@
 
     async function deleteEntry() {
       if (!currentEntry) return;
-      if (!confirm("Are you sure you want to delete this entry?")) return;
+      if (!(await showConfirm("Are you sure you want to delete this entry?", "Delete Entry", "Delete", "Cancel"))) return;
       await fetch(`/delete_journal/${currentEntry.id}`, {method:"DELETE"});
       closePopup();
       loadEntries();

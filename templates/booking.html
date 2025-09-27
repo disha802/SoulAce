@@ -6,6 +6,7 @@
   <title>SoulAce — Book</title>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;600&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <style>
 :root {
   --page-bg: linear-gradient(135deg, #f6f3f0 20%, #e8e1dc 100%);
@@ -931,13 +932,13 @@ html, body {
 
     /* Confirm booking */
     confirmBtn.addEventListener('click', async () => {
-      if (!selectedStaff) return alert('Select staff');
-      if (!selectedSlot) return alert('Select slot');
+      if (!selectedStaff) return showError('Select staff');
+      if (!selectedSlot) return showError('Select slot');
 
       // Check if user already has a booking for this date
       const existingBooking = bookings.find(b => b.date === selectedSlot.date);
       if (existingBooking) {
-        alert(`You already have a booking on ${selectedSlot.date}. Only one booking per day is allowed.`);
+        showError(`You already have a booking on ${selectedSlot.date}. Only one booking per day is allowed.`);
         return;
       }
 
@@ -1050,7 +1051,7 @@ html, body {
 
     /* Cancel booking */
     async function cancelBooking(bookingId) {
-      if (!confirm('Are you sure you want to cancel this booking?')) {
+      if (!(await showConfirm('Are you sure you want to cancel this booking?', 'Cancel Booking', 'Cancel Booking', 'Keep Booking'))) {
         return;
       }
 
@@ -1065,7 +1066,7 @@ html, body {
         renderBookings();
         
         // Show success message
-        alert('Booking cancelled successfully');
+        showSuccess('Booking cancelled successfully');
         
         // In a real app, you would also send a request to the server
         // await fetch('/api/cancel_booking', {
@@ -1075,7 +1076,7 @@ html, body {
         // });
       } catch (err) {
         console.error('Cancel booking error:', err);
-        alert('Error cancelling booking');
+        showError('Error cancelling booking');
       }
     }
 
