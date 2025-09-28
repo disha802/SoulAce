@@ -31,7 +31,7 @@ from google.cloud import speech_v1 as speech
 
 # --- Load environment variables ---
 load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://dishakataria_db_user:disha802@soulace.3lvcz0y.mongodb.net/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 
 # --- Connect to MongoDB ---
 client = MongoClient(MONGO_URI)
